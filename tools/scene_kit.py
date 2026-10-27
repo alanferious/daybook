@@ -7,8 +7,13 @@ to scenes/<region>.svg.
 """
 import math
 import random
+from contextlib import contextmanager
+from html import escape
 
 W, H = 1600, 400
+# extra lights a viewer can switch on stay dark wherever the file is shown as a plain image (the Daybook banner);
+# the scene viewer's own rules are more specific, so it can still light them
+LIT_STYLE = "<style>.hot .on-lit{opacity:0}</style>"
 
 
 def f(x):
@@ -27,11 +32,37 @@ class Scene:
 
     def svg(self, title):
         return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMax slice">'
-                f'<title>{title}</title><defs>{"".join(self.defs)}</defs>{"".join(self.parts)}</svg>')
+                f'<title>{title}</title><defs>{"".join(self.defs)}{LIT_STYLE}</defs>{"".join(self.parts)}</svg>')
 
     def save(self, path, title):
         with open(path, "w") as fh:
             fh.write(self.svg(title))
+
+    # ---------- structure the scene viewer (scenes.html) reads ----------
+    # Daybook shows the files as plain images, where these groups change nothing.
+    @contextmanager
+    def layer(self, name, depth):
+        """A depth plane: 0 = sky, 1 = nearest foreground. The viewer shifts each plane by depth for parallax."""
+        self.add(f'<g class="layer" data-layer="{name}" data-depth="{depth}">')
+        yield
+        self.add("</g>")
+
+    @contextmanager
+    def hot(self, hid, name, note, fx="pulse"):
+        """A feature you can click: name is its label, note one short line, fx what happens
+        (pulse, light, swing, smoke, sparks, leaves, splash, flash, erupt)."""
+        self.add(f'<g class="hot" id="{hid}" data-name="{escape(name)}" data-note="{escape(note)}" data-fx="{fx}">')
+        yield
+        self.add("</g>")
+
+    @contextmanager
+    def fx(self, kind, period=0):
+        """Ambient motion the viewer can switch on (smoke, cloud, water, flicker, rain, embers, sway, glow, beam, birds).
+        rain needs period: the streaks repeat every `period` px vertically so the loop is seamless."""
+        st = f' style="--p:{period}px"' if period else ""
+        self.add(f'<g class="fx fx-{kind}"{st}>')
+        yield
+        self.add("</g>")
 
     # ---------- helpers ----------
     def r(self, a, b):

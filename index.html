@@ -171,6 +171,7 @@ p { text-wrap: pretty; }
 .phead h2 { margin: 0; font-family: var(--font-caps); font-weight: 400; font-size: 25px; letter-spacing: .01em; line-height: 1.1; }
 .meta { font-size: 14px; color: var(--muted); }
 .linkbtn { background: none; border: 0; padding: 2px 4px; font-size: 15px; color: var(--accent); font-weight: 500; }
+a.linkbtn { text-decoration: none; }
 .empty-note { color: var(--muted); font-size: 15px; margin: 2px 0 6px; }
 
 .grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -612,6 +613,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     <span>Saved in this browser · <button class="linkbtn" type="button" id="moveBtn">Copy a link to carry it to another device</button></span>
     <span>Weather by Open-Meteo</span>
     <label class="preview">See another region<select id="regionPreview"><option value="">Where you are today</option></select></label>
+    <a class="linkbtn" id="sceneLink" href="scenes.html">Explore the scenes</a>
     <details><summary>How XP works</summary>
       <p>A finished task is worth 10 XP, a habit 5, each minute of focus 1, a paper sat 100 and a deed 50. Each of the day's three quests adds 30, and all three add 40 more. Earn 150 XP in a day to keep your streak going. Undoing something takes its XP back.</p>
     </details>
@@ -1410,7 +1412,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     J = journey();
     const rg = regionNow();
     document.documentElement.dataset.region = rg;
-    setVista(rg);
+    setVista(rg); $("#sceneLink").href = `scenes.html#${rg}`;
     if (shownRegion !== null && rg !== shownRegion) setTimeout(() => arrive(rg), calm() ? 0 : 900);
     // the browser chrome on phones takes the region's page colour once the palette has settled
     if (rg !== shownRegion) setTimeout(() => { $('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(); }, calm() ? 0 : 1500);

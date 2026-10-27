@@ -24,19 +24,33 @@ P = dict(
 )
 
 
+def puff(sc, x, y, n, col, op=.35, drift=1.0):
+    """Scene.smoke, written compactly."""
+    c = "".join(f'<circle cx="{x + drift * (i * 4 + math.sin(i) * 5):.0f}" cy="{y - i * 9:.0f}" r="{3 + i * 1.6:.1f}" opacity="{1 - i / (n + 1):.2f}"/>' for i in range(n))
+    with sc.fx("smoke"):
+        sc.add(f'<g fill="{col}" opacity="{op}">{c}</g>')
+
+
 def glow_def(sc):
     sc.rad("glow", [(0, "#ffd08a", .55), (.35, P["lamp"], .22), (1, P["lamp"], 0)])
 
 
 def glow(sc, x, y, rr, op=1.0):
-    sc.add(f'<circle cx="{f(x)}" cy="{f(y)}" r="{f(rr)}" fill="url(#glow)" opacity="{f(op)}"/>')
+    o = f' opacity="{f(op)}"' if op != 1 else ""
+    sc.add(f'<circle cx="{f(x)}" cy="{f(y)}" r="{f(rr)}" fill="url(#glow)"{o}/>')
 
 
-def window(sc, x, y, w, h, lit, tim):
-    """A small leaded window; lit ones are warm with a cross mullion."""
-    if lit:
+def window(sc, x, y, w, h, lit, tim, lightable=False):
+    """A small leaded window; lit ones are warm with a cross mullion.
+    lightable: a dark window that lights up (with its glow) when its hot feature is clicked."""
+    if not lit and lightable:
+        sc.add(f'<rect x="{f(x)}" y="{f(y)}" width="{f(w)}" height="{f(h)}" fill="{P["dark_win"]}"/><g class="on-lit">')
+        window(sc, x, y, w, h, True, tim)
+        glow(sc, x + w / 2, y + h / 2, w * 3.2)
+        sc.add("</g>")
+    elif lit:
         sc.add(f'<rect x="{f(x)}" y="{f(y)}" width="{f(w)}" height="{f(h)}" fill="{P["lamp"]}"/>'
-               f'<rect x="{f(x + w * .2)}" y="{f(y + h * .2)}" width="{f(w * .6)}" height="{f(h * .55)}" fill="{P["lamp_core"]}" opacity=".7"/>'
+               f'<rect x="{f(x + w * .2)}" y="{f(y + h * .2)}" width="{f(w * .6)}" height="{f(h * .55)}" fill="#f8ca7e"/>'
                f'<path d="M{f(x + w / 2)},{f(y)} V{f(y + h)} M{f(x)},{f(y + h * .45)} H{f(x + w)}" stroke="{tim}" stroke-width="{f(max(.6, w * .12))}"/>')
     else:
         sc.add(f'<rect x="{f(x)}" y="{f(y)}" width="{f(w)}" height="{f(h)}" fill="{P["dark_win"]}"/>')
@@ -50,7 +64,7 @@ def roof_y(kind, xt, wt, ytop, roof, o, x):
 
 
 def house(sc, x, base, w, storeys, sh, roof, kind="gable", lit=.6, jetty=0, s=1.0, chim=.72, door=True,
-          wall=None, roofc=None, braces=True, glow_op=1.0, smoke=True, stone_ground=False):
+          wall=None, roofc=None, braces=True, glow_op=1.0, smoke=True, stone_ground=False, lightable=False):
     """A timber-framed house standing on the ground at `base`, left edge x, width w.
     kind: 'gable' shows the gable end; 'side' shows the long side under a steep roof."""
     rnd = sc.rnd
@@ -92,7 +106,7 @@ def house(sc, x, base, w, storeys, sh, roof, kind="gable", lit=.6, jetty=0, s=1.
             if i == 0 and door and n >= 2 and k == n // 2:
                 continue
             on = rnd.random() < lit
-            window(sc, cx - ww / 2, y0 + sh * .3, ww, wh, on, tim)
+            window(sc, cx - ww / 2, y0 + sh * .3, ww, wh, on, tim, lightable)
             if on:
                 lights.append((cx, y0 + sh * .3 + wh / 2, ww))
         xt, wt, ytop = xi, wi, y0
@@ -104,6 +118,10 @@ def house(sc, x, base, w, storeys, sh, roof, kind="gable", lit=.6, jetty=0, s=1.
                f'<rect x="{f(dx - dw / 2 - 1)}" y="{f(base - dh - 1.2)}" width="{f(dw + 2)}" height="{f(1.6 * s)}" fill="{tim}"/>')
         if on:
             lights.append((dx, base - dh / 2, dw * 1.2))
+        elif lightable:
+            sc.add(f'<g class="on-lit"><rect x="{f(dx - dw / 2)}" y="{f(base - dh)}" width="{f(dw)}" height="{f(dh)}" fill="{P["lamp"]}"/>')
+            glow(sc, dx, base - dh / 2, dw * 3.6)
+            sc.add("</g>")
     # roof
     o = 3.5 * s
     if kind == "gable":
@@ -115,7 +133,7 @@ def house(sc, x, base, w, storeys, sh, roof, kind="gable", lit=.6, jetty=0, s=1.
                f'<path d="M{f(xt + wt / 2)},{f(ytop)} V{f(ytop - roof + 6 * s)}" stroke="{tim}" stroke-width="{f(tw)}"/>')
         if roof > 16 * s:
             on = rnd.random() < lit
-            window(sc, xt + wt / 2 - 2.5 * s - 3.5 * s, ytop - roof * .45, 5 * s, 6 * s, on, tim)
+            window(sc, xt + wt / 2 - 2.5 * s - 3.5 * s, ytop - roof * .45, 5 * s, 6 * s, on, tim, lightable)
             if on:
                 lights.append((xt + wt / 2 - 3.5 * s, ytop - roof * .45 + 3 * s, 5 * s))
         # bargeboards: the roof seen edge-on as a thick dark rim
@@ -138,13 +156,18 @@ def house(sc, x, base, w, storeys, sh, roof, kind="gable", lit=.6, jetty=0, s=1.
         sc.add(f'<rect x="{f(cx - cw / 2)}" y="{f(ry - 9 * s)}" width="{f(cw)}" height="{f(10 * s)}" fill="{P["stone_shade"]}"/>'
                f'<rect x="{f(cx - cw / 2 - .8 * s)}" y="{f(ry - 10 * s)}" width="{f(cw + 1.6 * s)}" height="{f(1.8 * s)}" fill="{P["stone"]}"/>')
         if smoke:
-            sc.smoke(cx, ry - 13 * s, 6, P["smoke"], .28, -1.3 * s)
+            puff(sc, cx, ry - 13 * s, 6, P["smoke"], .28, -1.3 * s)
     for lx, ly, lw in lights:
         glow(sc, lx, ly, lw * 3.2, glow_op)
     return xt, wt, ytop
 
 
 def lantern(sc, x, y, s=1.0):
+    with sc.fx("flicker"):
+        lantern_(sc, x, y, s)
+
+
+def lantern_(sc, x, y, s):
     sc.add(f'<rect x="{f(x - 3 * s)}" y="{f(y - 5 * s)}" width="{f(6 * s)}" height="{f(9 * s)}" fill="{P["lamp_core"]}"/>'
            f'<path d="M{f(x - 4 * s)},{f(y - 5 * s)} L{f(x)},{f(y - 9 * s)} L{f(x + 4 * s)},{f(y - 5 * s)}Z" fill="{P["timber"]}"/>'
            f'<rect x="{f(x - 3.6 * s)}" y="{f(y + 4 * s)}" width="{f(7.2 * s)}" height="{f(1.6 * s)}" fill="{P["timber"]}"/>'
@@ -180,12 +203,24 @@ def pony_sign(sc, x, y, s=1.0):
 
 def dark_tree(sc, x, y, s, fill, top=None):
     """A night silhouette of a broadleaf tree: a trunk and a few lumps of canopy."""
-    g = [f'<path d="M{f(x - s * .06)},{f(y)} L{f(x - s * .03)},{f(y - s * .7)} L{f(x + s * .03)},{f(y - s * .7)} L{f(x + s * .07)},{f(y)}Z" fill="{fill}"/>']
+    g = [f'<g fill="{fill}"><path d="M{f(x - s * .06)},{f(y)} L{f(x - s * .03)},{f(y - s * .7)} L{f(x + s * .03)},{f(y - s * .7)} L{f(x + s * .07)},{f(y)}Z"/>']
     for dx, dy, rr in [(-.32, -.9, .36), (.3, -.95, .38), (0, -1.2, .45), (-.12, -.78, .4), (.18, -.72, .3)]:
-        g.append(f'<circle cx="{f(x + dx * s + sc.r(-.05, .05) * s)}" cy="{f(y + dy * s)}" r="{f(rr * s * sc.r(.9, 1.1))}" fill="{fill}"/>')
+        g.append(f'<circle cx="{x + dx * s + sc.r(-.05, .05) * s:.0f}" cy="{y + dy * s:.0f}" r="{f(rr * s * sc.r(.9, 1.1))}"/>')
+    g.append("</g>")
     if top:
         g.append(f'<circle cx="{f(x - s * .1)}" cy="{f(y - s * 1.35)}" r="{f(s * .22)}" fill="{top}"/>')
     sc.add("".join(g))
+
+
+def hedge(sc, pts, s, fill, shade):
+    """Scene.hedge, written compactly: whole-pixel centres, one group per colour."""
+    a, b = [], []
+    for x, y in pts:
+        rr = s * sc.r(.7, 1.15)
+        a.append(f'<circle cx="{x + rr * .2:.0f}" cy="{y + rr * .2:.0f}" r="{f(rr)}"/>')
+    for x, y in pts:
+        b.append(f'<circle cx="{x:.0f}" cy="{y:.0f}" r="{f(s * sc.r(.6, 1.0))}"/>')
+    sc.add(f'<g fill="{shade}">{"".join(a)}</g><g fill="{fill}">{"".join(b)}</g>')
 
 
 def ceiling(sc, base, amp, fill, seed, step=10, op=1.0):
@@ -202,208 +237,308 @@ def ceiling(sc, base, amp, fill, seed, step=10, op=1.0):
     return pts
 
 
-def rain(sc, n, y0, y1, length, op, width, col=None, x0=-40, x1=W + 40, slant=.28):
+def rain(sc, n, length, op, width, period=200, col=None, slant=.28):
+    """Streaks in a band `period` tall, repeated at -period, 0 and +period so the viewer can loop it seamlessly."""
     d = []
     for _ in range(n):
-        x, y = sc.r(x0, x1), sc.r(y0, y1)
+        x, y = sc.r(-60, W + 40), sc.r(0, period)
         ln = length * sc.r(.6, 1.2)
-        d.append(f"M{x:.0f},{y:.0f}l{-ln * slant:.0f},{ln:.0f}")
-    sc.add(f'<path d="{"".join(d)}" stroke="{col or P["rain"]}" stroke-width="{width}" stroke-linecap="round" opacity="{op}"/>')
+        d.append((x, y, -ln * slant, ln))
+    with sc.fx("rain", period):
+        sc.add(f'<path d="{"".join(f"M{x:.0f},{y + k * period:.0f}l{dx:.0f},{dy:.0f}" for k in (-1, 0, 1) for x, y, dx, dy in d)}" stroke="{col or P["rain"]}" stroke-width="{width}" stroke-linecap="round" opacity="{op}"/>')
+
+
+def lit_rain(sc, n, cx, cy, rr):
+    """Drops caught in a lamp's light."""
+    d = "".join(f"M{sc.r(cx - rr * .8, cx + rr * .8):.0f},{sc.r(cy - rr, cy + rr):.0f}l-3,{sc.r(7, 14):.0f}" for _ in range(n))
+    sc.add(f'<path d="{d}" stroke="{P["lamp_core"]}" stroke-width=".8" stroke-linecap="round" opacity=".55"/>')
+
+
+def bez(p0, p1, p2, p3, n=12):
+    return [tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t * t * c + t ** 3 * d for a, b, c, d in zip(p0, p1, p2, p3))
+            for t in [k / n for k in range(n + 1)]]
+
+
+def poly(pts):
+    return " L".join(f"{f(a)},{f(b)}" for a, b in pts)
+
+
+def cart(sc, x, base):
+    """A carrier's cart left by the hedge for the night: two big wheels, a roped cover, shafts resting on the ground."""
+    tim, wet = "#2b1f15", P["roof_wet"]
+    sc.add(f'<path d="M{x - 30},{base - 2} L{x + 4},{base - 20}" stroke="{tim}" stroke-width="3" stroke-linecap="round"/>'  # shafts
+           f'<path d="M{x - 26},{base + 1} L{x + 6},{base - 16}" stroke="#20170f" stroke-width="2.4" stroke-linecap="round"/>'
+           f'<rect x="{x}" y="{base - 30}" width="74" height="12" fill="#3e2c1d"/>'
+           f'<path d="M{x},{base - 24} h74" stroke="{tim}" stroke-width="1.2"/>'
+           f'<path d="M{x + 2},{base - 30} C{x + 6},{base - 52} {x + 66},{base - 54} {x + 72},{base - 30}Z" fill="#4a4136"/>'  # the cover
+           f'<path d="M{x + 8},{base - 42} C{x + 26},{base - 50} {x + 50},{base - 50} {x + 64},{base - 43}" fill="none" stroke="{wet}" stroke-width="1.2" opacity=".8"/>'
+           f'<path d="M{x + 20},{base - 30} L{x + 22},{base - 48} M{x + 40},{base - 30} V{base - 50} M{x + 58},{base - 30} L{x + 56},{base - 47}" stroke="#2a241d" stroke-width="1"/>')
+    for wx in (x + 18, x + 58):
+        spokes = "".join(f"M{wx},{base - 13}l{f(12 * math.cos(k * math.pi / 4))},{f(12 * math.sin(k * math.pi / 4))}" for k in range(8))
+        sc.add(f'<circle cx="{wx}" cy="{base - 13}" r="13" fill="none" stroke="{tim}" stroke-width="3"/>'
+               f'<path d="{spokes}" stroke="{tim}" stroke-width="1.4"/><circle cx="{wx}" cy="{base - 13}" r="2.4" fill="#4a3624"/>'
+               f'<path d="M{wx - 12},{base - 18} A13,13 0 0 1 {wx - 4},{base - 25}" fill="none" stroke="{P["lamp"]}" stroke-width="1" opacity=".55"/>')
 
 
 def build(seed=29):
     sc = Scene(seed)
     glow_def(sc)
-    sc.sky(sc.lin("sky", P["sky"]))
-    # a last smear of evening light low in the west, under the cloud
-    sc.add(f'<ellipse cx="220" cy="210" rx="420" ry="70" fill="{sc.rad("west", [(0, "#7a5a3c", .45), (.5, "#5a4230", .2), (1, "#5a4230", 0)])}"/>')
-    # the cloud ceiling: low, heavy, ragged, faintly lit from beneath by the village
-    ceiling(sc, 112, 14, sc.lin("deck3", [(0, P["cloud_low"], .7), (.75, P["cloud_low"], .45), (1, P["cloud_low"], 0)]), 1.3)
-    ceiling(sc, 84, 16, sc.lin("deck2", [(0, P["cloud_shade"]), (.8, P["cloud"]), (1, "#3a2e27")]), 2.9)
-    ceiling(sc, 46, 14, sc.lin("deck1", [(0, "#0e0c0c"), (1, P["cloud_shade"])]), 4.4)
-    for cx, cy, s in [(300, 98, 34), (690, 72, 30), (1020, 104, 36), (1380, 86, 30)]:  # torn scud below the deck
-        sc.add(f'<ellipse cx="{cx}" cy="{cy}" rx="{s * 2.6}" ry="{s * .28}" fill="{P["cloud_low"]}" opacity=".5"/>'
-               f'<ellipse cx="{cx + s}" cy="{cy - 5}" rx="{s * 1.4}" ry="{s * .22}" fill="{P["cloud_low"]}" opacity=".45"/>')
-    # rain curtains trailing from the cloud
-    for cx, wdt in [(120, 160), (430, 110), (1180, 140), (1450, 190)]:
-        sc.add(f'<path d="M{cx},70 L{cx + wdt},70 L{cx + wdt - 70},250 L{cx - 70},250Z" fill="{sc.lin(f"cur{cx}", [(0, P["rain"], 0), (.4, P["rain"], .08), (1, P["rain"], 0)])}"/>')
+    with sc.layer("sky", 0):
+        sc.sky(sc.lin("sky", P["sky"]))
+        # a last smear of evening light low in the west, under the cloud
+        sc.add(f'<ellipse cx="220" cy="210" rx="420" ry="70" fill="{sc.rad("west", [(0, "#7a5a3c", .45), (.5, "#5a4230", .2), (1, "#5a4230", 0)])}"/>')
+        # the cloud ceiling: low, heavy, ragged, faintly lit from beneath by the village
+        ceiling(sc, 112, 14, sc.lin("deck3", [(0, P["cloud_low"], .7), (.75, P["cloud_low"], .45), (1, P["cloud_low"], 0)]), 1.3)
+        ceiling(sc, 84, 16, sc.lin("deck2", [(0, P["cloud_shade"]), (.8, P["cloud"]), (1, "#3a2e27")]), 2.9)
+        ceiling(sc, 46, 14, sc.lin("deck1", [(0, "#0e0c0c"), (1, P["cloud_shade"])]), 4.4)
+        for cx, cy, s in [(300, 98, 34), (690, 72, 30), (1020, 104, 36), (1380, 86, 30)]:  # torn scud below the deck
+            with sc.fx("cloud"):
+                sc.add(f'<ellipse cx="{cx}" cy="{cy}" rx="{s * 2.6}" ry="{s * .28}" fill="{P["cloud_low"]}" opacity=".5"/>'
+                       f'<ellipse cx="{cx + s}" cy="{cy - 5}" rx="{s * 1.4}" ry="{s * .22}" fill="{P["cloud_low"]}" opacity=".45"/>')
+        # rain curtains trailing from the cloud
+        for cx, wdt in [(120, 160), (430, 110), (1180, 140), (1450, 190)]:
+            sc.add(f'<path d="M{cx},70 L{cx + wdt},70 L{cx + wdt - 70},250 L{cx - 70},250Z" fill="{sc.lin(f"cur{cx}", [(0, P["rain"], 0), (.4, P["rain"], .08), (1, P["rain"], 0)])}"/>')
 
-    # far country: the Barrow-downs and the Road west, lost in rain
-    sc.ridge(214, 10, [(1.1, 1), (2.7, .5), (6.1, .2)], P["far1"], seed=0.7)
-    sc.add(f'<rect y="180" width="{W}" height="80" fill="{sc.lin("haze1", [(0, P["haze"], 0), (1, P["haze"], .5)])}"/>')
+    with sc.layer("far", .15):
+        # far country: the Barrow-downs and the Road west, lost in rain
+        sc.ridge(214, 10, [(1.1, 1), (2.7, .5), (6.1, .2)], P["far1"], seed=0.7)
+        sc.add(f'<rect x="-30" y="180" width="{W + 60}" height="80" fill="{sc.lin("haze1", [(0, P["haze"], 0), (1, P["haze"], .5)])}"/>')
+        # the Chetwood, dark on the rising ground east of the village
+        wood = sc.ridge(196, 12, [(1.4, 1), (3.3, .4)], P["wood_far"], seed=3.1, x0=880, x1=W + 40, taper=140)
+        for x in range(900, W + 30, 9):
+            y = sc.y_at(wood, x) + 4
+            if sc.r(0, 1) < .55:
+                sc.conifer(x + sc.r(-4, 4), y + 6, sc.r(9, 17), P["wood_far"], P["wood_shade"])
+            else:
+                rr = sc.r(9, 16)
+                sc.add(f'<circle cx="{f(x)}" cy="{f(y - rr * .6)}" r="{f(rr)}" fill="{P["wood_far"]}"/>')
+        for x in range(1120, W + 30, 16):  # a nearer rank of tall trees at the wood's edge
+            y = sc.y_at(wood, x) + 40
+            if sc.r(0, 1) < .6:
+                sc.conifer(x, y, sc.r(16, 26), P["wood"], P["wood_shade"])
+            else:
+                dark_tree(sc, x, y, sc.r(24, 34), P["wood"])
+        sc.add(f'<rect x="860" y="150" width="{W - 830}" height="110" fill="{sc.lin("haze2", [(0, P["haze"], 0), (1, P["haze"], .22)])}"/>')
 
-    # the Chetwood, dark on the rising ground east of the village
-    wood = sc.ridge(196, 12, [(1.4, 1), (3.3, .4)], P["wood_far"], seed=3.1, x0=880, x1=W + 40, taper=140)
-    for x in range(900, W + 30, 9):
-        y = sc.y_at(wood, x) + 4
-        if sc.r(0, 1) < .55:
-            sc.conifer(x + sc.r(-4, 4), y + 6, sc.r(9, 17), P["wood_far"], P["wood_shade"])
-        else:
-            rr = sc.r(9, 16)
-            sc.add(f'<circle cx="{f(x)}" cy="{f(y - rr * .6)}" r="{f(rr)}" fill="{P["wood_far"]}"/>')
-    for x in range(1120, W + 30, 16):  # a nearer rank of tall trees at the wood's edge
-        y = sc.y_at(wood, x) + 40
-        if sc.r(0, 1) < .6:
-            sc.conifer(x, y, sc.r(16, 26), P["wood"], P["wood_shade"])
-        else:
-            dark_tree(sc, x, y, sc.r(24, 34), P["wood"])
-    sc.add(f'<rect x="860" y="150" width="{W}" height="110" fill="{sc.lin("haze2", [(0, P["haze"], 0), (1, P["haze"], .22)])}"/>')
+    with sc.layer("hill", .35):
+        # Bree-hill, the village climbing its western side
+        # the outlying fields first, west of the hill, with a farm or two and their trees
+        fields = sc.ridge(246, 5, [(1.6, 1), (3.9, .4)], "#2a2219", seed=1.9, x0=-20, x1=700)
+        for x in range(-10, 700, 30):  # hedgerows along the far fields
+            dark_tree(sc, x + sc.r(-6, 6), sc.y_at(fields, x) + 4, sc.r(8, 13), "#221d16")
+        hill = []
+        for x in range(-20, W + 21, 8):
+            t = (x - 700) / 560
+            hill.append((x, 268 - 166 * max(0, 1 - t * t) ** 1.35 + 5 * math.sin(x / 41) + 3 * math.sin(x / 17)))
+        d = "M" + poly(hill) + f" L{W + 20},{H} L-20,{H}Z"
+        sc.add(f'<path d="{d}" fill="{sc.lin("hillg", [(0, P["hill_shade"]), (.4, P["hill_light"]), (1, P["hill_shade"])], x2=1, y2=0)}"/>')
+        # an outlying farm on the lower slope west of the village, and its trees
+        house(sc, 200, sc.y_at(hill, 215) + 8, 34, 1, 15, 17, "side", lit=1, s=.62, door=False)
+        house(sc, 238, sc.y_at(hill, 245) + 9, 18, 1, 12, 13, "gable", lit=0, s=.55, door=False, chim=None)
+        for x, s in [(28, 32), (88, 24), (160, 36), (290, 28), (330, 22)]:
+            dark_tree(sc, x, sc.y_at(hill, x) + 10, s, "#1b1711")
+        # trees crowning the hill
+        for x in range(560, 860, 12):
+            y = sc.y_at(hill, x) + 8
+            dark_tree(sc, x + sc.r(-4, 4), y, sc.r(14, 21), "#1a1711")
+        # terraces, lanes and garden walls stepping up the slope
+        for a0, a1, dy in [(420, 640, 46), (760, 1010, 42), (470, 700, 82), (740, 1060, 86), (360, 560, 120)]:
+            pts = [(x, sc.y_at(hill, x) + dy) for x in range(a0, a1, 6)]
+            sc.add(f'<path d="M{poly(pts)}" fill="none" stroke="{P["hill_shade"]}" stroke-width="3"/>')
+            sc.add(f'<path d="M{poly([(a, b - 2) for a, b in pts])}" fill="none" stroke="#4a3d2c" stroke-width=".8" opacity=".6"/>')
+        # hobbit-holes high on the hill, round windows lit
+        with sc.hot("bree-holes", "Hobbit-holes", "Bree's hobbits dig their homes into the upper slope, above the houses of the Big Folk.", "pulse"):
+            for x, dy, s, fl in [(606, 24, 1, 1), (652, 28, .9, -1), (870, 28, .95, 1), (912, 36, .9, -1)]:
+                hobbit_hole(sc, x, sc.y_at(hill, x) + dy, s, fl)
 
-    # Bree-hill, the village climbing its western side
-    # the outlying fields first, west of the hill, with a farm or two and their trees
-    fields = sc.ridge(246, 5, [(1.6, 1), (3.9, .4)], "#2a2219", seed=1.9, x0=-20, x1=700)
-    for x in range(-10, 700, 30):  # hedgerows along the far fields
-        dark_tree(sc, x + sc.r(-6, 6), sc.y_at(fields, x) + 4, sc.r(8, 13), "#221d16")
-    hill = []
-    for x in range(-20, W + 21, 8):
-        t = (x - 700) / 560
-        hill.append((x, 268 - 166 * max(0, 1 - t * t) ** 1.35 + 5 * math.sin(x / 41) + 3 * math.sin(x / 17)))
-    d = "M" + " L".join(f"{f(a)},{f(b)}" for a, b in hill) + f" L{W + 20},{H} L-20,{H}Z"
-    sc.add(f'<path d="{d}" fill="{sc.lin("hillg", [(0, P["hill_shade"]), (.4, P["hill_light"]), (1, P["hill_shade"])], x2=1, y2=0)}"/>')
-    # an outlying farm on the lower slope west of the village, and its trees
-    house(sc, 200, sc.y_at(hill, 215) + 8, 34, 1, 15, 17, "side", lit=1, s=.62, door=False)
-    house(sc, 238, sc.y_at(hill, 245) + 9, 18, 1, 12, 13, "gable", lit=0, s=.55, door=False, chim=None)
-    for x, s in [(28, 32), (88, 24), (160, 36), (290, 28), (330, 22)]:
-        dark_tree(sc, x, sc.y_at(hill, x) + 10, s, "#1b1711")
-    # trees crowning the hill
-    for x in range(560, 860, 12):
-        y = sc.y_at(hill, x) + 8
-        dark_tree(sc, x + sc.r(-4, 4), y, sc.r(14, 21), "#1a1711")
-    # terraces, lanes and garden walls stepping up the slope
-    for a0, a1, dy in [(420, 640, 46), (760, 1010, 42), (470, 700, 82), (740, 1060, 86), (360, 560, 120)]:
-        pts = [(x, sc.y_at(hill, x) + dy) for x in range(a0, a1, 6)]
-        sc.add('<path d="M' + " L".join(f"{f(a)},{f(b)}" for a, b in pts) + f'" fill="none" stroke="{P["hill_shade"]}" stroke-width="3"/>')
-        sc.add('<path d="M' + " L".join(f"{f(a)},{f(b - 2)}" for a, b in pts) + f'" fill="none" stroke="#4a3d2c" stroke-width=".8" opacity=".6"/>')
-    # hobbit-holes high on the hill, round windows lit
-    for x, dy, s, fl in [(606, 24, 1, 1), (652, 28, .9, -1), (870, 28, .95, 1), (912, 36, .9, -1)]:
-        hobbit_hole(sc, x, sc.y_at(hill, x) + dy, s, fl)
+        # upper village: small houses on the slope, far off
+        upper = [(452, 236, 26, 1, 15, "gable"), (498, 221, 30, 2, 12, "side"), (548, 200, 24, 2, 11, "gable"),
+                 (590, 186, 28, 1, 13, "side"), (700, 166, 24, 2, 11, "gable"), (742, 178, 30, 1, 13, "side"),
+                 (812, 176, 26, 2, 11, "gable"), (930, 196, 30, 2, 12, "side"), (978, 212, 24, 1, 14, "gable"),
+                 (1020, 226, 30, 2, 12, "side"), (1080, 238, 26, 2, 12, "gable"), (642, 202, 26, 1, 13, "gable"),
+                 (868, 194, 28, 1, 13, "side")]
+        for k, (x, b, w, st, sh, kind) in enumerate(upper):
+            house(sc, x, b, w, st, sh, sh * 1.25, kind, lit=.55, s=.55, door=False, braces=True, smoke=k % 2 == 0)
+        sc.add(f'<rect x="-30" y="150" width="{W + 60}" height="120" fill="{sc.lin("haze3", [(0, P["haze"], 0), (1, P["haze"], .16)])}"/>')
 
-    # upper village: small houses on the slope, far off
-    upper = [(452, 236, 26, 1, 15, "gable"), (498, 221, 30, 2, 12, "side"), (548, 200, 24, 2, 11, "gable"),
-             (590, 186, 28, 1, 13, "side"), (700, 166, 24, 2, 11, "gable"), (742, 178, 30, 1, 13, "side"),
-             (812, 176, 26, 2, 11, "gable"), (930, 196, 30, 2, 12, "side"), (978, 212, 24, 1, 14, "gable"),
-             (1020, 226, 30, 2, 12, "side"), (1080, 238, 26, 2, 12, "gable"), (642, 202, 26, 1, 13, "gable"),
-             (868, 194, 28, 1, 13, "side")]
-    for k, (x, b, w, st, sh, kind) in enumerate(upper):
-        house(sc, x, b, w, st, sh, sh * 1.25, kind, lit=.55, s=.55, door=False, braces=True, smoke=k % 2 == 0)
-    sc.add(f'<rect y="150" width="{W}" height="120" fill="{sc.lin("haze3", [(0, P["haze"], 0), (1, P["haze"], .16)])}"/>')
-    # middle village
-    mid = [(470, 268, 44, 2, 17, "side"), (520, 258, 34, 2, 17, "gable"), (580, 244, 42, 2, 16, "side"),
-           (636, 236, 32, 2, 16, "gable"), (962, 246, 40, 2, 16, "gable"), (1012, 254, 46, 2, 16, "side"),
-           (1066, 262, 36, 2, 17, "gable"), (1118, 250, 44, 2, 15, "side"), (1176, 258, 34, 1, 18, "gable")]
-    for x, b, w, st, sh, kind in mid:
-        house(sc, x, b, w, st, sh, sh * 1.3, kind, lit=.6, s=.75, door=False)
-    # lower village, along the Road
-    lower = [(560, 292, 50, 2, 22, "gable"), (618, 290, 48, 2, 20, "side"), (920, 294, 52, 2, 22, "side"),
-             (980, 294, 40, 2, 21, "gable"), (1030, 296, 56, 2, 21, "side")]
-    for x, b, w, st, sh, kind in lower:
-        house(sc, x, b, w, st, sh, sh * 1.25, kind, lit=.65, s=1.0, jetty=2)
+    with sc.layer("village", .6):
+        # middle village
+        mid = [(470, 268, 44, 2, 17, "side"), (520, 258, 34, 2, 17, "gable"), (580, 244, 42, 2, 16, "side"),
+               (636, 236, 32, 2, 16, "gable"), (962, 246, 40, 2, 16, "gable"), (1012, 254, 46, 2, 16, "side"),
+               (1066, 262, 36, 2, 17, "gable"), (1118, 250, 44, 2, 15, "side"), (1176, 258, 34, 1, 18, "gable")]
+        for x, b, w, st, sh, kind in mid:
+            house(sc, x, b, w, st, sh, sh * 1.3, kind, lit=.6, s=.75, door=False)
+        # lower village, along the Road
+        lower = [(560, 292, 50, 2, 22, "gable"), (618, 290, 48, 2, 20, "side")]
+        for x, b, w, st, sh, kind in lower:
+            house(sc, x, b, w, st, sh, sh * 1.25, kind, lit=.65, s=1.0, jetty=2)
+        with sc.hot("bree-houses", "Houses on the Road", "Tall timber houses face the Road; more windows glow as their folk come in out of the rain.", "light"):
+            for x, b, w, st, sh, kind in [(920, 294, 52, 2, 22, "side"), (980, 294, 40, 2, 21, "gable"), (1030, 296, 56, 2, 21, "side")]:
+                house(sc, x, b, w, st, sh, sh * 1.25, kind, lit=.65, s=1.0, jetty=2, lightable=True)
 
-    # the Prancing Pony: three storeys, jettied, with a wing and the stable-yard arch
-    ix, ib = 690, 298
-    # the wing running back on the right, with the arch into the yard
-    wx0, ww = 868, 70
-    sc.add(f'<rect x="{wx0}" y="{ib - 64}" width="{ww}" height="64" fill="{P["wall"][2]}"/>')
-    for k in range(6):
-        sc.add(f'<path d="M{wx0 + k * 14},{ib - 64} V{ib}" stroke="{P["timber"]}" stroke-width="1.7"/>')
-    sc.add(f'<path d="M{wx0},{ib - 32} H{wx0 + ww}" stroke="{P["timber"]}" stroke-width="2.4"/>')
-    sc.add(f'<path d="M{wx0 - 4},{ib - 63} L{wx0 + 8},{ib - 92} L{wx0 + ww - 6},{ib - 92} L{wx0 + ww + 5},{ib - 63}Z" fill="{P["roof"][1]}"/>'
-           f'<path d="M{wx0 + 8},{ib - 92} H{wx0 + ww - 6}" stroke="{P["roof_wet"]}" stroke-width="1.1"/>')
-    for k in range(4):
-        window(sc, wx0 + 8 + k * 16, ib - 56, 6, 8, k != 2, P["timber"])
-        if k != 2:
-            glow(sc, wx0 + 11 + k * 16, ib - 52, 20)
-    ax, aw, ah = wx0 + 35, 30, 30  # the arch
-    arch = f"M{ax - aw / 2},{ib} V{ib - ah + aw / 2} A{aw / 2},{aw / 2} 0 0 1 {ax + aw / 2},{ib - ah + aw / 2} V{ib}Z"
-    sc.add(f'<path d="{arch}" fill="{sc.lin("yard", [(0, "#f2b866"), (.6, "#c47e3c"), (1, "#6a4224")])}"/>')
-    sc.add(f'<path d="M{ax - aw / 2 + 3},{ib - 6} h{aw - 6}" stroke="#7a5030" stroke-width="2"/>'
-           f'<rect x="{ax + 3}" y="{ib - 18}" width="8" height="12" fill="#5a3a22"/><rect x="{ax - 10}" y="{ib - 14}" width="6" height="8" fill="#5a3a22"/>')  # cart and barrel in the yard
-    sc.add(f'<path d="{arch}" fill="none" stroke="{P["stone"]}" stroke-width="3.2"/>')
-    lantern(sc, ax, ib - ah + 8, .7)
-    # the main house
-    xt, wt, ytop = house(sc, ix, ib, 178, 3, 34, 50, "side", lit=.85, jetty=3, s=1.15, chim=None, door=False, wall="#635242", roofc="#3b3029", stone_ground=True)
-    for cx in (ix + 28, ix + 152):  # tall chimneys
-        sc.add(f'<rect x="{cx - 4}" y="{ytop - 62}" width="9" height="20" fill="{P["stone_shade"]}"/><rect x="{cx - 5}" y="{ytop - 64}" width="11" height="3" fill="{P["stone"]}"/>')
-        sc.smoke(cx, ytop - 70, 8, P["smoke"], .32, -1.5)
-    for dxp in (40, 89, 138):  # dormers
-        dx = ix + dxp
-        sc.add(f'<rect x="{dx - 9}" y="{ytop - 30}" width="18" height="16" fill="#635242"/>'
-               f'<path d="M{dx - 12},{ytop - 29} L{dx},{ytop - 42} L{dx + 12},{ytop - 29}Z" fill="#3b3029"/>'
-               f'<path d="M{dx - 12},{ytop - 29} L{dx},{ytop - 42} L{dx + 12},{ytop - 29}" fill="none" stroke="{P["roof_wet"]}" stroke-width=".9" opacity=".7"/>')
-        window(sc, dx - 4, ytop - 26, 8, 9, dxp != 138, P["timber"])
-        if dxp != 138:
-            glow(sc, dx, ytop - 21, 22)
-    # front door, steps and the lamp over it
-    dx = ix + 89
-    sc.add(f'<rect x="{dx - 9}" y="{ib - 24}" width="18" height="24" fill="#f0b765"/><rect x="{dx - 6}" y="{ib - 20}" width="8" height="20" fill="#3a2414" opacity=".75"/>'
-           f'<rect x="{dx - 11}" y="{ib - 26}" width="22" height="3" fill="{P["timber"]}"/>'
-           f'<rect x="{dx - 16}" y="{ib - 2}" width="32" height="3" fill="{P["stone"]}"/><rect x="{dx - 20}" y="{ib + 1}" width="40" height="3" fill="{P["stone_shade"]}"/>')
-    glow(sc, dx, ib - 12, 40)
-    lantern(sc, dx + 22, ib - 30, .8)
-    # the hanging sign on its bracket at the corner
-    sx, sy = ix - 3, ib - 46
-    sc.add(f'<path d="M{sx},{sy} H{sx - 36} M{sx},{sy + 12} L{sx - 16},{sy}" stroke="#1c140d" stroke-width="2.4" fill="none"/>'
-           f'<circle cx="{sx - 36}" cy="{sy}" r="1.6" fill="#1c140d"/>')
-    pony_sign(sc, sx - 40, sy + 7, 1.15)
-    glow(sc, sx - 25, sy + 18, 30, .55)
+        # the Prancing Pony: three storeys, jettied, with a wing and the stable-yard arch
+        ix, ib = 690, 298
+        with sc.hot("bree-pony", "The Prancing Pony", "The big inn at the crossroads, where news and travellers from every road end up by the fire.", "light"):
+            # the wing running back on the right, with the arch into the yard
+            wx0, ww = 868, 70
+            sc.add(f'<rect x="{wx0}" y="{ib - 64}" width="{ww}" height="64" fill="{P["wall"][2]}"/>')
+            sc.add(f'<path d="{"".join(f"M{wx0 + k * 14},{ib - 64}V{ib}" for k in range(6))}" stroke="{P["timber"]}" stroke-width="1.7"/>')
+            sc.add(f'<path d="M{wx0},{ib - 32} H{wx0 + ww}" stroke="{P["timber"]}" stroke-width="2.4"/>')
+            sc.add(f'<path d="M{wx0 - 4},{ib - 63} L{wx0 + 8},{ib - 92} L{wx0 + ww - 6},{ib - 92} L{wx0 + ww + 5},{ib - 63}Z" fill="{P["roof"][1]}"/>'
+                   f'<path d="M{wx0 + 8},{ib - 92} H{wx0 + ww - 6}" stroke="{P["roof_wet"]}" stroke-width="1.1"/>')
+            for k in range(4):
+                window(sc, wx0 + 8 + k * 16, ib - 56, 6, 8, k != 2, P["timber"], lightable=True)
+                if k != 2:
+                    glow(sc, wx0 + 11 + k * 16, ib - 52, 20)
+            ax, aw, ah = wx0 + 35, 30, 30  # the arch
+            arch = f"M{ax - aw / 2},{ib} V{ib - ah + aw / 2} A{aw / 2},{aw / 2} 0 0 1 {ax + aw / 2},{ib - ah + aw / 2} V{ib}Z"
+            sc.add(f'<path d="{arch}" fill="{sc.lin("yard", [(0, "#f2b866"), (.6, "#c47e3c"), (1, "#6a4224")])}"/>')
+            sc.add(f'<path d="M{ax - aw / 2 + 3},{ib - 6} h{aw - 6}" stroke="#7a5030" stroke-width="2"/>'
+                   f'<rect x="{ax + 3}" y="{ib - 18}" width="8" height="12" fill="#5a3a22"/><rect x="{ax - 10}" y="{ib - 14}" width="6" height="8" fill="#5a3a22"/>')  # cart and barrel in the yard
+            sc.add(f'<path d="{arch}" fill="none" stroke="{P["stone"]}" stroke-width="3.2"/>')
+            lantern(sc, ax, ib - ah + 8, .7)
+            # the main house
+            xt, wt, ytop = house(sc, ix, ib, 178, 3, 34, 50, "side", lit=.75, jetty=3, s=1.15, chim=None, door=False, wall="#635242",
+                                 roofc="#3b3029", stone_ground=True, lightable=True)
+            for cx in (ix + 28, ix + 152):  # tall chimneys
+                sc.add(f'<rect x="{cx - 4}" y="{ytop - 62}" width="9" height="20" fill="{P["stone_shade"]}"/><rect x="{cx - 5}" y="{ytop - 64}" width="11" height="3" fill="{P["stone"]}"/>')
+                puff(sc, cx, ytop - 70, 8, P["smoke"], .32, -1.5)
+            for dxp in (40, 89, 138):  # dormers
+                dx = ix + dxp
+                sc.add(f'<rect x="{dx - 9}" y="{ytop - 30}" width="18" height="16" fill="#635242"/>'
+                       f'<path d="M{dx - 12},{ytop - 29} L{dx},{ytop - 42} L{dx + 12},{ytop - 29}Z" fill="#3b3029"/>'
+                       f'<path d="M{dx - 12},{ytop - 29} L{dx},{ytop - 42} L{dx + 12},{ytop - 29}" fill="none" stroke="{P["roof_wet"]}" stroke-width=".9" opacity=".7"/>')
+                window(sc, dx - 4, ytop - 26, 8, 9, dxp != 138, P["timber"], lightable=True)
+                if dxp != 138:
+                    glow(sc, dx, ytop - 21, 22)
+            # front door, steps and the lamp over it
+            dx = ix + 89
+            sc.add(f'<rect x="{dx - 9}" y="{ib - 24}" width="18" height="24" fill="#f0b765"/><rect x="{dx - 6}" y="{ib - 20}" width="8" height="20" fill="#3a2414" opacity=".75"/>'
+                   f'<rect x="{dx - 11}" y="{ib - 26}" width="22" height="3" fill="{P["timber"]}"/>'
+                   f'<rect x="{dx - 16}" y="{ib - 2}" width="32" height="3" fill="{P["stone"]}"/><rect x="{dx - 20}" y="{ib + 1}" width="40" height="3" fill="{P["stone_shade"]}"/>')
+            with sc.fx("flicker"):
+                glow(sc, dx, ib - 12, 40)
+            lantern(sc, dx + 22, ib - 30, .8)
+            # the hanging sign on its bracket at the corner
+            sx, sy = ix - 3, ib - 46
+            sc.add(f'<path d="M{sx},{sy} H{sx - 36} M{sx},{sy + 12} L{sx - 16},{sy}" stroke="#1c140d" stroke-width="2.4" fill="none"/>'
+                   f'<circle cx="{sx - 36}" cy="{sy}" r="1.6" fill="#1c140d"/>')
+            pony_sign(sc, sx - 40, sy + 7, 1.15)
+            glow(sc, sx - 25, sy + 18, 30, .55)
 
-    # the gatekeeper's lodge just inside the West-gate
-    house(sc, 372, 290, 46, 1, 22, 22, "gable", lit=1, s=.9, chim=.3, door=False)
+        # the gatekeeper's lodge just inside the West-gate
+        house(sc, 372, 290, 46, 1, 22, 22, "gable", lit=1, s=.9, chim=.3, door=False)
 
-    # ground in front of the village, sloping down to the hedge
-    sc.ridge(296, 3, [(1.3, 1), (3.1, .4)], P["ground"], seed=9.1)
-    # the Road: in at the West-gate, along the front of the Pony and away east
-    road = "M300,410 C380,360 430,322 470,306 C520,296 600,300 700,300 C900,302 1200,300 1620,296 L1620,312 C1200,316 900,318 700,316 C600,316 540,318 500,328 C460,342 440,380 420,410Z"
-    sc.add(f'<path d="{road}" fill="{P["road"]}"/>')
-    sc.add(f'<path d="M470,306 C520,296 600,300 700,300 C900,302 1200,300 1620,296" fill="none" stroke="{P["road_edge"]}" stroke-width="2"/>')
-    # puddles, each holding a smear of lamplight
-    for px, py, rx, ry, refl in [(560, 307, 26, 3.2, 600), (780, 307, 34, 3.6, 779), (720, 306, 14, 2.4, None), (900, 307, 22, 3, 903),
-                                 (1000, 306, 28, 3, 1001), (468, 330, 22, 3.6, 468), (440, 356, 30, 4.4, 452), (1120, 305, 26, 2.8, None),
-                                 (660, 309, 18, 2.6, 660), (1300, 303, 30, 2.8, None)]:
-        sc.add(f'<ellipse cx="{px}" cy="{py}" rx="{rx}" ry="{ry}" fill="{P["puddle"]}"/>')
-        sc.add(f'<ellipse cx="{px - rx * .3}" cy="{py - ry * .3}" rx="{f(rx * .5)}" ry="{f(ry * .35)}" fill="#6a5a4a" opacity=".5"/>')
-        if refl:
-            sc.add(f'<ellipse cx="{refl}" cy="{py}" rx="{f(min(rx * .35, 7))}" ry="{f(ry * .8)}" fill="{P["lamp"]}" opacity=".75"/>'
-                   f'<ellipse cx="{refl}" cy="{py}" rx="{f(min(rx * .8, 16))}" ry="{f(ry * 1.4)}" fill="url(#glow)"/>')
-        for k in range(2):  # rain rings
-            rx2 = sc.r(2, 4)
-            sc.add(f'<ellipse cx="{f(px + sc.r(-rx * .6, rx * .6))}" cy="{f(py + sc.r(-.5, .5))}" rx="{f(rx2)}" ry="{f(rx2 * .3)}" fill="none" stroke="#8a7a66" stroke-width=".6" opacity=".7"/>')
-    # wet shine where lamplight lies along the road
-    for x in [600, 780, 903, 1001, 1060, 422]:
-        sc.add(f'<path d="M{x - 1},{299 if x > 470 else 300} v12" stroke="{P["lamp"]}" stroke-width="2" opacity=".25"/>')
+        # ground in front of the village, sloping down to the hedge
+        sc.ridge(296, 3, [(1.3, 1), (3.1, .4)], P["ground"], seed=9.1)
+        # the Road through the village, in at the West-gate
+        road = "M300,410 C380,360 430,322 470,306 C520,296 600,300 700,300 C900,302 1200,300 1620,296 L1620,312 C1200,316 900,318 700,316 C600,316 540,318 500,328 C460,342 440,380 420,410Z"
+        sc.add(f'<path d="{road}" fill="{P["road"]}"/>')
+        sc.add(f'<path d="M470,306 C520,296 600,300 700,300 C900,302 1200,300 1620,296" fill="none" stroke="{P["road_edge"]}" stroke-width="2"/>')
+        # puddles, each holding a smear of lamplight
+        for px, py, rx, ry, refl in [(560, 307, 26, 3.2, 600), (780, 307, 34, 3.6, 779), (720, 306, 14, 2.4, None), (900, 307, 22, 3, 903),
+                                     (1000, 306, 28, 3, 1001), (468, 330, 22, 3.6, 468), (1120, 305, 26, 2.8, None),
+                                     (660, 309, 18, 2.6, 660), (1300, 303, 30, 2.8, None)]:
+            puddle(sc, px, py, rx, ry, refl)
+        # wet shine where lamplight lies along the road
+        sc.add("".join(f'<path d="M{x - 1},{299 if x > 470 else 300} v12" stroke="{P["lamp"]}" stroke-width="2" opacity=".25"/>' for x in [600, 780, 903, 1001, 1060]))
 
-    # the village hedge, with its dike, and the West-gate across the Road
-    hl = [(x, 298 - 0.02 * (420 - x) + 2 * math.sin(x / 23)) for x in range(-20, 432, 9)]
-    sc.add('<path d="M-20,312 ' + " ".join(f"L{f(a)},{f(b + 10)}" for a, b in hl) + f' L432,330 L-20,330Z" fill="{P["hedge_shade"]}"/>')
-    sc.hedge(hl, 7, P["hedge"], P["hedge_shade"])
-    hr = [(x, 322 + (x - 510) * .018 + 2 * math.sin(x / 19)) for x in range(512, W + 25, 12)]
-    sc.hedge(hr, 9, P["hedge"], P["hedge_shade"])
-    # hedge-sprigs catching the light
-    sc.add("".join(f'<circle cx="{f(x)}" cy="{f(y - 5)}" r="1.4" fill="#3a3422" opacity=".8"/>' for x, y in hl[::3] + hr[::5]))
-    # gateposts and the gate swung open
-    for gx, top in [(430, 246), (510, 250)]:
-        sc.add(f'<rect x="{gx - 5}" y="{top}" width="11" height="{334 - top}" fill="#2e2116"/><rect x="{gx - 7}" y="{top - 4}" width="15" height="5" fill="#3e2f21"/>'
-               f'<path d="M{gx - 6},{top - 4} L{gx + .5},{top - 9} L{gx + 7},{top - 4}Z" fill="#3e2f21"/>'
-               f'<path d="M{gx + 4},{top + 2} V332" stroke="#6a5642" stroke-width="1.1" opacity=".7"/>')
-    # the gate itself, of bars, swung back against the hedge on the right
-    g = []
-    for k in range(5):
-        g.append(f'M{515 + k * 9},{288 + k * .6} V{328 + k * .3}')
-    g.append("M514,292 L556,294 M514,310 L556,311 M514,326 L556,326 M514,326 L556,294")
-    sc.add(f'<path d="{" ".join(g)}" stroke="#2e2116" stroke-width="2.4" fill="none"/>')
-    sc.add(f'<path d="M435,262 H456 M435,272 L447,262" stroke="#1c140d" stroke-width="2.2" fill="none"/><path d="M455,262 v4" stroke="#1c140d" stroke-width="1"/>')
-    lantern(sc, 455, 275, 1.05)
+        # the village hedge, with the West-gate across the Road
+        hl = [(x, 298 - 0.02 * (420 - x) + 2 * math.sin(x / 23)) for x in range(-30, 432, 9)]
+        sc.add('<path d="M-30,312 ' + " ".join(f"L{f(a)},{f(b + 10)}" for a, b in hl) + f' L432,334 L-30,334Z" fill="{P["hedge_shade"]}"/>')
+        hedge(sc, hl, 7, P["hedge"], P["hedge_shade"])
+        hr = [(x, 322 + (x - 510) * .018 + 2 * math.sin(x / 19)) for x in range(512, W + 35, 12)]
+        hedge(sc, hr, 9, P["hedge"], P["hedge_shade"])
+        # hedge-sprigs catching the light
+        sc.add('<g fill="#3a3422" opacity=".8">' + "".join(f'<circle cx="{x:.0f}" cy="{y - 5:.0f}" r="1.4"/>' for x, y in hl[::3] + hr[::5]) + "</g>")
+        # the dike outside the hedge, brimming with rain and lamplight
+        dk = [(x, dike_y(x)) for x in range(-30, W + 41, 20)]
+        dike_fill = sc.lin("dike", [(0, "#2a231c"), (1, "#3b3127")])
+        for seg in ([p for p in dk if p[0] <= 400], [p for p in dk if p[0] >= 480]):
+            sc.add(f'<path d="M{poly([(a, b - 8) for a, b in seg])} L{poly([(a, b + 5) for a, b in seg[::-1]])}Z" fill="#120e0a"/>'
+                   f'<path d="M{poly([(a, b - 4) for a, b in seg])} L{poly([(a, b + 5) for a, b in seg[::-1]])}Z" fill="{dike_fill}"/>'
+                   f'<path d="M{poly([(a, b - 4) for a, b in seg])}" fill="none" stroke="#4a3f33" stroke-width=".8" opacity=".7"/>')
+        with sc.fx("water"):
+            refl = "".join(f"M{x - 6},{dike_y(x) - 1:.0f}h12M{x - 3},{dike_y(x) + 2:.0f}h7" for x in [180, 236, 560, 600, 660, 920, 1000, 1060, 1120])
+            sc.add(f'<path d="{refl}" stroke="{P["lamp"]}" stroke-width="1.4" stroke-linecap="round" opacity=".55"/>')
+        # gateposts
+        with sc.hot("bree-westgate", "The West-gate", "The gate in Bree's hedge where the Road comes in; it is shut at nightfall.", "swing"):
+            for gx, top in [(430, 246), (510, 250)]:
+                sc.add(f'<rect x="{gx - 5}" y="{top}" width="11" height="{338 - top}" fill="#2e2116"/><rect x="{gx - 7}" y="{top - 4}" width="15" height="5" fill="#3e2f21"/>'
+                       f'<path d="M{gx - 6},{top - 4} L{gx + .5},{top - 9} L{gx + 7},{top - 4}Z" fill="#3e2f21"/>'
+                       f'<path d="M{gx + 4},{top + 2} V336" stroke="#6a5642" stroke-width="1.1" opacity=".7"/>')
+            # the gate, shut for the night: hung on the right post, it folds back towards it when opened
+            sc.add('<g class="swing" data-origin="504 312">')
+            bars = "".join(f"M{438 + k * 11},{290} V{332}" for k in range(7))
+            sc.add(f'<path d="{bars}M436,292 H505 M436,311 H505 M436,330 H505 M438,330 L503,293" stroke="#3a2a1c" stroke-width="2.6" fill="none"/>'
+                   f'<path d="M436,290.6 H505 M436,309.6 H505" stroke="#7a5c40" stroke-width=".9" opacity=".8"/>'
+                   f'<path d="{"".join(f"M{437 + k * 11},291 V331" for k in range(4))}" stroke="#6a5040" stroke-width=".7" opacity=".7"/>')
+            sc.add("</g>")
+            sc.add(f'<path d="M435,262 H456 M435,272 L447,262" stroke="#1c140d" stroke-width="2.2" fill="none"/><path d="M455,262 v4" stroke="#1c140d" stroke-width="1"/>')
+            lantern(sc, 455, 275, 1.05)
+            with sc.fx("flicker"):
+                lit_rain(sc, 18, 455, 275, 42)
 
-    # foreground: wet grass falling away into the dark
-    sc.ridge(352, 5, [(2.0, 1), (4.7, .4)], "#1e1710", seed=4.4)
-    sc.tufts(340, 400, 90, ["#2a2216", "#251d13", "#30271a"], 6, 16)
+    with sc.layer("front", 1):
+        # the near bank of the dike, wet grass falling away into the dark
+        bank = [(x, dike_y(x) + 4 + 1.5 * math.sin(x / 37) + sc.r(-.6, .6)) for x in range(-40, W + 41, 10)]
+        sc.add(f'<path d="M{poly(bank)} L{W + 40},{H + 10} L-40,{H + 10}Z" fill="{sc.lin("bank", [(0, "#2a2116"), (.35, "#1e1710"), (1, "#140f0a")])}"/>'
+               f'<path d="M{poly(bank)}" fill="none" stroke="#3a3020" stroke-width="1.2" opacity=".8"/>')
+        # the Road crossing the dike and running down towards us
+        lft = bez((300, 410), (380, 360), (430, 322), (470, 306))
+        rgt = bez((500, 328), (460, 342), (440, 380), (420, 410))
+        lft = [p for p in lft if p[1] >= 334] + [(396, 334)]
+        rgt = [(474, 334)] + [p for p in rgt if p[1] >= 334]
+        sc.add(f'<path d="M{poly(lft[::-1])} L{poly(rgt)} L420,{H + 10} L300,{H + 10}Z" fill="{P["road"]}"/>')
+        # ruts and puddles in the road, one catching the gate lantern
+        sc.add('<path d="M440,340 C420,360 395,382 372,404 M458,342 C445,362 430,384 414,404" stroke="#2a2017" stroke-width="3.5" fill="none" opacity=".6"/>')
+        puddle(sc, 440, 350, 20, 3.4, 452)
+        puddle(sc, 398, 384, 34, 5, 410)
+        # a lamp post outside the gate, its light lying across the dike
+        lx, ly = 548, 318
+        with sc.fx("flicker"):
+            glow(sc, lx, ly + 34, 60, .55)
+        sc.add(f'<rect x="{lx - 2.5}" y="{ly + 4}" width="5" height="{392 - ly - 4}" fill="#1a130c"/><rect x="{lx - 5}" y="388" width="10" height="5" fill="#1a130c"/>'
+               f'<path d="M{lx - 1.6},{ly + 8} V388" stroke="#5a4634" stroke-width=".8" opacity=".8"/>')
+        lantern(sc, lx, ly, 1.2)
+        with sc.fx("flicker"):
+            lit_rain(sc, 22, lx, ly, 46)
+        puddle(sc, 560, 396, 30, 4.2, lx)
+        # a carrier's cart left by the hedge for the night
+        with sc.hot("bree-cart", "A Carrier's Cart", "Unhitched by the hedge for the night, its load roped down under a sodden cover.", "pulse"):
+            cart(sc, 636, 384)
+        # reeds and tufts along the bank
+        reeds = "".join(f"M{x:.0f},{dike_y(x) + 6:.0f}q{sc.r(-2, 2):.0f},-{sc.r(8, 14):.0f} {sc.r(-4, 4):.0f},-{sc.r(14, 22):.0f}" for x in
+                        [sc.r(-20, W + 20) for _ in range(70)] if not 380 < x < 490)
+        sc.add(f'<path d="{reeds}" stroke="#2c2618" stroke-width="1.3" fill="none" stroke-linecap="round"/>')
+        sc.tufts(352, 400, 90, ["#2a2216", "#251d13", "#30271a"], 6, 16)
 
-    # the rain, in two depths, with streaks lit where it falls past the lamps
-    rain(sc, 760, -20, 360, 16, .16, .7)
-    rain(sc, 260, -20, 400, 30, .2, 1)
-    for lx, ly, rr in [(455, 275, 42), (ax, ib - ah + 8, 26), (dx + 22, ib - 30, 34), (dx, ib - 12, 30)]:
-        rain(sc, 18, ly - rr, ly + rr, 12, .55, .8, col=P["lamp_core"], x0=lx - rr * .8, x1=lx + rr * .8)
+        # the rain, in two depths, looping seamlessly in the viewer
+        # puddles out on the bank, and an old milestone by the Road east
+        puddle(sc, 905, 372, 26, 3.4, 920)
+        puddle(sc, 1290, 380, 34, 4, None)
+        sc.add('<path d="M1196,384 V362 Q1196,352 1205,352 Q1214,352 1214,362 V384Z" fill="#3a332b"/>'
+               '<path d="M1198,382 V362 Q1198,355 1203,354" fill="none" stroke="#5c5144" stroke-width="1.2"/>'
+               '<path d="M1201,366 h8 M1201,371 h6" stroke="#262019" stroke-width="1.2"/>')
+        rain(sc, 240, 16, .17, .7)
+        rain(sc, 90, 30, .2, 1)
     return sc
+
+
+def dike_y(x):
+    """The waterline of the dike outside the hedge."""
+    return 342 + max(0, x - 480) * .016 + 1.2 * math.sin(x / 53)
+
+
+def puddle(sc, px, py, rx, ry, refl):
+    sc.add(f'<ellipse cx="{px}" cy="{py}" rx="{rx}" ry="{ry}" fill="{P["puddle"]}"/>'
+           f'<ellipse cx="{f(px - rx * .3)}" cy="{f(py - ry * .3)}" rx="{f(rx * .5)}" ry="{f(ry * .35)}" fill="#6a5a4a" opacity=".5"/>')
+    if refl:
+        sc.add(f'<ellipse cx="{refl}" cy="{py}" rx="{f(min(rx * .35, 7))}" ry="{f(ry * .8)}" fill="{P["lamp"]}" opacity=".75"/>'
+               f'<ellipse cx="{refl}" cy="{py}" rx="{f(min(rx * .8, 16))}" ry="{f(ry * 1.4)}" fill="url(#glow)"/>')
+    for k in range(2):  # rain rings
+        rx2 = sc.r(2, 4)
+        sc.add(f'<ellipse cx="{f(px + sc.r(-rx * .6, rx * .6))}" cy="{f(py + sc.r(-.5, .5))}" rx="{f(rx2)}" ry="{f(rx2 * .3)}" fill="none" stroke="#8a7a66" stroke-width=".6" opacity=".7"/>')
 
 
 if __name__ == "__main__":

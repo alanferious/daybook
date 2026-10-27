@@ -251,12 +251,14 @@ def fall(sc, x, y0, y1, w, op=1.0, mist_s=1.0, lean=0.0):
     g = [f'<g opacity="{op}">',
          f'<ellipse cx="{f(x)}" cy="{f(y0 + 1)}" rx="{f(w * .9)}" ry="{f(w * .5)}" fill="{P["rock2_shade"]}" opacity=".5"/>',
          f'<path d="{d}" fill="{P["fall"]}" opacity=".9"/>']
+    st = ""
     for i in range(int(3 + w / 2)):  # streaks in the falling water
         t = sc.r(.1, .9)
         sx = x - w / 2 + w * t
         ex = xm - w1 / 2 + w1 * t
         sy = sc.r(y0, y0 + (y1 - y0) * .4)
-        g.append(f'<path d="M{f(sx)},{f(sy)} L{f(ex)},{f(y1)}" stroke="#c9d3dc" stroke-width="{f(sc.r(.5, 1.1))}" opacity=".55"/>')
+        st += f"M{f(sx)},{f(sy)}L{f(ex)},{f(y1)}"
+    g.append(f'<path d="{st}" stroke="#c9d3dc" stroke-width=".8" opacity=".55"/>')
     # spray drifting at the foot
     for i in range(5):
         g.append(f'<ellipse cx="{f(xm + sc.r(-14, 14) * mist_s)}" cy="{f(y1 - sc.r(0, 12) * mist_s)}" rx="{f(sc.r(12, 24) * mist_s)}" ry="{f(sc.r(5, 9) * mist_s)}" fill="{P["mist"]}" opacity="{f(sc.r(.3, .55))}"/>')
@@ -294,10 +296,12 @@ def roof(sc, x0, x1, y, h, ov, col, light, dark, lines=True):
     g.append(f'<path d="M{f(x0 - ov)},{f(y - 3)} Q{f(x0 + w * .18)},{f(y - h * .12)} {f(xc - w * .06)},{f(y - h)} L{f(xc - w * .02)},{f(y - h)} Q{f(x0 + w * .3)},{f(y - h * .05)} {f(x0 + w * .1)},{f(y + 1)}Z" fill="{light}" opacity=".75"/>')
     if lines:
         k = max(3, int(w / 9))
+        rl = ""
         for i in range(1, k):
             t = i / k
             ex = x0 - ov + (x1 + ov - x0 + ov) * t
-            g.append(f'<path d="M{f(xc + (t - .5) * w * .12)},{f(y - h + 1)} Q{f(xc + (t - .5) * w * .5)},{f(y - h * .35)} {f(ex)},{f(y - 1)}" stroke="{dark}" stroke-width=".6" fill="none" opacity=".45"/>')
+            rl += f"M{f(xc + (t - .5) * w * .12)},{f(y - h + 1)}Q{f(xc + (t - .5) * w * .5)},{f(y - h * .35)} {f(ex)},{f(y - 1)}"
+        g.append(f'<path d="{rl}" stroke="{dark}" stroke-width=".6" fill="none" opacity=".45"/>')
     g.append(f'<path d="M{f(xc - w * .06)},{f(y - h)} L{f(xc + w * .06)},{f(y - h)}" stroke="{P["trim"]}" stroke-width="1.2"/>')
     g.append(f'<path d="M{f(xc)},{f(y - h)} V{f(y - h - 5)}" stroke="{P["trim"]}" stroke-width="1"/><circle cx="{f(xc)}" cy="{f(y - h - 5.5)}" r="1.2" fill="{P["trim"]}"/>')
     sc.add("".join(g))
@@ -380,12 +384,13 @@ def bridge(sc, x0, y0, x1, y1, rise, fade=0.0):
 
     def q(t, a, c, b):
         return (1 - t) ** 2 * a + 2 * (1 - t) * t * c + t * t * b
+    hg = ""
     for i in range(1, 12):  # hangers and rail posts
         t = i / 12
         dx, dy = q(t, x0, xm, x1), q(t, y0, ym - rise * .1, y1)
         uy = q(t, y0 + 6, ym + 3, y1 + 6)
-        g.append(f'<path d="M{f(dx)},{f(dy + 3)} V{f(uy)}" stroke="{shade}" stroke-width=".7"/>')
-        g.append(f'<path d="M{f(dx)},{f(dy)} V{f(dy - 5)}" stroke="{shade}" stroke-width=".8"/>')
+        hg += f"M{f(dx)},{f(dy + 3)}V{f(uy)}M{f(dx)},{f(dy)}V{f(dy - 5)}"
+    g.append(f'<path d="{hg}" stroke="{shade}" stroke-width=".75"/>')
     g.append(f'<path d="M{f(x0)},{f(y0 - 5)} Q{f(xm)},{f(ym - rise * .1 - 5)} {f(x1)},{f(y1 - 5)}" stroke="{shade}" stroke-width="1" fill="none"/>')
     sc.add("".join(g))
 
@@ -407,172 +412,247 @@ def terrace(sc, x0, x1, y, depth, fade=0.0, arches=0):
     sc.add("".join(g))
 
 
+def arch_glows(sc, x0, yb, w, h, n):
+    """Warm light in every arch of an arcade (same geometry as arcade())."""
+    col = max(1.2, w / n * .18)
+    aw = w / n - col
+    d = ""
+    for i in range(n):
+        a = x0 + col / 2 + i * (aw + col)
+        yt = yb - h + h * .14
+        d += f"M{f(a)},{f(yb)} V{f(yt + aw * .6)} Q{f(a)},{f(yt)} {f(a + aw / 2)},{f(yt - aw * .2)} Q{f(a + aw)},{f(yt)} {f(a + aw)},{f(yt + aw * .6)} V{f(yb)}Z"
+    return d
+
+
+def house_lights(sc, halls):
+    """The extra lamps of the house, shown when it is lit: every arch aglow and a warm haze round the halls."""
+    d = ""
+    for x0, yb, w, h, n, upper in halls:
+        if upper:
+            uw = w * .7
+            d += arch_glows(sc, x0 + (w - uw) / 2, yb - h, uw, upper, max(3, n - 2))
+        d += arch_glows(sc, x0, yb, w, h, n)
+    sc.add(f'<g class="on-lit"><ellipse cx="700" cy="200" rx="230" ry="60" fill="{sc.rad("houseglow", [(0, "#ffd98a", .35), (1, "#ffd98a", 0)])}"/>'
+           f'<path d="{d}" fill="#ffe6a6"/></g>')
+
+
+def fern(sc, x, y, s, col, flip=1):
+    """A bracken frond turned rust-brown: a curved stem with leaflets."""
+    d = f"M{f(x)},{f(y)} Q{f(x + flip * s * .3)},{f(y - s * .9)} {f(x + flip * s * .9)},{f(y - s * .8)}"
+    for k in range(1, 7):
+        t = k / 7
+        px = x + flip * s * (.9 * t * t + .3 * 2 * t * (1 - t))
+        py = y - s * (.9 * 2 * t * (1 - t) + .8 * t * t)
+        ll = s * .28 * (1 - t * .6)
+        d += f"M{f(px)},{f(py)}l{f(-flip * ll * .3)},{f(-ll)}M{f(px)},{f(py)}l{f(flip * ll * .7)},{f(ll * .4)}"
+    sc.add(f'<path d="{d}" stroke="{col}" stroke-width="1.6" fill="none" stroke-linecap="round"/>')
+
+
+def stone(sc, x, y, w, h, fade=0.0):
+    body, lit, shade = (mix(c, P["haze"], fade) for c in (P["rock3"], P["rock3_lit"], P["rock3_shade"]))
+    sc.add(f'<path d="M{f(x - w)},{f(y)} Q{f(x - w)},{f(y - h)} {f(x)},{f(y - h)} Q{f(x + w)},{f(y - h)} {f(x + w)},{f(y)}Z" fill="{body}"/>'
+           f'<path d="M{f(x - w * .7)},{f(y - h * .55)} Q{f(x - w * .5)},{f(y - h * .95)} {f(x)},{f(y - h * .95)} Q{f(x + w * .3)},{f(y - h * .9)} {f(x + w * .2)},{f(y - h * .7)} Q{f(x - w * .3)},{f(y - h * .6)} {f(x - w * .7)},{f(y - h * .55)}Z" fill="{lit}"/>'
+           f'<path d="M{f(x + w * .4)},{f(y)} Q{f(x + w)},{f(y - h * .1)} {f(x + w)},{f(y - h * .5)} Q{f(x + w * .8)},{f(y - h * .2)} {f(x + w * .4)},{f(y)}Z" fill="{shade}"/>')
+
+
 def build(seed=11):
     sc = Scene(seed)
-    sc.sky(sc.lin("sky", P["sky"]))
-    sc.add(f'<circle cx="300" cy="40" r="300" fill="{sc.rad("sun", [(0, P["sun"], .95), (.3, P["sun"], .45), (1, P["sun"], 0)])}"/>')
-    for cx, cy, s, op in [(560, 40, 26, .75), (850, 70, 34, .85), (1300, 30, 30, .7), (1520, 96, 20, .55), (120, 104, 18, .5)]:
-        sc.cloud(cx, cy, s, P["cloud"], P["cloud_shade"], op)
-    sc.birds([(700, 62), (716, 55), (731, 66), (1010, 44)], P["bird"], .8)
-
-    # ---- the Misty Mountains, far off through the valley mouth ----
-    keys = [(-20, 150), (60, 120), (140, 142), (230, 108), (320, 138), (420, 116), (520, 140), (610, 104), (690, 132),
-            (760, 96), (840, 128), (905, 88), (970, 124), (1040, 100), (1110, 136), (1190, 110), (1290, 140), (1400, 112),
-            (1500, 138), (1620, 118)]
-    mtn = profile(sc, keys, 5, .8)
-    mass(sc, mtn, P["mtn"])
-    for (ax, ay), (bx, by), (cx, cy) in zip(keys, keys[1:], keys[2:]):  # snow on the peaks, shade on their right flanks
-        if by < ay and by < cy:
-            sc.add(f'<path d="M{f(bx)},{f(by)} L{f(cx)},{f(cy)} L{f(bx + 6)},{f(cy + 30)}Z" fill="{P["mtn_shade"]}" opacity=".7"/>')
-            sc.add(f'<path d="M{f(bx)},{f(by)} L{f(bx + (cx - bx) * .28)},{f(by + (cy - by) * .28)} L{f(bx + 3)},{f(by + 9)} L{f(bx - 4)},{f(by + 13)} L{f(bx + (ax - bx) * .3)},{f(by + (ay - by) * .3)}Z" fill="{P["snow"]}"/>')
-    sc.add(f'<rect y="90" width="{W}" height="130" fill="{sc.lin("hz0", [(0, P["haze"], 0), (1, P["haze"], .75)])}"/>')
-    # a lower blue foothill in the gap
-    sc.ridge(178, 6, [(2.1, 1), (5.3, .4)], mix(P["mtn"], P["haze"], .35), seed=3.3)
-
-    # ---- back cliffs (hazy), wrapping round behind the house, open in the middle-right ----
-    k1 = [(-20, 66), (70, 56), (150, 64), (240, 44), (330, 58), (420, 50), (520, 68), (600, 60), (680, 88), (760, 96),
-          (830, 118), (875, 146), (910, 176), (960, 196), (1010, 200), (1050, 186), (1090, 150), (1140, 112), (1200, 92),
-          (1300, 72), (1400, 82), (1500, 58), (1620, 66)]
-    back = profile(sc, k1, 6, 1.6)
-    mass(sc, back, P["rock1"], cid="c1")
-    strata(sc, "c1", -20, 1620, 50, 260, 60, P["rock1_shade"], .55, P["rock1_lit"], 30, 34)
-    # woods along the back rim: scattered small crowns, thinning where the rim drops into the gap
-    g = []
-    x = -10
-    while x < W + 10:
-        y = sc.y_at(back, x)
-        if sc.r(0, 1) < (.6 if y < 120 else .25):
-            leaf, shade, light = (mix(c, P["haze"], .58) for c in sc.rnd.choice(P["leaves"]))
-            r = sc.r(2.5, 5)
-            g.append(f'<circle cx="{f(x + .8)}" cy="{f(y + 4 - r * .3)}" r="{f(r)}" fill="{shade}"/><circle cx="{f(x)}" cy="{f(y + 3 - r * .4)}" r="{f(r * .85)}" fill="{leaf}"/>')
-        x += sc.r(6, 10)
-    sc.add("".join(g))
-    for x in range(0, W, 56):
-        x += sc.r(-16, 16)
-        if sc.r(0, 1) < .6:
-            pine(sc, x, sc.y_at(back, x) + 6, sc.r(10, 15), .62)
-    fall(sc, 742, 94, 230, 3, .75, .8, 3)
-    fall(sc, 1255, 84, 220, 3.5, .7, .8, -2)
-    sc.add(f'<rect y="60" width="{W}" height="260" fill="{sc.lin("hz1", [(0, P["haze"], 0), (.5, P["haze"], .35), (1, P["haze"], .9)])}"/>')
-
-    # upper buildings on a ledge of the back cliff, softened by haze
-    terrace(sc, 640, 760, 168, 14, .45)
-    hall(sc, 652, 168, 52, 16, 5, 12, .45)
-    tower(sc, 722, 168, 9, 44, .45, 2)
-    gazebo(sc, 748, 168, 7, 13, .45)
-    for x in (630, 770, 790):
-        autumn(sc, x, 176, 9, .45)
-
-    # ---- the near cliffs, left and right ----
-    kl = [(-20, 40), (60, 30), (140, 46), (220, 34), (300, 54), (360, 66), (405, 80), (432, 96), (446, 134), (456, 190),
-          (466, 246), (476, 300), (484, 410)]
-    left = profile(sc, kl, 5, 1.3)
-    mass(sc, left, P["rock2"], cid="cl")
-    kr = [(1066, 410), (1072, 300), (1084, 240), (1098, 172), (1112, 124), (1136, 100), (1200, 86), (1262, 94),
-          (1330, 70), (1400, 62), (1470, 76), (1540, 46), (1620, 40)]
-    right = profile(sc, kr, 5, 1.3)
-    mass(sc, right, P["rock2"], cid="cr")
-    # left cliff: sunlit top face, shaded face toward the house; right cliff: its west face catches the sun
-    sc.add(f'<g clip-path="url(#cl)"><path d="M-20,30 L430,90 L455,400 L-20,400Z" fill="{P["rock2_lit"]}" opacity=".35"/>'
-           f'<path d="M400,60 L470,60 L490,400 L440,400Z" fill="{P["rock2_shade"]}" opacity=".7"/></g>')
-    sc.add(f'<g clip-path="url(#cr)"><path d="M1060,400 L1110,110 L1160,96 L1150,400Z" fill="{P["rock2_lit"]}" opacity=".85"/></g>')
-    strata(sc, "cl", -20, 480, 30, 320, 60, P["rock2_shade"], .6, P["rock2_lit"], 20, 22)
-    strata(sc, "cr", 1060, 1620, 40, 320, 70, P["rock2_shade"], .6, P["rock2_lit"], 24, 28)
-    # wooded ledges on the cliff faces: crowns of mixed colour, a few dark pines standing out
     L = P["leaves"]
-    ledges = [(-20, 100, 84, 112), (126, 150, 226, 138), (256, 108, 318, 118), (40, 190, 150, 204), (280, 192, 372, 204),
-              (-20, 252, 96, 262), (150, 222, 236, 234), (330, 150, 392, 158), (1150, 162, 1250, 148), (1290, 110, 1356, 118),
-              (1428, 126, 1516, 136), (1270, 206, 1360, 222), (1476, 192, 1600, 180),
-              (1560, 118, 1620, 112)]  # (the cards cover the cliff foot on the right, so no ledges there)
-    for i, (x0, y0, x1, y1) in enumerate(ledges):
-        stand(sc, x0, y0, x1, y1, .2)
-        for k in range(sc.rnd.choice([0, 1, 1, 2])):
-            xx = sc.r(x0 + 10, x1 - 10)
-            pine(sc, xx, y0 + (y1 - y0) * (xx - x0) / (x1 - x0) + 4, sc.r(18, 26), .25)
-    # a little pavilion on a ledge beside the falls
-    sc.add(f'<path d="M280,262 L384,262 Q376,278 352,288 Q330,300 300,286 Q286,276 280,262Z" fill="{mix(P["rock2_shade"], P["haze"], .1)}"/>'
-           f'<path d="M280,262 L330,262 Q320,280 300,286 Q286,276 280,262Z" fill="{P["rock2_lit"]}" opacity=".6"/>')
-    stand(sc, 284, 288, 384, 286, .2, 4, 7)
-    terrace(sc, 292, 372, 254, 12, .15)
-    hall(sc, 300, 254, 64, 18, 5, 13, .15, 3)
-    # waterfalls on the near cliffs
-    fall(sc, 214, 37, 300, 5, .95, 1.3, 8)
-    fall(sc, 410, 84, 306, 4, .9, 1.1, 10)
-    fall(sc, 1118, 120, 300, 4.5, .95, 1.2, -6)
-    fall(sc, 1392, 63, 290, 6, .95, 1.3, -4)
-    fall(sc, 1545, 48, 270, 3.5, .85, 1.0, 2)
-    # woods along the near rims, with a few slender golden poplars
-    rimwood(sc, left, -14, 424, .15, 5, 9, .18, (20, 30))
-    rimwood(sc, right, 1134, W + 14, .15, 5, 9, .18, (20, 30))
-    for x in (1162, 1240, 1300, 1455, 1590):
-        poplar(sc, x, sc.y_at(right, x) + 5, sc.r(26, 34), .15)
-    for x in (24, 168, 330):
-        poplar(sc, x, sc.y_at(left, x) + 5, sc.r(26, 34), .15)
 
-    # ---- the spur of the Last Homely House ----
-    ks = [(470, 410), (478, 300), (498, 266), (530, 252), (560, 236), (590, 220), (640, 212), (720, 210), (790, 216),
-          (840, 226), (880, 238), (950, 242), (1000, 236), (1016, 244), (1034, 270), (1050, 310), (1060, 410)]
-    spur = profile(sc, ks, 5, 1.0)
-    mass(sc, spur, P["rock3"], cid="cs")
-    sc.add(f'<g clip-path="url(#cs)"><path d="M470,410 L520,250 L640,212 L700,240 L620,410Z" fill="{P["rock3_lit"]}" opacity=".6"/>'
-           f'<path d="M980,236 L1060,240 L1070,410 L1000,410Z" fill="{P["rock3_shade"]}" opacity=".6"/></g>')
-    strata(sc, "cs", 470, 1060, 220, 330, 40, P["rock3_shade"], .5)
-    # trees behind the buildings
-    for x, y, s in [(612, 214, 12), (800, 220, 13), (836, 228, 11), (690, 212, 10), (540, 252, 11), (960, 240, 10)]:
-        autumn(sc, x, y, s, .1)
-    poplar(sc, 580, 226, 40, .05)
-    poplar(sc, 846, 232, 36, .05)
-    pine(sc, 822, 226, 38, .1)
-    pine(sc, 524, 258, 32, .1)
+    # ================= sky =================
+    with sc.layer("sky", 0):
+        sc.sky(sc.lin("sky", P["sky"]))
+        sc.add(f'<circle cx="300" cy="40" r="300" fill="{sc.rad("sun", [(0, P["sun"], .95), (.3, P["sun"], .45), (1, P["sun"], 0)])}"/>')
+        for cx, cy, s, op in [(560, 40, 26, .75), (850, 70, 34, .85), (1300, 30, 30, .7), (1520, 96, 20, .55), (120, 104, 18, .5)]:
+            with sc.fx("cloud"):
+                sc.cloud(cx, cy, s, P["cloud"], P["cloud_shade"], op)
+        with sc.fx("birds"):
+            sc.birds([(700, 62), (716, 55), (731, 66), (1010, 44)], P["bird"], .8)
 
-    # the main house: a tall tower, the great hall with its upper storey, a second tower
-    tower(sc, 598, 214, 15, 96, 0, 4)
-    terrace(sc, 600, 790, 214, 22, 0, 6)
-    hall(sc, 620, 214, 150, 34, 9, 22, 0, 3, upper=22)
-    tower(sc, 790, 216, 12, 62, 0, 3)
-    # left wing on a lower terrace
-    terrace(sc, 494, 590, 252, 18, 0, 4)
-    hall(sc, 505, 252, 76, 26, 5, 18, 0, 2)
-    # an open colonnade on the right, then the round pavilion on its outcrop
-    terrace(sc, 842, 970, 240, 16, 0, 5)
-    tower(sc, 948, 240, 11, 64, 0, 3)
-    hall(sc, 852, 240, 104, 24, 8, 16, 0, 4)
-    gazebo(sc, 996, 236, 12, 22)
-    bridge(sc, 1006, 238, 1108, 234, 16)
-    # stair from the lower wing up to the hall terrace
-    for i in range(7):
-        sc.add(f'<rect x="{f(588 + i * 2.2)}" y="{f(250 - i * 5)}" width="9" height="2" fill="{P["wall_shade"]}"/>')
+    # ================= far: the mountains through the valley mouth, and the hazy back cliffs =================
+    with sc.layer("far", .15):
+        keys = [(-30, 150), (60, 120), (140, 142), (230, 108), (320, 138), (420, 116), (520, 140), (610, 104), (690, 132),
+                (760, 96), (840, 128), (905, 88), (970, 124), (1040, 100), (1110, 136), (1190, 110), (1290, 140), (1400, 112),
+                (1500, 138), (1630, 118)]
+        mtn = profile(sc, keys, 5, .8)
+        mass(sc, mtn, P["mtn"])
+        for (ax, ay), (bx, by), (cx, cy) in zip(keys, keys[1:], keys[2:]):
+            if by < ay and by < cy:
+                sc.add(f'<path d="M{f(bx)},{f(by)} L{f(cx)},{f(cy)} L{f(bx + 6)},{f(cy + 30)}Z" fill="{P["mtn_shade"]}" opacity=".7"/>')
+                sc.add(f'<path d="M{f(bx)},{f(by)} L{f(bx + (cx - bx) * .28)},{f(by + (cy - by) * .28)} L{f(bx + 3)},{f(by + 9)} L{f(bx - 4)},{f(by + 13)} L{f(bx + (ax - bx) * .3)},{f(by + (ay - by) * .3)}Z" fill="{P["snow"]}"/>')
+        sc.add(f'<rect x="-30" y="90" width="{W + 60}" height="130" fill="{sc.lin("hz0", [(0, P["haze"], 0), (1, P["haze"], .75)])}"/>')
+        sc.ridge(178, 6, [(2.1, 1), (5.3, .4)], mix(P["mtn"], P["haze"], .35), seed=3.3, x0=-30, x1=W + 30)
 
-    # front trees on the spur, in front of the terrace walls
-    for x, y, s in [(505, 286, 18), (560, 280, 16), (612, 262, 15), (668, 258, 17), (726, 262, 14), (780, 258, 16),
-                    (840, 268, 15), (896, 270, 17), (950, 274, 15), (1004, 280, 16), (1040, 300, 14)]:
-        autumn(sc, x + sc.r(-4, 4), y, s, .05)
-    for x in (640, 862, 980):
-        pine(sc, x, 272, sc.r(36, 44), .08)
-    for x in (700, 925):
-        poplar(sc, x, 268, sc.r(44, 52), .05)
+        k1 = [(-30, 66), (70, 56), (150, 64), (240, 44), (330, 58), (420, 50), (520, 68), (600, 60), (680, 88), (760, 96),
+              (830, 118), (875, 146), (910, 176), (960, 196), (1010, 200), (1050, 186), (1090, 150), (1140, 112), (1200, 92),
+              (1300, 72), (1400, 82), (1500, 58), (1630, 66)]
+        back = profile(sc, k1, 6, 1.6)
+        mass(sc, back, P["rock1"], cid="c1")
+        strata(sc, "c1", -20, 1620, 50, 260, 36, P["rock1_shade"], .55, P["rock1_lit"], 18, 22)
+        g = []
+        x = -10
+        while x < W + 10:
+            y = sc.y_at(back, x)
+            if sc.r(0, 1) < (.6 if y < 120 else .25):
+                leaf, shade, light = (mix(c, P["haze"], .58) for c in sc.rnd.choice(P["leaves"]))
+                r = sc.r(2.5, 5)
+                g.append(f'<circle cx="{f(x + .8)}" cy="{f(y + 4 - r * .3)}" r="{f(r)}" fill="{shade}"/><circle cx="{f(x)}" cy="{f(y + 3 - r * .4)}" r="{f(r * .85)}" fill="{leaf}"/>')
+            x += sc.r(6, 10)
+        sc.add("".join(g))
+        for x in range(0, W, 56):
+            x += sc.r(-16, 16)
+            if sc.r(0, 1) < .6:
+                pine(sc, x, sc.y_at(back, x) + 6, sc.r(10, 15), .62)
+        with sc.fx("water"):
+            fall(sc, 742, 94, 230, 3, .75, .8, 3)
+        with sc.fx("water"):
+            fall(sc, 1255, 84, 220, 3.5, .7, .8, -2)
+        sc.add(f'<rect x="-30" y="60" width="{W + 60}" height="260" fill="{sc.lin("hz1", [(0, P["haze"], 0), (.5, P["haze"], .35), (1, P["haze"], .9)])}"/>')
+        terrace(sc, 640, 760, 168, 14, .45)
+        hall(sc, 652, 168, 52, 16, 5, 12, .45)
+        tower(sc, 722, 168, 9, 44, .45, 2)
+        gazebo(sc, 748, 168, 7, 13, .45)
+        for x in (630, 770, 790):
+            autumn(sc, x, 176, 9, .45)
 
-    # ---- the valley floor: the Bruinen in mist, autumn treetops, fading toward the page ----
-    sc.add(f'<rect y="250" width="{W}" height="150" fill="{sc.lin("hz2", [(0, P["haze"], 0), (.4, P["haze"], .45), (1, P["haze"], .7)])}"/>')
-    L = P["leaves"]
-    canopy(sc, -20, W + 20, 300, 9, 15, L[2], .42, 5, 334, .15)
-    canopy(sc, -20, W + 20, 308, 8, 14, L[1], .4, 5, 334, .2)
-    for x in range(10, W, 120):
-        pine(sc, x + sc.r(-30, 30), 316, sc.r(28, 38), .42)
-    canopy(sc, -20, W + 20, 316, 8, 13, L[0], .38, 4, 334, .35)
-    wy = 322
-    sc.add(f'<path d="M-20,{wy} Q260,{wy - 8} 560,{wy + 2} T1140,{wy - 2} T1620,{wy + 3} L1620,{wy + 14} Q1200,{wy + 9} 880,{wy + 15} T-20,{wy + 13}Z" fill="{P["water"]}"/>')
-    glints = "".join(f"M{f(sc.r(0, W))},{f(wy + 4 + sc.r(0, 7))}h{f(sc.r(8, 22))}" for i in range(36))
-    sc.add(f'<path d="{glints}" stroke="{P["water_light"]}" stroke-width="1.2" stroke-linecap="round" opacity=".85"/>')
-    # drifting mist over the water
-    for i in range(18):
-        sc.add(f'<ellipse cx="{f(sc.r(-40, W + 40))}" cy="{f(sc.r(300, 336))}" rx="{f(sc.r(60, 140))}" ry="{f(sc.r(6, 12))}" fill="{P["mist"]}" opacity="{f(sc.r(.3, .55))}"/>')
-    # near ground, close to the page colour
-    canopy(sc, -20, W + 20, 348, 10, 18, L[3], .78, 6, H + 10, .15, "#d6d2da")
-    sc.ridge(368, 4, [(2.3, 1), (5.1, .4)], P["ground"], seed=7.7)
-    sc.tufts(364, 400, 50, ["#c4b8b0", "#cbbca6", "#bdb0ae", "#d1c4b4"], 5, 12)
-    sc.flowers(368, 398, 40, ["#d99a3a", "#bd5e2e", "#e6b84c", "#cf7d32"], 1.5, 2.8)  # fallen leaves
-    sc.add(f'<rect y="330" width="{W}" height="70" fill="{sc.lin("hz3", [(0, "#dcdae0", 0), (1, "#dcdae0", .55)])}"/>')
+    # ================= mid: the near cliffs, their ledges, woods and falls =================
+    with sc.layer("mid", .35):
+        kl = [(-40, 40), (60, 30), (140, 46), (220, 34), (300, 54), (360, 66), (405, 80), (432, 96), (446, 134), (456, 190),
+              (466, 246), (476, 300), (484, 410)]
+        left = profile(sc, kl, 5, 1.3)
+        mass(sc, left, P["rock2"], cid="cl")
+        kr = [(1066, 410), (1072, 300), (1084, 240), (1098, 172), (1112, 124), (1136, 100), (1200, 86), (1262, 94),
+              (1330, 70), (1400, 62), (1470, 76), (1540, 46), (1640, 40)]
+        right = profile(sc, kr, 5, 1.3)
+        mass(sc, right, P["rock2"], cid="cr")
+        sc.add(f'<g clip-path="url(#cl)"><path d="M-40,30 L430,90 L455,400 L-40,400Z" fill="{P["rock2_lit"]}" opacity=".35"/>'
+               f'<path d="M400,60 L470,60 L490,400 L440,400Z" fill="{P["rock2_shade"]}" opacity=".7"/></g>')
+        sc.add(f'<g clip-path="url(#cr)"><path d="M1060,400 L1110,110 L1160,96 L1150,400Z" fill="{P["rock2_lit"]}" opacity=".85"/></g>')
+        strata(sc, "cl", -40, 480, 30, 320, 38, P["rock2_shade"], .6, P["rock2_lit"], 14, 16)
+        strata(sc, "cr", 1060, 1640, 40, 320, 42, P["rock2_shade"], .6, P["rock2_lit"], 16, 18)
+        ledges = [(-20, 100, 84, 112), (126, 150, 226, 138), (256, 108, 318, 118), (40, 190, 150, 204), (280, 192, 372, 204),
+                  (-20, 252, 96, 262), (150, 222, 236, 234), (330, 150, 392, 158), (1150, 162, 1250, 148), (1290, 110, 1356, 118),
+                  (1428, 126, 1516, 136), (1270, 206, 1360, 222), (1476, 192, 1600, 180), (1560, 118, 1620, 112)]
+        for i, (x0, y0, x1, y1) in enumerate(ledges):
+            stand(sc, x0, y0, x1, y1, .2)
+            for k in range(sc.rnd.choice([0, 1, 1, 2])):
+                xx = sc.r(x0 + 10, x1 - 10)
+                pine(sc, xx, y0 + (y1 - y0) * (xx - x0) / (x1 - x0) + 4, sc.r(18, 26), .25)
+        sc.add(f'<path d="M280,262 L384,262 Q376,278 352,288 Q330,300 300,286 Q286,276 280,262Z" fill="{mix(P["rock2_shade"], P["haze"], .1)}"/>'
+               f'<path d="M280,262 L330,262 Q320,280 300,286 Q286,276 280,262Z" fill="{P["rock2_lit"]}" opacity=".6"/>')
+        stand(sc, 284, 288, 384, 286, .2, 4, 7)
+        terrace(sc, 292, 372, 254, 12, .15)
+        hall(sc, 300, 254, 64, 18, 5, 13, .15, 3)
+        for args in [(214, 37, 300, 5, .95, 1.3, 8), (410, 84, 306, 4, .9, 1.1, 10), (1392, 63, 290, 6, .95, 1.3, -4), (1545, 48, 270, 3.5, .85, 1.0, 2)]:
+            with sc.fx("water"):
+                fall(sc, *args)
+        with sc.hot("rivendell-falls", "The falls", "Streams drop off the valley rim in long white ribbons of spray.", "splash"):
+            with sc.fx("water"):
+                fall(sc, 1118, 120, 300, 4.5, .95, 1.2, -6)
+            sc.add('<path d="M1108,120 L1130,120 L1126,300 L1100,300Z" fill="#000" fill-opacity="0"/>')
+        rimwood(sc, left, -24, 424, .15, 5, 9, .18, (20, 30))
+        rimwood(sc, right, 1134, W + 24, .15, 5, 9, .18, (20, 30))
+        for x in (1162, 1240, 1300, 1455, 1590):
+            poplar(sc, x, sc.y_at(right, x) + 5, sc.r(26, 34), .15)
+        for x in (24, 168, 330):
+            poplar(sc, x, sc.y_at(left, x) + 5, sc.r(26, 34), .15)
+
+    # ================= near: the spur, the Last Homely House, the bridge, the trees in front =================
+    with sc.layer("near", .55):
+        ks = [(470, 410), (478, 300), (498, 266), (530, 252), (560, 236), (590, 220), (640, 212), (720, 210), (790, 216),
+              (840, 226), (880, 238), (950, 242), (1000, 236), (1016, 244), (1034, 270), (1050, 310), (1060, 410)]
+        spur = profile(sc, ks, 5, 1.0)
+        mass(sc, spur, P["rock3"], cid="cs")
+        sc.add(f'<g clip-path="url(#cs)"><path d="M470,410 L520,250 L640,212 L700,240 L620,410Z" fill="{P["rock3_lit"]}" opacity=".6"/>'
+               f'<path d="M980,236 L1060,240 L1070,410 L1000,410Z" fill="{P["rock3_shade"]}" opacity=".6"/></g>')
+        strata(sc, "cs", 470, 1060, 220, 330, 34, P["rock3_shade"], .5)
+        for x, y, s in [(612, 214, 12), (800, 220, 13), (836, 228, 11), (690, 212, 10), (540, 252, 11), (960, 240, 10)]:
+            autumn(sc, x, y, s, .1)
+        poplar(sc, 580, 226, 40, .05)
+        poplar(sc, 846, 232, 36, .05)
+        pine(sc, 822, 226, 38, .1)
+        pine(sc, 524, 258, 32, .1)
+
+        halls = [(620, 214, 150, 34, 9, 22), (505, 252, 76, 26, 5, 0), (852, 240, 104, 24, 8, 0)]
+        with sc.hot("rivendell-house", "The Last Homely House", "Halls and towers on a spur of rock, open to anyone in need of rest.", "light"):
+            tower(sc, 598, 214, 15, 96, 0, 4)
+            terrace(sc, 600, 790, 214, 22, 0, 6)
+            hall(sc, 620, 214, 150, 34, 9, 22, 0, 3, upper=22)
+            tower(sc, 790, 216, 12, 62, 0, 3)
+            terrace(sc, 494, 590, 252, 18, 0, 4)
+            hall(sc, 505, 252, 76, 26, 5, 18, 0, 2)
+            terrace(sc, 842, 970, 240, 16, 0, 5)
+            tower(sc, 948, 240, 11, 64, 0, 3)
+            hall(sc, 852, 240, 104, 24, 8, 16, 0, 4)
+            for i in range(7):
+                sc.add(f'<rect x="{f(588 + i * 2.2)}" y="{f(250 - i * 5)}" width="9" height="2" fill="{P["wall_shade"]}"/>')
+            gazebo(sc, 996, 236, 12, 22)
+            house_lights(sc, halls)
+        with sc.hot("rivendell-bridge", "The footbridge", "A slender bridge leaps the gorge from the pavilion to the cliffs.", "pulse"):
+            bridge(sc, 1006, 238, 1108, 234, 16)
+            sc.add('<path d="M1004,232 Q1057,206 1110,228 L1110,248 Q1057,226 1004,252Z" fill="#000" fill-opacity="0"/>')
+
+        with sc.hot("rivendell-trees", "Autumn woods", "Beech and birch gone gold and copper, shedding leaves on the paths.", "leaves"):
+            for x, y, s in [(505, 286, 18), (560, 280, 16), (612, 262, 15), (668, 258, 17), (726, 262, 14), (780, 258, 16),
+                            (840, 268, 15), (896, 270, 17), (950, 274, 15), (1004, 280, 16), (1040, 300, 14)]:
+                with sc.fx("sway"):
+                    autumn(sc, x + sc.r(-4, 4), y, s, .05)
+            for x in (640, 862, 980):
+                pine(sc, x, 272, sc.r(36, 44), .08)
+            for x in (700, 925):
+                with sc.fx("sway"):
+                    poplar(sc, x, 268, sc.r(44, 52), .05)
+
+        # the valley floor below the spur: the Bruinen in mist under the treetops
+        sc.add(f'<rect x="-30" y="250" width="{W + 60}" height="160" fill="{sc.lin("hz2", [(0, P["haze"], 0), (.4, P["haze"], .45), (1, P["haze"], .7)])}"/>')
+        canopy(sc, -40, W + 40, 300, 11, 17, L[2], .42, 5, 334, .15)
+        canopy(sc, -40, W + 40, 308, 10, 16, L[1], .4, 5, 334, .2)
+        for x in range(10, W, 120):
+            pine(sc, x + sc.r(-30, 30), 316, sc.r(28, 38), .42)
+        canopy(sc, -40, W + 40, 316, 10, 15, L[0], .38, 4, 334, .35)
+        wy = 322
+        with sc.fx("water"):
+            sc.add(f'<path d="M-40,{wy} Q260,{wy - 8} 560,{wy + 2} T1140,{wy - 2} T1640,{wy + 3} L1640,{wy + 14} Q1200,{wy + 9} 880,{wy + 15} T-40,{wy + 13}Z" fill="{P["water"]}"/>')
+            glints = "".join(f"M{f(sc.r(0, W))},{f(wy + 4 + sc.r(0, 7))}h{f(sc.r(8, 22))}" for i in range(30))
+            sc.add(f'<path d="{glints}" stroke="{P["water_light"]}" stroke-width="1.2" stroke-linecap="round" opacity=".85"/>')
+        for i in range(10):
+            sc.add(f'<ellipse cx="{f(sc.r(-40, W + 40))}" cy="{f(sc.r(300, 336))}" rx="{f(sc.r(60, 140))}" ry="{f(sc.r(6, 12))}" fill="{P["mist"]}" opacity="{f(sc.r(.3, .5))}"/>')
+
+    # ================= front: the near bank of the river, bracken, stones and two big trees at the edges =================
+    with sc.layer("front", 1):
+        # the nearer reach of the river, running across in front of us
+        sc.add(f'<path d="M-40,342 Q200,336 420,344 T860,340 T1300,346 T1640,340 L1640,376 Q1300,370 900,378 T420,374 T-40,378Z" fill="{mix(P["water"], P["haze"], .15)}"/>')
+        with sc.fx("water"):
+            gl = "".join(f"M{f(sc.r(-20, W + 20))},{f(sc.r(346, 364))}h{f(sc.r(10, 34))}" for i in range(34))
+            sc.add(f'<path d="{gl}" stroke="{P["water_light"]}" stroke-width="1.4" stroke-linecap="round" opacity=".9"/>')
+        for x, y, w, h in [(180, 356, 16, 10), (236, 360, 9, 6), (560, 352, 12, 8), (760, 358, 18, 11), (812, 354, 8, 5),
+                           (1040, 356, 14, 9), (1250, 352, 10, 7), (1420, 358, 16, 10)]:
+            sc.add(f'<ellipse cx="{f(x)}" cy="{f(y + 1)}" rx="{f(w * 1.6)}" ry="3" fill="{P["water_light"]}" opacity=".8"/>')
+            stone(sc, x, y, w, h, .1)
+        # the bank: a thicket of autumn bushes, then grass and bracken
+        canopy(sc, -40, W + 40, 372, 11, 18, L[3], .22, 6, H + 10, .4)
+        canopy(sc, -40, W + 40, 382, 10, 16, L[0], .2, 5, H + 10, .45)
+        bank = [(x, 392 + 3 * math.sin(x / 90)) for x in range(-40, W + 50, 40)]
+        sc.add(f'<path d="M' + " L".join(f"{f(a)},{f(b)}" for a, b in bank) + f' L{W + 40},{H + 10} L-40,{H + 10}Z" fill="{mix(P["ground"], "#c9b48f", .3)}"/>')
+        for x in (330, 610, 1000, 1210, 1460):  # a few bigger bushes standing up out of the thicket
+            fam = sc.rnd.choice(L)
+            leaf, shade, light = (mix(c, P["haze"], .18) for c in fam)
+            y, r = 376, sc.r(14, 20)
+            with sc.fx("sway"):
+                sc.add(f'<circle cx="{f(x + r * .2)}" cy="{f(y - r * .4)}" r="{f(r)}" fill="{shade}"/><circle cx="{f(x - r * .7)}" cy="{f(y - r * .1)}" r="{f(r * .75)}" fill="{shade}"/>'
+                       f'<circle cx="{f(x)}" cy="{f(y - r * .5)}" r="{f(r * .88)}" fill="{leaf}"/><circle cx="{f(x - r * .75)}" cy="{f(y - r * .2)}" r="{f(r * .66)}" fill="{leaf}"/>'
+                       f'<circle cx="{f(x - r * .3)}" cy="{f(y - r * .95)}" r="{f(r * .34)}" fill="{light}" opacity=".8"/>')
+        for x in [sc.r(0, W) for _ in range(18)]:
+            fern(sc, x, sc.r(388, 398), sc.r(12, 20), sc.rnd.choice(["#b0742a", "#954422", "#a65d26", "#c08f33"]), sc.rnd.choice([-1, 1]))
+        for x, w, h in [(120, 22, 14), (470, 16, 10), (980, 20, 12), (1330, 24, 15)]:
+            stone(sc, x, 402, w, h, .05)
+        sc.tufts(390, 404, 30, ["#c4b8b0", "#cbbca6", "#bdb0ae", "#d1c4b4"], 5, 12)
+        sc.flowers(390, 400, 40, ["#d99a3a", "#bd5e2e", "#e6b84c", "#cf7d32"], 1.5, 2.8)
+        # two big trees at the edges of the view, framing it
+        for x, y, s, fam in [(26, 404, 92, L[3]), (1590, 404, 86, L[2])]:
+            with sc.fx("sway"):
+                autumn(sc, x, y, s, .12, fam)
+        sc.add(f'<rect x="-30" y="340" width="{W + 60}" height="70" fill="{sc.lin("hz3", [(0, "#dcdae0", 0), (1, "#dcdae0", .3)])}"/>')
     return sc
 
 
@@ -581,6 +661,7 @@ def save(sc, path, title):
     svg = sc.svg(title)
     svg = re.sub(r"(?<![\d.])(-?\d{2,})\.\d\b", lambda m: str(round(float(m.group(0)))), svg)
     svg = re.sub(r"(?<![\d.])0\.(\d)", r".\1", svg)  # 0.4 -> .4
+    svg = svg.replace('data-depth=".', 'data-depth="0.')  # keep the layer depths plain numbers
     with open(path, "w") as fh:
         fh.write(svg)
 

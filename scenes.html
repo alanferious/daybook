@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en-AU" data-region="shire">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#eee3c3">
+<title>Daybook Scenes</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f7dc8a'/%3E%3Cstop offset='.5' stop-color='%23c9962e'/%3E%3Cstop offset='1' stop-color='%237a5414'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='11.5' fill='none' stroke='url(%23g)' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap">
+<style>
+/* The scene viewer: every region's painted scene, inline, so you can look around it, click what's in it,
+   and check it against what Daybook needs (structure, size, and how the banner crops it). */
+/* @tokens: copied from index.html so each scene wears its region's palette */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #eee3c3; }
+@property --surface { syntax: "<color>"; inherits: true; initial-value: #fbf6e3; }
+@property --raise { syntax: "<color>"; inherits: true; initial-value: #f3e9cc; }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #2a2412; }
+@property --muted { syntax: "<color>"; inherits: true; initial-value: #5d5333; }
+@property --line { syntax: "<color>"; inherits: true; initial-value: #dccd9f; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #2d5d22; }
+@property --on-accent { syntax: "<color>"; inherits: true; initial-value: #fbf6e3; }
+@property --good { syntax: "<color>"; inherits: true; initial-value: #2d5d22; }
+@property --warn { syntax: "<color>"; inherits: true; initial-value: #9a3f12; }
+
+:root {
+  /* The Shire in high summer: honey-cream, meadow green, a round green door */
+  --bg: #eee3c3; --surface: #fbf6e3; --raise: #f3e9cc; --ink: #2a2412; --muted: #5d5333; --line: #dccd9f;
+  --accent: #2d5d22; --on-accent: #fbf6e3; --good: #2d5d22; --warn: #9a3f12;
+  --gold: #d4a243; --gold-hi: #f6dd8f; --gold-lo: #7a5414; --ember: #ff7a2f;
+  /* the night stage and toasts keep one fixed palette in every region */
+  --night: #17120b; --night-ink: #f2e7d2; --night-muted: #d9cbb2; --night-gold: #f6dd8f;
+  /* control edges: muted pulled toward the surface, still 3:1 against it */
+  --edge: color-mix(in srgb, var(--muted) 78%, var(--surface));
+  /* the Red Book: hand-printed Fell types for names and numbers, Alegreya for reading */
+  --font-display: "IM Fell English", "Iowan Old Style", Georgia, serif;
+  --font-caps: "IM Fell English SC", "IM Fell English", Georgia, serif;
+  --font-body: "Alegreya", "Iowan Old Style", Georgia, serif;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  color-scheme: light;
+  transition: --bg 1.4s ease, --surface 1.4s ease, --raise 1.4s ease, --ink 1.4s ease, --muted 1.4s ease,
+    --line 1.4s ease, --accent 1.4s ease, --on-accent 1.4s ease, --good 1.4s ease, --warn 1.4s ease;
+}
+/* Bree: an inn by lamplight */
+[data-region="bree"] { --bg: #1e1710; --surface: #2a2016; --raise: #352a1d; --ink: #f0e6d6; --muted: #b5a68f; --line: #42352a; --accent: #e8a957; --on-accent: #1e1408; --good: #a7cf8f; --warn: #f4a576; color-scheme: dark; }
+/* Weathertop: moonlit storm on the ruined hill */
+[data-region="weathertop"] { --bg: #151823; --surface: #1e2232; --raise: #282d40; --ink: #e7e9f2; --muted: #a4aac0; --line: #343a50; --accent: #9fb2ea; --on-accent: #10142a; --good: #9fd0a8; --warn: #f2a27a; color-scheme: dark; }
+/* Rivendell: pale stone and autumn amber */
+[data-region="rivendell"] { --bg: #dcdae0; --surface: #f4f3f6; --raise: #e8e6ec; --ink: #25222f; --muted: #575366; --line: #c6c3cf; --accent: #9b4f12; --on-accent: #fbf6f0; --good: #2f6b45; --warn: #9a3412; color-scheme: light; }
+/* Moria: black stone, dwarf gold */
+[data-region="moria"] { --bg: #0f0f11; --surface: #19191d; --raise: #232328; --ink: #e6e1d6; --muted: #a29c90; --line: #2f2f36; --accent: #d6b05a; --on-accent: #171207; --good: #9cc98e; --warn: #f08a5d; color-scheme: dark; }
+/* Lothlórien: silver bark, mallorn gold */
+[data-region="lorien"] { --bg: #d6dce2; --surface: #f2f5f8; --raise: #e4e9ee; --ink: #1a222b; --muted: #4b5763; --line: #c1c9d1; --accent: #7d5b0c; --on-accent: #fffaf0; --good: #2a6a45; --warn: #9a3412; color-scheme: light; }
+/* Amon Hen and the Anduin: river light */
+[data-region="amonhen"] { --bg: #d0dce1; --surface: #eef3f5; --raise: #e0e9ed; --ink: #14232a; --muted: #44575f; --line: #b8c8cf; --accent: #1f6480; --on-accent: #eef6f9; --good: #23664a; --warn: #933a12; color-scheme: light; }
+/* Helm's Deep: rain on the wall at night */
+[data-region="helmsdeep"] { --bg: #13161a; --surface: #1c2025; --raise: #262b31; --ink: #e6e8eb; --muted: #a3a9b0; --line: #30363d; --accent: #d7b45e; --on-accent: #17130a; --good: #9ccb93; --warn: #f2a074; color-scheme: dark; }
+/* Minas Tirith: white stone, Gondor blue */
+[data-region="minastirith"] { --bg: #e1e4ea; --surface: #fbfbfd; --raise: #eef0f4; --ink: #19203a; --muted: #4d566c; --line: #cdd2dd; --accent: #263c7a; --on-accent: #f6f8fd; --good: #23654a; --warn: #9a3412; color-scheme: light; }
+/* The Black Gate: ash plain */
+[data-region="blackgate"] { --bg: #16130e; --surface: #211d17; --raise: #2c2720; --ink: #eee6d8; --muted: #ada290; --line: #3a332a; --accent: #ec7d3c; --on-accent: #1a0e06; --good: #a6cf8f; --warn: #ff9b6a; color-scheme: dark; }
+/* Mount Doom: lava light */
+[data-region="mountdoom"] { --bg: #110a07; --surface: #1d120d; --raise: #2a1a12; --ink: #f5e8dc; --muted: #bba08b; --line: #3d261b; --accent: #ff8a3d; --on-accent: #1d0b03; --good: #b5d98f; --warn: #ffb07a; color-scheme: dark; }
+/* Home again: the Shire in harvest gold */
+[data-region="home"] { --bg: #e3dfc4; --surface: #f7f6ec; --raise: #ece9d6; --ink: #22240f; --muted: #535637; --line: #cfcaa6; --accent: #3d6b1f; --on-accent: #f7f6ec; --good: #3d6b1f; --warn: #9a3f12; color-scheme: light; }
+/* each region keeps its own ground: a faint pattern behind the panels, and its own corner shape */
+:root, [data-region="shire"] { --r: 12px; --r-sm: 8px; --motif-op: .11; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='90'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 62 Q40 38 80 62 T160 62'/%3E%3Cpath d='M0 80 Q40 60 80 80 T160 80' opacity='.6'/%3E%3Cpath d='M112 52 a9 9 0 0 1 18 0 v6 h-18z'/%3E%3Ccircle cx='121' cy='54' r='1' fill='black'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="bree"] { --r: 6px; --r-sm: 4px; --motif-op: .10; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='64'%3E%3Cg fill='none' stroke='black' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 2 l-5 14'/%3E%3Cpath d='M34 22 l-5 14'/%3E%3Cpath d='M18 42 l-5 14'/%3E%3Cpath d='M44 50 l-3 8'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="weathertop"] { --r: 4px; --r-sm: 3px; --motif-op: .22; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='14' cy='18' r='.9' fill='black'/%3E%3Ccircle cx='70' cy='12' r='.7' fill='black'/%3E%3Ccircle cx='96' cy='60' r='.9' fill='black'/%3E%3Ccircle cx='40' cy='76' r='.7' fill='black'/%3E%3Ccircle cx='22' cy='98' r='.6' fill='black'/%3E%3Cpath d='M62 52 v10 M57 57 h10' stroke-width='.9'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="rivendell"] { --r: 14px; --r-sm: 8px; --motif-op: .10; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 150 C40 90 10 40 70 40 S130 120 180 60'/%3E%3Cpath d='M70 40 c10 -14 26 -14 30 -2 c-12 4 -22 6 -30 2z'/%3E%3Cpath d='M126 96 c12 2 20 12 16 22 c-10 -4 -16 -12 -16 -22z'/%3E%3Cpath d='M20 0 C30 20 60 18 66 2' opacity='.6'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="moria"] { --r: 2px; --r-sm: 1px; --motif-op: .12; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56'%3E%3Cg fill='none' stroke='black' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 28 H10 V10 H28 V20 H38 V10 H46 V28 H56'/%3E%3Cpath d='M28 28 V46 H10 V56 M28 46 H46 V56' opacity='.7'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="lorien"] { --r: 12px; --r-sm: 8px; --motif-op: .12; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M24 34 q10 -16 22 0 q-12 14 -22 0z'/%3E%3Cpath d='M24 34 h22' stroke-width='.7'/%3E%3Cpath d='M88 92 q8 -13 18 0 q-10 11 -18 0z'/%3E%3Cpath d='M88 92 h18' stroke-width='.7'/%3E%3Ccircle cx='96' cy='30' r='1.1' fill='black'/%3E%3Ccircle cx='36' cy='104' r='.9' fill='black'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="amonhen"] { --r: 8px; --r-sm: 6px; --motif-op: .10; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='48'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 18 q18 -7 37 0 t38 0 t37 0 t38 0'/%3E%3Cpath d='M20 36 q14 -5 28 0 t28 0' opacity='.6'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="helmsdeep"] { --r: 3px; --r-sm: 2px; --motif-op: .10; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48'%3E%3Cg fill='none' stroke='black' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 14 C12 14 12 34 24 34 S36 14 48 14'/%3E%3Cpath d='M0 34 C12 34 12 14 24 14 S36 34 48 34'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="minastirith"] { --r: 3px; --r-sm: 2px; --motif-op: .10; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='48'%3E%3Cg fill='none' stroke='black' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 .5 H96 M0 24.5 H96 M48 0 V24 M0 24 V48 M96 24 V48' /%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="blackgate"] { --r: 2px; --r-sm: 1px; --motif-op: .22; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='12' r='1' fill='black'/%3E%3Ccircle cx='40' cy='6' r='.7' fill='black'/%3E%3Ccircle cx='58' cy='36' r='1.2' fill='black'/%3E%3Ccircle cx='22' cy='48' r='.8' fill='black'/%3E%3Ccircle cx='48' cy='62' r='.6' fill='black'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="mountdoom"] { --r: 2px; --r-sm: 1px; --motif-op: .14; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='70'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 34 L16 28 L26 38 L44 30 L58 40 L78 32 L92 42 L120 34'/%3E%3Cpath d='M44 30 L48 16 M78 32 L74 52' opacity='.7'/%3E%3C/g%3E%3C/svg%3E"); }
+[data-region="home"] { --r: 12px; --r-sm: 8px; --motif-op: .11; --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70'%3E%3Cg fill='none' stroke='black' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M35 66 V30'/%3E%3Cpath d='M35 34 c-6 -4 -6 -10 0 -14 c6 4 6 10 0 14z'/%3E%3Cpath d='M35 46 c-6 -4 -7 -9 -2 -12 M35 46 c6 -4 7 -9 2 -12' opacity='.8'/%3E%3Cpath d='M8 66 l4 -8 M60 66 l3 -7' opacity='.6'/%3E%3C/g%3E%3C/svg%3E"); }
+/* @end-tokens */
+:root { --shift: 14; }
+* { box-sizing: border-box; }
+body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background: var(--muted); opacity: var(--motif-op);
+  -webkit-mask: var(--motif) repeat; mask: var(--motif) repeat; }
+html { background: var(--bg); -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; color: var(--ink); font: 17px/1.5 var(--font-body); font-variant-numeric: lining-nums;
+  padding: 22px max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
+button, input { font: inherit; color: inherit; }
+button, summary { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1260px; margin: 0 auto; display: grid; gap: 20px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+header { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; justify-content: space-between; }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: clamp(2.2rem, 4.4vw, 3.2rem); line-height: 1.05; }
+.lede { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+.back { color: var(--accent); text-decoration: none; font-size: 15px; }
+.back:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* the road, as tabs */
+.regions { display: flex; gap: 2px 6px; overflow-x: auto; scrollbar-width: none; padding: 2px; margin: 0 -2px; }
+.regions button { flex: none; border: 0; background: none; padding: 6px 10px; border-radius: var(--r-sm); font-family: var(--font-caps); font-size: 16px; color: var(--muted);
+  transition: color .15s ease, background-color .15s ease, transform .16s var(--ease-out); }
+.regions button[aria-selected="true"] { color: var(--on-accent); background: var(--accent); }
+.regions button:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) { .regions button:not([aria-selected="true"]):hover { color: var(--ink); background: var(--raise); } }
+
+/* the scene itself */
+.viewer { display: grid; gap: 12px; }
+.frame { position: relative; overflow: hidden; border-radius: var(--r); background: var(--raise); aspect-ratio: 4 / 1; touch-action: pan-y; }
+.scene { position: absolute; inset: 0; transform: scale(1.035); transform-origin: 50% 100%; transition: opacity .2s ease; }
+.scene.out { opacity: 0; }
+.scene svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; will-change: transform; }
+.scene .hot { pointer-events: visiblePainted; cursor: pointer; outline: none; transition: filter .15s ease; }
+.scene .hot:focus-visible { filter: drop-shadow(0 0 3px var(--accent)) drop-shadow(0 0 1px var(--accent)) brightness(1.15); }
+@media (hover: hover) and (pointer: fine) { .scene .hot:hover { filter: brightness(1.18) drop-shadow(0 0 5px rgba(255, 244, 214, .85)); } }
+.scene .hot .on-lit { opacity: 0; transition: opacity .5s ease; }
+.scene .hot .off-lit { transition: opacity .5s ease; }
+.scene .hot.lit .on-lit { opacity: 1; }
+.scene .hot.lit .off-lit { opacity: 0; }
+.scene .hot .swing { transform-box: view-box; transition: transform .55s var(--ease-out); }
+.scene .hot.open .swing { transform: scaleX(.14); }
+#fxc { position: absolute; left: 0; top: 0; pointer-events: none; }
+.flash { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: #eef3ff; opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 15px; }
+
+/* the caption that opens where you clicked */
+.card { position: absolute; z-index: 3; width: max-content; max-width: min(300px, calc(100vw - 56px)); padding: 10px 14px 11px; border-radius: var(--r-sm); pointer-events: none;
+  background: var(--night); color: var(--night-ink); box-shadow: inset 0 2px 0 var(--gold), 0 14px 30px -14px rgba(0, 0, 0, .7);
+  opacity: 0; transform: scale(.96); transition: opacity .18s ease, transform .18s var(--ease-out); }
+.card.on { opacity: 1; transform: none; }
+.card.instant { transition: none; }
+.card b { display: block; font-family: var(--font-caps); font-weight: 400; font-size: 19px; line-height: 1.15; color: var(--night-gold); }
+.card span { display: block; font-size: 15px; line-height: 1.4; color: var(--night-muted); margin-top: 2px; }
+
+.bar { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; }
+.bar h2 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1.1; }
+.bar p { margin: 2px 0 0; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 15px; color: var(--muted); }
+.switch { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.controls > span { display: inline-flex; gap: 6px; }
+.step { width: 38px; height: 34px; border-radius: var(--r-sm); border: 1px solid var(--edge); background: var(--surface); display: grid; place-items: center; padding: 0;
+  transition: transform .16s var(--ease-out), background-color .15s ease; }
+.step:active { transform: scale(.95); }
+@media (hover: hover) and (pointer: fine) { .step:hover { background: var(--raise); } }
+.step svg { width: 16px; height: 16px; }
+.hint { font-size: 14px; color: var(--muted); margin: 0; }
+
+.panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.15fr); gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px 18px; min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; margin-bottom: 10px; }
+.phead h3 { margin: 0; font-family: var(--font-caps); font-weight: 400; font-size: 22px; line-height: 1.1; }
+.meta { font-size: 14px; color: var(--muted); }
+
+/* things to find */
+.finds { list-style: none; margin: 0; padding: 0; display: grid; }
+.finds button { width: 100%; display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; align-items: start; text-align: left; border: 0; background: none;
+  padding: 7px 8px; margin: 0 -8px; width: calc(100% + 16px); border-radius: var(--r-sm); transition: background-color .15s ease, transform .16s var(--ease-out); }
+.finds button:active { transform: scale(.98); }
+@media (hover: hover) and (pointer: fine) { .finds button:hover { background: var(--raise); } }
+.finds i { width: 16px; height: 16px; margin-top: 4px; border-radius: 50%; border: 2px solid var(--edge); }
+.finds .got i { background: var(--accent); border-color: var(--accent); }
+.finds b { display: block; font-weight: 500; line-height: 1.3; }
+.finds small { display: block; font-size: 14px; color: var(--muted); line-height: 1.35; }
+.finds .what { color: var(--muted); font-style: italic; }
+
+/* checks */
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 15px; }
+.checks li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; line-height: 1.4; }
+.checks li::before { content: ""; width: 10px; height: 10px; margin: 6px 0 0 3px; border-radius: 50%; background: var(--good); }
+.checks li.warn::before { background: var(--warn); border-radius: 2px; transform: rotate(45deg); }
+.checks li.warn { color: var(--ink); }
+.checks small { color: var(--muted); }
+
+/* the banner as Daybook crops it */
+.crops { display: grid; gap: 12px; }
+.crop { display: grid; gap: 4px; }
+.crop .box { position: relative; overflow: hidden; border-radius: var(--r-sm); background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.crop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%;
+  -webkit-mask: linear-gradient(#000 52%, transparent 100%); mask: linear-gradient(#000 52%, transparent 100%); }
+.crop .fold { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--muted); }
+.crop .fold::after { content: "page starts"; position: absolute; right: 6px; top: 2px; font-size: 11px; color: var(--muted); }
+.crop.laptop .box { aspect-ratio: 1366 / 328; }
+.crop.phone .box { width: 195px; height: 110px; }
+.crop.laptop .fold { top: 56%; }
+.crop.phone .fold { top: 86%; }
+.crop small { font-size: 13px; color: var(--muted); }
+
+/* every scene at once */
+.all { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.all button { width: 100%; display: grid; gap: 6px; text-align: left; border: 0; background: none; padding: 0; transition: transform .16s var(--ease-out); }
+.all button:active { transform: scale(.98); }
+.all img { width: 100%; aspect-ratio: 4 / 1; object-fit: cover; border-radius: var(--r-sm); background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); display: block; }
+.all .cur img { box-shadow: 0 0 0 2px var(--accent); }
+.all span { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; }
+.all b { font-family: var(--font-caps); font-weight: 400; font-size: 17px; }
+.all em { font-style: normal; color: var(--muted); font-size: 14px; }
+.all em.warn { color: var(--warn); }
+footer { font-size: 14px; color: var(--muted); }
+
+/* ambient motion, only when switched on */
+.ambient .fx > *, .ambient .fx-cloud, .ambient .fx-glow, .ambient .fx-birds, .ambient .fx-rain { transform-box: fill-box; }
+.ambient .fx-smoke > * { animation: smoke 4.5s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.ambient .fx-cloud > * { animation: cloud 34s ease-in-out infinite alternate; }
+.ambient .fx-water > * { animation: shimmer 3.4s ease-in-out infinite alternate; }
+.ambient .fx-flicker > * { animation: flicker 2.6s ease-in-out infinite; }
+.ambient .fx-rain { animation: rain .55s linear infinite; }
+.ambient .fx-embers > * { animation: embers 4.2s linear infinite; }
+.ambient .fx-sway > * { animation: sway 6s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.ambient .fx-glow { animation: glow 3.2s ease-in-out infinite alternate; }
+.ambient .fx-beam > * { animation: beam 7s ease-in-out infinite alternate; }
+.ambient .fx-birds { animation: birds 20s ease-in-out infinite alternate; }
+@keyframes smoke { to { transform: translate(4px, -6px) scale(1.08); opacity: .65; } }
+@keyframes cloud { to { transform: translateX(34px); } }
+@keyframes shimmer { to { opacity: .5; } }
+@keyframes flicker { 0%, 100% { opacity: 1; } 30% { opacity: .78; } 45% { opacity: .95; } 70% { opacity: .7; } 85% { opacity: .92; } }
+@keyframes rain { to { transform: translateY(var(--p, 200px)); } }
+@keyframes embers { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-34px); opacity: 0; } }
+@keyframes sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
+@keyframes glow { to { opacity: .72; } }
+@keyframes beam { to { opacity: .45; } }
+@keyframes birds { to { transform: translate(60px, -10px); } }
+
+@media (max-width: 980px) { .panels { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .panels .crops-panel { grid-column: 1 / -1; } }
+@media (max-width: 700px) {
+  body { font-size: 16px; padding-top: 16px; }
+  .panels { grid-template-columns: minmax(0, 1fr); }
+  /* a 4:1 strip is too thin on a phone: keep it tall and let it pan sideways */
+  .frame { aspect-ratio: auto; height: 250px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+  .scene { position: relative; width: 1000px; height: 250px; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { transition: none; }
+  .scene, .card, .scene .hot .on-lit, .scene .hot .off-lit, .scene .hot .swing { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Scenes of the Road</h1>
+      <p class="lede">Every place on the road to Mount Doom. Move across a scene to look around it, and click anything that catches your eye.</p>
+    </div>
+    <a class="back" href="./">Back to Daybook</a>
+  </header>
+
+  <nav class="regions" role="tablist" aria-label="Scenes" id="tabs"></nav>
+
+  <section class="viewer" aria-labelledby="sName">
+    <div class="frame" id="frame">
+      <div class="scene" id="scene"></div>
+      <canvas id="fxc" aria-hidden="true"></canvas>
+      <div class="flash" id="flash"></div>
+      <div class="card" id="card" aria-hidden="true"><b></b><span></span></div>
+      <div class="loading" id="loading">Unrolling the scene…</div>
+    </div>
+    <p class="sr" id="said" aria-live="polite"></p>
+    <div class="bar">
+      <div><h2 id="sName"></h2><p id="sLine"></p></div>
+      <div class="controls">
+        <label class="switch"><input type="checkbox" id="ambient"> Ambient motion</label>
+        <span>
+          <button class="step" type="button" id="prev" aria-label="Previous scene"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="step" type="button" id="next" aria-label="Next scene"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panels">
+    <div class="panel">
+      <div class="phead"><h3>Things to find</h3><span class="meta" id="foundN"></span></div>
+      <ul class="finds" id="finds"></ul>
+    </div>
+    <div class="panel">
+      <div class="phead"><h3>Checks</h3><span class="meta" id="checkN"></span></div>
+      <ul class="checks" id="checks"></ul>
+    </div>
+    <div class="panel crops-panel">
+      <div class="phead"><h3>As Daybook shows it</h3></div>
+      <div class="crops">
+        <div class="crop laptop"><div class="box"><img id="cropL" src="scenes/shire.svg" alt=""><i class="fold"></i></div><small>Laptop, 1366 wide. Below the dashed line the page's panels sit over the scene.</small></div>
+        <div class="crop phone"><div class="box"><img id="cropP" src="scenes/shire.svg" alt=""><i class="fold"></i></div><small>Phone, 390 wide. Only the middle of the scene fits.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="phead"><h3>All twelve</h3><span class="meta" id="allN"></span></div>
+    <ul class="all" id="all"></ul>
+  </section>
+
+  <footer>Arrow keys move between scenes. Scenes are drawn by the scripts in <code>tools/</code>; nothing here is saved anywhere except which features you've found, in this browser.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+  const ORDER = ["shire", "bree", "weathertop", "rivendell", "moria", "lorien", "amonhen", "helmsdeep", "minastirith", "blackgate", "mountdoom", "home"];
+  const REALMS = {
+    shire: ["The Shire", "Round doors, full larders and time to think."],
+    bree: ["Bree", "Rain on the windows and a fire in the common room."],
+    weathertop: ["Weathertop", "Cold wind on the old watchtower. Keep the fire small."],
+    rivendell: ["Rivendell", "The Last Homely House, where every road pauses."],
+    moria: ["Moria", "Long dark halls. Keep to the path and keep going."],
+    lorien: ["Lothlórien", "Silver trees, and a quiet that helps you think."],
+    amonhen: ["Amon Hen", "The river runs fast below the hill."],
+    helmsdeep: ["Helm's Deep", "Hold the wall through the night. Dawn comes."],
+    minastirith: ["Minas Tirith", "Seven white circles, and the beacons ready."],
+    blackgate: ["The Black Gate", "Ash on the wind. Nearly there."],
+    mountdoom: ["Mount Doom", "The last climb."],
+    home: ["Home", "The Shire at harvest, and nothing left to carry."],
+  };
+  const FX = ["pulse", "light", "swing", "smoke", "sparks", "leaves", "splash", "flash", "erupt"];
+  const AMBIENT = ["smoke", "cloud", "water", "flicker", "rain", "embers", "sway", "glow", "beam", "birds"];
+  const LIMIT = 200 * 1024;
+  const rmq = matchMedia("(prefers-reduced-motion: reduce)"), calm = () => rmq.matches;
+  const fine = matchMedia("(hover: hover) and (pointer: fine)");
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("daybook.scenes." + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("daybook.scenes." + k, JSON.stringify(v)); } catch {} },
+  };
+  const found = store.get("found", {});
+  const texts = {}, fetches = {};
+  const getText = (r) => fetches[r] || (fetches[r] = fetch(`scenes/${r}.svg`).then((x) => { if (!x.ok) throw new Error(x.status); return x.text(); }).then((t) => (texts[r] = t)));
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const kb = (n) => (n / 1024).toFixed(0) + " KB";
+
+  // ---------- tabs ----------
+  let cur = ORDER.includes(location.hash.slice(1)) ? location.hash.slice(1) : "shire";
+  $("#tabs").innerHTML = ORDER.map((r) => `<button type="button" role="tab" id="tab-${r}" data-r="${r}" aria-selected="false" tabindex="-1">${esc(REALMS[r][0])}</button>`).join("");
+  $("#tabs").addEventListener("click", (e) => { const b = e.target.closest("[data-r]"); if (b) show(b.dataset.r, { instant: !e.detail }); });
+  $("#tabs").addEventListener("keydown", (e) => {
+    const i = ORDER.indexOf(cur), d = { ArrowRight: 1, ArrowLeft: -1, Home: -i, End: ORDER.length - 1 - i }[e.key];
+    if (d === undefined) return;
+    e.preventDefault(); show(ORDER[(i + d + ORDER.length) % ORDER.length], { instant: true, focusTab: true });
+  });
+  const step = (d, e) => show(ORDER[(ORDER.indexOf(cur) + d + ORDER.length) % ORDER.length], { instant: !e.detail });
+  $("#prev").addEventListener("click", (e) => step(-1, e));
+  $("#next").addEventListener("click", (e) => step(1, e));
+  addEventListener("keydown", (e) => {
+    if (e.key === "Escape") return hideCard();
+    if (e.target.closest("input, textarea, [role=tab]") || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); show(ORDER[(ORDER.indexOf(cur) + (e.key === "ArrowRight" ? 1 : -1) + ORDER.length) % ORDER.length], { instant: true }); }
+  });
+
+  // ---------- ambient switch ----------
+  const amb = $("#ambient");
+  amb.checked = store.get("ambient", !calm());
+  const setAmbient = () => $("#frame").classList.toggle("ambient", amb.checked);
+  amb.addEventListener("change", () => { store.set("ambient", amb.checked); setAmbient(); });
+  setAmbient();
+
+  // ---------- load a scene: one <svg> per depth layer, so parallax only moves composited planes ----------
+  let layers = [], token = 0;
+  async function show(r, opts = {}) {
+    if (!REALMS[r]) return;
+    const same = r === cur && layers.length;
+    cur = r; hideCard(true);
+    history.replaceState(null, "", "#" + r);
+    document.documentElement.dataset.region = r;
+    setTimeout(() => { $('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(); }, calm() ? 0 : 1500);
+    ORDER.forEach((x) => { const t = $("#tab-" + x); t.setAttribute("aria-selected", String(x === r)); t.tabIndex = x === r ? 0 : -1; });
+    const tab = $("#tab-" + r);
+    if (opts.focusTab) tab.focus();
+    tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    $("#sName").textContent = REALMS[r][0]; $("#sLine").textContent = REALMS[r][1];
+    $("#cropL").src = $("#cropP").src = `scenes/${r}.svg`;
+    $("#all").querySelectorAll("li").forEach((li) => li.classList.toggle("cur", li.dataset.r === r));
+    if (same) return;
+    const my = ++token, sc = $("#scene");
+    const fade = !opts.instant && !calm() && layers.length;
+    if (fade) sc.classList.add("out");
+    let text;
+    try { text = await getText(r); } catch { if (my === token) { $("#loading").hidden = false; $("#loading").textContent = "This scene couldn't be loaded."; } return; }
+    if (fade) await new Promise((ok) => setTimeout(ok, 200));
+    if (my !== token) return;
+    build(text);
+    sc.classList.remove("out");
+    $("#loading").hidden = true;
+    renderFinds(); renderChecks(r, text);
+    const fr = $("#frame"); if (fr.scrollWidth > fr.clientWidth) fr.scrollLeft = (fr.scrollWidth - fr.clientWidth) / 2;
+    sizeCanvas();
+  }
+
+  function build(text) {
+    const doc = new DOMParser().parseFromString(text, "image/svg+xml");
+    const src = doc.documentElement, sc = $("#scene");
+    const vb = src.getAttribute("viewBox") || "0 0 1600 400";
+    const make = () => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", vb); s.setAttribute("preserveAspectRatio", "xMidYMax slice"); s.setAttribute("aria-hidden", "true"); return s; };
+    sc.replaceChildren();
+    layers = [];
+    const first = make(); first.removeAttribute("aria-hidden");
+    first.setAttribute("role", "group"); first.setAttribute("aria-label", REALMS[cur][0] + " scene");
+    const defs = src.querySelector(":scope > defs"); if (defs) first.appendChild(document.importNode(defs, true));
+    let svg = first, loose = null;
+    for (const node of [...src.children]) {
+      if (node.tagName === "title" || node.tagName === "defs") continue;
+      if (node.classList.contains("layer")) {
+        if (svg.querySelector(":scope > g")) { sc.appendChild(svg); svg = make(); }
+        svg.appendChild(document.importNode(node, true));
+        layers.push({ el: svg, depth: Math.max(0, Math.min(1.2, parseFloat(node.dataset.depth) || 0)) });
+        loose = null;
+      } else {
+        // drawn outside any layer: it still shows, as a still plane
+        if (!loose) { if (svg.querySelector(":scope > g")) { sc.appendChild(svg); svg = make(); } loose = svg; layers.push({ el: svg, depth: 0 }); }
+        svg.appendChild(document.importNode(node, true));
+      }
+    }
+    sc.appendChild(svg);
+    if (!layers.length) layers.push({ el: svg, depth: 0 });
+    // clickable features
+    sc.querySelectorAll(".hot").forEach((g) => {
+      g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); g.setAttribute("aria-label", g.dataset.name || "Feature");
+      const sw = g.querySelector(".swing");
+      if (sw && sw.dataset.origin) {
+        const [x, y] = sw.dataset.origin.split(/[\s,]+/).map(Number); sw.style.transformOrigin = `${x}px ${y}px`;
+        // an open door is a sliver; keep its closed outline clickable so it can be shut again
+        const bb = sw.getBBox(), hit = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        for (const [k, v] of Object.entries({ x: bb.x, y: bb.y, width: bb.width, height: bb.height, fill: "transparent" })) hit.setAttribute(k, v);
+        sw.before(hit);
+      }
+    });
+    // each ambient piece starts at a different point in its loop
+    sc.querySelectorAll(".fx > *").forEach((n) => { n.style.animationDelay = `${-(Math.random() * 30).toFixed(2)}s`; });
+    sc.querySelectorAll(".fx-rain").forEach((n, i) => { n.style.animationDelay = `${-(i * .17).toFixed(2)}s`; });
+    px.x = px.y = px.vx = px.vy = 0; place();
+  }
+
+  // ---------- parallax: decorative, so it follows the pointer through a spring rather than 1:1 ----------
+  const px = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, raf: 0 };
+  const place = () => {
+    const k = $("#scene").clientWidth / 1600 * +getComputedStyle(document.documentElement).getPropertyValue("--shift");
+    for (const L of layers) L.el.style.transform = L.depth ? `translate3d(${(-px.x * L.depth * k).toFixed(2)}px, ${(-px.y * L.depth * k * .4).toFixed(2)}px, 0)` : "";
+  };
+  const tick = () => {
+    px.vx = (px.vx + (px.tx - px.x) * .07) * .78; px.vy = (px.vy + (px.ty - px.y) * .07) * .78;
+    px.x += px.vx; px.y += px.vy; place();
+    px.raf = Math.abs(px.tx - px.x) + Math.abs(px.ty - px.y) + Math.abs(px.vx) + Math.abs(px.vy) > .002 ? requestAnimationFrame(tick) : 0;
+  };
+  const aim = (x, y) => { px.tx = x; px.ty = y; if (!px.raf) px.raf = requestAnimationFrame(tick); };
+  $("#frame").addEventListener("pointermove", (e) => {
+    if (calm() || !fine.matches || e.pointerType !== "mouse") return;
+    const r = $("#frame").getBoundingClientRect();
+    aim(((e.clientX - r.left) / r.width) * 2 - 1, ((e.clientY - r.top) / r.height) * 2 - 1);
+  });
+  $("#frame").addEventListener("pointerleave", () => aim(0, 0));
+  addEventListener("resize", () => { place(); sizeCanvas(); });
+
+  // ---------- clicking things ----------
+  $("#frame").addEventListener("click", (e) => {
+    const g = e.target.closest && e.target.closest(".hot");
+    if (!g) return hideCard();
+    const fr = $("#frame"), r = fr.getBoundingClientRect();
+    activate(g, e.clientX - r.left + fr.scrollLeft, e.clientY - r.top, !e.detail);
+  });
+  $("#frame").addEventListener("keydown", (e) => {
+    const g = e.target.closest && e.target.closest(".hot");
+    if (!g || (e.key !== "Enter" && e.key !== " ")) return;
+    e.preventDefault();
+    const at = centre(g); activate(g, at.x, at.y, true);
+  });
+  const centre = (g) => { const fr = $("#frame"), a = g.getBoundingClientRect(), r = fr.getBoundingClientRect(); return { x: a.left - r.left + fr.scrollLeft + a.width / 2, y: a.top - r.top + a.height / 2 }; };
+
+  function activate(g, x, y, keyboard) {
+    const fx = FX.includes(g.dataset.fx) ? g.dataset.fx : "pulse";
+    if (fx === "light") g.classList.toggle("lit");
+    if (fx === "swing") g.classList.toggle("open");
+    if (fx === "flash") flash(x, y);
+    burst(fx, x, y);
+    const name = g.dataset.name || "", note = g.dataset.note || "";
+    showCard(x, y, name, note, keyboard);
+    $("#said").textContent = `${name}. ${note}`;
+    const f = found[cur] || (found[cur] = []);
+    if (g.id && !f.includes(g.id)) { f.push(g.id); store.set("found", found); renderFinds(); }
+  }
+
+  // the caption grows from the point you clicked
+  let cardTimer = 0;
+  function showCard(x, y, name, note, instant) {
+    const c = $("#card"), fr = $("#frame");
+    c.querySelector("b").textContent = name; c.querySelector("span").textContent = note;
+    c.classList.remove("on"); c.classList.add("instant");
+    c.style.left = "0px"; c.style.top = "0px";
+    const w = c.offsetWidth, h = c.offsetHeight, W = fr.clientWidth, H = fr.clientHeight, sx = fr.scrollLeft;
+    const left = Math.max(sx + 8, Math.min(sx + W - w - 8, x - w / 2));
+    const below = y - h - 14 < 6;
+    const top = below ? Math.min(H - h - 6, y + 14) : y - h - 14;
+    c.style.left = left + "px"; c.style.top = top + "px";
+    c.style.transformOrigin = `${x - left}px ${below ? 0 : h}px`;
+    c.offsetWidth; // commit the start state before transitioning
+    c.classList.toggle("instant", !!instant || calm());
+    c.classList.add("on");
+    clearTimeout(cardTimer); cardTimer = setTimeout(() => hideCard(), 4200);
+  }
+  function hideCard(now) { const c = $("#card"); clearTimeout(cardTimer); if (now) c.classList.add("instant"); c.classList.remove("on"); }
+
+  function flash(x, y) {
+    bolt = calm() ? null : { x, y, t: 0 };
+    const f = $("#flash");
+    if (!f.animate) return;
+    f.animate(calm() ? [{ opacity: 0 }, { opacity: .25 }, { opacity: 0 }]
+      : [{ opacity: 0 }, { opacity: .75, offset: .06 }, { opacity: .1, offset: .18 }, { opacity: .5, offset: .26 }, { opacity: 0 }], { duration: calm() ? 500 : 900, easing: "ease-out" });
+    if (!calm()) wake();
+  }
+
+  // ---------- particles ----------
+  const cv = $("#fxc"), cx = cv.getContext("2d");
+  let parts = [], bolt = null, last = 0, raf = 0, glow = null;
+  // the canvas and flash cover the whole scene, which is wider than the frame on a phone; points are in scene-box pixels
+  function sizeCanvas() {
+    const fr = $("#frame"), W = fr.scrollWidth, H = fr.clientHeight, d = devicePixelRatio || 1;
+    cv.width = Math.round(W * d); cv.height = Math.round(H * d); cv.style.width = W + "px"; cv.style.height = H + "px"; cx.setTransform(d, 0, 0, d, 0, 0);
+    $("#flash").style.width = W + "px";
+  }
+  sizeCanvas();
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const pick = (a) => a[(Math.random() * a.length) | 0];
+  function burst(kind, x, y) {
+    if (calm()) return;
+    const s = Math.max(.55, $("#frame").clientWidth / 1260);
+    const add = (p) => parts.push(Object.assign({ t: 0, rot: 0, vr: 0, g: 0, drag: .99, grow: 0, add: false }, p));
+    if (kind === "pulse" || kind === "light" || kind === "swing") {
+      for (let i = 0; i < 2; i++) add({ kind: "ring", x, y, r: 6 * s, grow: 1.1 * s, life: 46, delay: i * 9, col: "255,244,214" });
+    }
+    if (kind === "smoke" || kind === "erupt") {
+      const n = kind === "erupt" ? 22 : 12;
+      for (let i = 0; i < n; i++) add({ kind: "puff", x: x + rnd(-6, 6) * s, y: y + rnd(-4, 4) * s, vx: rnd(-.35, .35) * s, vy: rnd(-1.1, -.45) * s * (kind === "erupt" ? 1.8 : 1),
+        r: rnd(4, 8) * s, grow: rnd(.12, .22) * s, life: rnd(90, 150), delay: i * 3, col: kind === "erupt" ? "60,52,48" : "226,222,214", a: kind === "erupt" ? .55 : .38 });
+    }
+    if (kind === "sparks" || kind === "erupt") {
+      const n = kind === "erupt" ? 130 : 42, sp = kind === "erupt" ? [3, 8.5] : [1.6, 4.4];
+      for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + rnd(-1, 1) * (kind === "erupt" ? .75 : 1.05), v = rnd(...sp) * s;
+        add({ kind: "dot", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: .11 * s, r: rnd(1, 2.3) * s, life: rnd(40, kind === "erupt" ? 110 : 70), delay: kind === "erupt" ? rnd(0, 40) : 0,
+          col: `${255},${(rnd(120, 200)) | 0},${(rnd(30, 80)) | 0}`, add: true }); }
+      if (kind === "erupt") { glow = { x, y, t: 0 }; shake(); }
+    }
+    if (kind === "leaves") {
+      for (let i = 0; i < 18; i++) add({ kind: "leaf", x: x + rnd(-14, 14) * s, y: y + rnd(-8, 8) * s, vx: rnd(-1.4, 1.4) * s, vy: rnd(-2, -.6) * s, g: .035 * s, drag: .985,
+        r: rnd(2.6, 4.2) * s, rot: rnd(0, 6), vr: rnd(-.12, .12), life: rnd(110, 170), sway: rnd(0, 6), col: pick(["217,166,58", "196,106,43", "122,154,58", "230,196,92"]) });
+    }
+    if (kind === "splash") {
+      for (let i = 0; i < 28; i++) { const a = -Math.PI / 2 + rnd(-.9, .9), v = rnd(1.8, 4.6) * s;
+        add({ kind: "dot", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: .17 * s, r: rnd(1, 2.2) * s, life: rnd(32, 55), col: "226,238,255" }); }
+      for (let i = 0; i < 2; i++) add({ kind: "ring", x, y, r: 4 * s, grow: .9 * s, life: 40, delay: i * 8, col: "226,238,255", flat: true });
+    }
+    wake();
+  }
+  function shake() {
+    const sc = $("#scene");
+    if (!sc.animate || calm()) return;
+    sc.animate([{ translate: "0 0" }, { translate: "-5px 2px" }, { translate: "4px -3px" }, { translate: "-3px 2px" }, { translate: "2px -1px" }, { translate: "0 0" }], { duration: 520, easing: "ease-out" });
+  }
+  const wake = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame); } };
+  function frame(now) {
+    const dt = Math.min(3, (now - last) / 16.67); last = now;
+    const W = cv.width / (devicePixelRatio || 1), H = cv.height / (devicePixelRatio || 1);
+    cx.clearRect(0, 0, W, H);
+    if (glow) {
+      glow.t += dt; const k = glow.t / 70;
+      if (k >= 1) glow = null; else { const r = 140 * (0.6 + k), g = cx.createRadialGradient(glow.x, glow.y, 0, glow.x, glow.y, r);
+        g.addColorStop(0, `rgba(255,150,60,${.55 * (1 - k)})`); g.addColorStop(1, "rgba(255,90,20,0)"); cx.fillStyle = g; cx.fillRect(glow.x - r, glow.y - r, r * 2, r * 2); }
+    }
+    if (bolt) {
+      bolt.t += dt;
+      if (bolt.t > 14) bolt = null; else {
+        if (!bolt.pts) { bolt.pts = []; let x = bolt.x + rnd(-60, 60), y = 0; const n = 9; for (let i = 0; i <= n; i++) { bolt.pts.push([x, y]); y += bolt.y / n; x += rnd(-22, 22) + (bolt.x - x) / (n - i + 1); } }
+        cx.save(); cx.globalAlpha = 1 - bolt.t / 14; cx.strokeStyle = "#f4f7ff"; cx.lineWidth = 2.2; cx.shadowColor = "#bcd0ff"; cx.shadowBlur = 14;
+        cx.beginPath(); bolt.pts.forEach(([a, b], i) => (i ? cx.lineTo(a, b) : cx.moveTo(a, b))); cx.stroke(); cx.restore();
+      }
+    }
+    parts = parts.filter((p) => {
+      if (p.delay > 0) { p.delay -= dt; return true; }
+      p.t += dt; if (p.t >= p.life) return false;
+      const k = p.t / p.life;
+      if (p.vx !== undefined) {
+        p.vy += p.g * dt; p.vx *= Math.pow(p.drag, dt); p.vy *= Math.pow(p.drag, dt);
+        p.x += p.vx * dt + (p.kind === "leaf" ? Math.sin(p.t / 14 + p.sway) * .6 : 0); p.y += p.vy * dt; p.rot += p.vr * dt;
+      }
+      p.r += p.grow * dt;
+      cx.globalCompositeOperation = p.add ? "lighter" : "source-over";
+      if (p.kind === "ring") {
+        cx.strokeStyle = `rgba(${p.col},${.7 * (1 - k)})`; cx.lineWidth = 1.6; cx.beginPath();
+        if (p.flat) cx.ellipse(p.x, p.y, p.r, p.r * .35, 0, 0, 7); else cx.arc(p.x, p.y, p.r, 0, 7); cx.stroke();
+      } else if (p.kind === "puff") {
+        cx.fillStyle = `rgba(${p.col},${p.a * Math.min(1, k * 5) * (1 - k)})`; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, 7); cx.fill();
+      } else if (p.kind === "leaf") {
+        cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot); cx.fillStyle = `rgba(${p.col},${1 - Math.max(0, k - .7) / .3})`;
+        cx.beginPath(); cx.ellipse(0, 0, p.r, p.r * .45, 0, 0, 7); cx.fill(); cx.restore();
+      } else {
+        cx.fillStyle = `rgba(${p.col},${1 - k})`; cx.beginPath(); cx.arc(p.x, p.y, p.r * (1 - k * .4), 0, 7); cx.fill();
+      }
+      return true;
+    });
+    cx.globalCompositeOperation = "source-over";
+    raf = parts.length || bolt || glow ? requestAnimationFrame(frame) : 0;
+    if (!raf) cx.clearRect(0, 0, W, H);
+  }
+
+  // ---------- panels ----------
+  function hotsOf() { return [...$("#scene").querySelectorAll(".hot")]; }
+  function renderFinds() {
+    const hs = hotsOf(), f = found[cur] || [];
+    const got = hs.filter((g) => f.includes(g.id)).length;
+    $("#foundN").textContent = hs.length ? (got === hs.length ? `All ${hs.length} found` : `${got} of ${hs.length} found`) : "";
+    $("#finds").innerHTML = hs.length ? hs.map((g, i) => {
+      const has = f.includes(g.id);
+      return `<li class="${has ? "got" : ""}"><button type="button" data-i="${i}"><i></i><span><b>${has ? esc(g.dataset.name) : "Something here"}</b>
+        <small>${has ? esc(g.dataset.note) : `<span class="what">${esc(hint(g))}</span>`}</small></span></button></li>`;
+    }).join("") : `<li class="hint">Nothing in this scene can be clicked yet.</li>`;
+  }
+  const hint = (g) => {
+    const a = g.getBBox ? g.getBBox() : null; if (!a) return "Somewhere in the scene";
+    const x = a.x + a.width / 2, y = a.y + a.height / 2;
+    return `${y < 150 ? "High up" : y < 280 ? "In the middle" : "Low down"}, ${x < 560 ? "on the left" : x > 1040 ? "on the right" : "near the centre"}`;
+  };
+  $("#finds").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-i]"); if (!b) return;
+    const g = hotsOf()[+b.dataset.i]; if (!g) return;
+    const fr = $("#frame"), a = g.getBoundingClientRect(), r = fr.getBoundingClientRect();
+    if (fr.scrollWidth > fr.clientWidth) fr.scrollLeft += a.left + a.width / 2 - (r.left + r.width / 2);
+    const at = centre(g); activate(g, at.x, at.y, !e.detail);
+  });
+
+  function audit(text) {
+    const doc = new DOMParser().parseFromString(text, "image/svg+xml"), root = doc.documentElement, out = [];
+    const ok = (t, sub) => out.push({ ok: true, t, sub }), bad = (t, sub) => out.push({ ok: false, t, sub });
+    if (doc.querySelector("parsererror")) { bad("The file isn't valid SVG"); return out; }
+    const size = new Blob([text]).size;
+    (size <= LIMIT ? ok : bad)(`${kb(size)}`, size <= LIMIT ? "under the 200 KB budget" : "over the 200 KB budget");
+    const L = [...root.children].filter((n) => n.classList.contains("layer"));
+    const loose = [...root.children].filter((n) => !["title", "defs"].includes(n.tagName) && !n.classList.contains("layer"));
+    if (L.length) ok(`${L.length} depth layers`, L.map((n) => `${n.dataset.layer || "?"} ${n.dataset.depth}`).join(" · "));
+    else bad("No depth layers", "the scene can't move with the pointer");
+    if (loose.length) bad(`${loose.length} shapes outside a layer`, "they stay still while the rest moves");
+    const H = [...root.querySelectorAll(".hot")], ids = H.map((g) => g.id);
+    if (H.length >= 3) ok(`${H.length} things to click`, H.map((g) => g.dataset.name).join(", "));
+    else bad(`${H.length} things to click`, "aim for 3 to 5");
+    const dup = ids.filter((x, i) => !x || ids.indexOf(x) !== i);
+    if (dup.length) bad("Repeated or missing feature ids", dup.join(", ") || "blank id");
+    for (const g of H) {
+      const fx = g.dataset.fx, why = [];
+      if (!g.dataset.name) why.push("no name");
+      if (!g.dataset.note) why.push("no note"); else if (g.dataset.note.length > 110) why.push("note is long");
+      if (!FX.includes(fx)) why.push(`unknown effect "${fx}"`);
+      if (fx === "swing" && !g.querySelector(".swing[data-origin]")) why.push("nothing marked to swing");
+      if (fx === "light" && !g.querySelector(".on-lit, .off-lit")) why.push("no lights to switch");
+      if (g.closest(".layer") === null) why.push("not inside a layer");
+      if (why.length) bad(`${g.dataset.name || g.id}`, why.join(", "));
+    }
+    const F = [...root.querySelectorAll(".fx")], kinds = {};
+    for (const n of F) { const k = [...n.classList].find((c) => c.startsWith("fx-"))?.slice(3); kinds[k] = (kinds[k] || 0) + 1;
+      if (!AMBIENT.includes(k)) bad(`Unknown ambient kind "${k}"`); if (k === "rain" && !/--p/.test(n.getAttribute("style") || "")) bad("Rain without a period", "its loop will jump"); }
+    const moving = [...root.querySelectorAll(".fx[transform], .hot[transform]")];
+    if (moving.length) bad(`${moving.length} effect groups carry their own transform`, "the animation would replace it");
+    if (F.length) ok(`${F.length} ambient groups`, Object.entries(kinds).map(([k, n]) => (n > 1 ? `${k} ×${n}` : k)).join(", "));
+    else bad("No ambient motion", "nothing moves when it's switched on");
+    ok(`${root.querySelectorAll("*").length.toLocaleString()} shapes in all`);
+    return out;
+  }
+  function renderChecks(r, text) {
+    const a = audit(text), n = a.filter((x) => !x.ok).length;
+    $("#checkN").textContent = n ? `${n} to look at` : "All good";
+    $("#checks").innerHTML = a.map((x) => `<li class="${x.ok ? "" : "warn"}"><span>${esc(x.t)}${x.sub ? ` <small>${esc(x.sub)}</small>` : ""}</span></li>`).join("");
+  }
+
+  // every scene, with its size and how many checks need a look
+  $("#all").innerHTML = ORDER.map((r) => `<li data-r="${r}"><button type="button" data-r="${r}"><img src="scenes/${r}.svg" alt="" loading="lazy" decoding="async">
+    <span><b>${esc(REALMS[r][0])}</b><em id="st-${r}">…</em></span></button></li>`).join("");
+  $("#all").addEventListener("click", (e) => { const b = e.target.closest("button[data-r]"); if (!b) return; show(b.dataset.r, { instant: !e.detail }); $("#frame").scrollIntoView({ behavior: calm() ? "auto" : "smooth", block: "nearest" }); });
+  Promise.allSettled(ORDER.map((r) => getText(r).then((t) => {
+    const n = audit(t).filter((x) => !x.ok).length, el = $("#st-" + r);
+    el.textContent = `${kb(new Blob([t]).size)} · ${n ? n + " to look at" : "all good"}`; el.classList.toggle("warn", !!n);
+    return n;
+  }, () => { const el = $("#st-" + r); el.textContent = "missing"; el.classList.add("warn"); return 1; }))).then((rs) => {
+    const bad = rs.filter((x) => x.value).length;
+    $("#allN").textContent = bad ? `${bad} of ${ORDER.length} need a look` : `All ${ORDER.length} pass`;
+  });
+
+  show(cur, { instant: true });
+})();
+</script>
+</body>
+</html>

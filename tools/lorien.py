@@ -147,10 +147,10 @@ def canopy_band(sc, y, rmin, rmax, fill, light=None, dapple=.3, x0=-30, x1=W + 3
 
 def lantern(sc, x, y, hang=8, s=1.0):
     """A small hanging lamp with a soft halo."""
-    sc.add(f'<circle cx="{f(x)}" cy="{f(y + hang + 3 * s)}" r="{f(16 * s)}" fill="url(#lampglow)"/>'
+    sc.add(f'<g><circle cx="{f(x)}" cy="{f(y + hang + 3 * s)}" r="{f(16 * s)}" fill="url(#lampglow)"/>'
            f'<path d="M{f(x)},{f(y)} v{f(hang)}" stroke="{P["wood_dark"]}" stroke-width=".7"/>'
            f'<path d="M{f(x - 2.4 * s)},{f(y + hang + 1)} Q{f(x)},{f(y + hang - 1.5 * s)} {f(x + 2.4 * s)},{f(y + hang + 1)} '
-           f'Q{f(x + 2.8 * s)},{f(y + hang + 5 * s)} {f(x)},{f(y + hang + 6.5 * s)} Q{f(x - 2.8 * s)},{f(y + hang + 5 * s)} {f(x - 2.4 * s)},{f(y + hang + 1)}Z" fill="{P["lamp"]}"/>')
+           f'Q{f(x + 2.8 * s)},{f(y + hang + 5 * s)} {f(x)},{f(y + hang + 6.5 * s)} Q{f(x - 2.8 * s)},{f(y + hang + 5 * s)} {f(x - 2.4 * s)},{f(y + hang + 1)}Z" fill="{P["lamp"]}"/></g>')
 
 
 def talan(sc, cx, y, rx, fade=0.0, lamps=(), rail=True, under=True):
@@ -183,8 +183,10 @@ def talan(sc, cx, y, rx, fade=0.0, lamps=(), rail=True, under=True):
         g.append(f'<path d="M{f(cx - rx)},{f(y - 1.5 - rh)} A{f(rx)},{f(ry * .9)} 0 0 0 {f(cx + rx)},{f(y - 1.5 - rh)}" stroke="{wood}" stroke-width="1.3" fill="none"/>')
         g.append(f'<path d="{arc}" stroke="{wood}" stroke-width=".8" fill="none"/>')
     sc.add("".join(g))
-    for lx, hang in lamps:
-        lantern(sc, cx + lx, y + ry * math.sqrt(max(0, 1 - (lx / rx) ** 2)) + 1, hang)
+    if lamps:
+        with sc.fx("flicker"):
+            for lx, hang in lamps:
+                lantern(sc, cx + lx, y + ry * math.sqrt(max(0, 1 - (lx / rx) ** 2)) + 1, hang)
 
 
 def pavilion(sc, x, y, w, h, fade=0.0):
@@ -269,132 +271,192 @@ def walkway(sc, x0, y0, x1, y1, sag, fade=0.0):
     return q
 
 
+def fern(x, y, s, flip=1):
+    """A low fern clump: arching fronds with paired leaflets, as one path."""
+    d = ""
+    for a in (-1.25, -.75, -.3, .2, .65, 1.1):
+        L = s * (1 - abs(a) * .25)
+        ex, ey = x + math.sin(a) * L * flip, y - math.cos(a) * L * .8
+        cx, cy = x + math.sin(a) * L * .3 * flip, y - L * .9
+        d += f"M{f(x)},{f(y)} Q{f(cx)},{f(cy)} {f(ex)},{f(ey)}"
+        for k in range(1, 6):
+            t = k / 6
+            px = (1 - t) ** 2 * x + 2 * (1 - t) * t * cx + t * t * ex
+            py = (1 - t) ** 2 * y + 2 * (1 - t) * t * cy + t * t * ey
+            l = s * .16 * (1 - t * .6)
+            d += f"M{f(px)},{f(py)} l{f(-l * .8)},{f(l * .5)} M{f(px)},{f(py)} l{f(l * .8)},{f(l * .5)}"
+    return d
+
+
 def build(seed=23):
     sc = Scene(seed)
     sc.defs.append(f'<radialGradient id="lampglow"><stop offset="0" stop-color="{P["lamp_glow"]}" stop-opacity=".75"/>'
                    f'<stop offset=".35" stop-color="{P["lamp_glow"]}" stop-opacity=".3"/><stop offset="1" stop-color="{P["lamp_glow"]}" stop-opacity="0"/></radialGradient>')
-    sc.sky(sc.lin("sky", P["sky"]))
-    # light pouring in from high on the left
-    sc.add(f'<ellipse cx="380" cy="30" rx="520" ry="260" fill="{sc.rad("sun", [(0, P["glow"], .7), (.4, P["glow"], .3), (1, P["glow"], 0)])}"/>')
+    with sc.layer("sky", 0):
+        sc.sky(sc.lin("sky", P["sky"]))
+        # light pouring in from high on the left
+        sc.add(f'<ellipse cx="380" cy="30" rx="520" ry="260" fill="{sc.rad("sun", [(0, P["glow"], .7), (.4, P["glow"], .3), (1, P["glow"], 0)])}"/>')
 
     # ---- the far wood: pale boles and a hazy gold roof ----
-    canopy_band(sc, 118, 26, 46, mix(P["gold_pale"], P["air"], .55))
-    for i in range(46):
-        x = sc.r(-20, W + 20)
-        w = sc.r(7, 15)
-        sc.add(f'<path d="M{f(x - w * .45)},-10 L{f(x - w / 2)},300 L{f(x + w / 2)},300 L{f(x + w * .45)},-10Z" fill="{mix(P["bark_far"], P["air"], sc.r(.2, .6))}"/>')
-    canopy_band(sc, 82, 22, 40, mix(P["gold_pale"], P["air"], .3), mix(P["gold_light"], P["air"], .45), .4)
-    sc.add(f'<rect y="120" width="{W}" height="200" fill="{sc.lin("hz1", [(0, P["air"], 0), (.6, P["air"], .7), (1, P["air"], .9)])}"/>')
+    with sc.layer("far-wood", .15):
+        canopy_band(sc, 118, 26, 46, mix(P["gold_pale"], P["air"], .55))
+        for i in range(46):
+            x = sc.r(-20, W + 20)
+            w = sc.r(7, 15)
+            sc.add(f'<path d="M{f(x - w * .45)},-10 L{f(x - w / 2)},300 L{f(x + w / 2)},300 L{f(x + w * .45)},-10Z" fill="{mix(P["bark_far"], P["air"], sc.r(.2, .6))}"/>')
+        canopy_band(sc, 82, 22, 40, mix(P["gold_pale"], P["air"], .3), mix(P["gold_light"], P["air"], .45), .4)
+        sc.add(f'<rect x="-30" y="120" width="{W + 60}" height="200" fill="{sc.lin("hz1", [(0, P["air"], 0), (.6, P["air"], .7), (1, P["air"], .9)])}"/>')
 
-    # ---- the middle wood ----
-    mids = [(40, 34), (300, 30), (548, 26), (880, 36), (1118, 30), (1420, 38), (1590, 28)]
-    for i, (x, w) in enumerate(mids):
-        trunk(sc, x, w, 286, .45, sc.r(-6, 6), None, .7)
-    for x, y, s in [(70, 96, 40), (250, 70, 46), (520, 110, 38), (900, 92, 44), (1090, 120, 36), (1180, 74, 42), (1400, 104, 44), (1560, 84, 38)]:
-        leaves(sc, x, y, s, .45, 8, .7)
-    talan(sc, 1118, 160, 34, .45, lamps=[(-20, 6), (14, 9)])
-    talan(sc, 300, 190, 30, .45, lamps=[(16, 7)])
-    talan(sc, 880, 206, 38, .45, lamps=[(-24, 6), (22, 8)])
-    pavilion(sc, 892, 204, 26, 14, .45)
+    # ---- the middle wood, the glade and the stream ----
+    with sc.layer("glade", .4):
+        mids = [(40, 34), (300, 30), (548, 26), (880, 36), (1118, 30), (1420, 38), (1590, 28)]
+        for i, (x, w) in enumerate(mids):
+            trunk(sc, x, w, 286, .45, sc.r(-6, 6), None, .7)
+        for x, y, s in [(70, 96, 40), (250, 70, 46), (520, 110, 38), (900, 92, 44), (1090, 120, 36), (1180, 74, 42), (1400, 104, 44), (1560, 84, 38)]:
+            leaves(sc, x, y, s, .45, 8, .7)
+        talan(sc, 1118, 160, 34, .45, lamps=[(-20, 6), (14, 9)])
+        talan(sc, 300, 190, 30, .45, lamps=[(16, 7)])
+        talan(sc, 880, 206, 38, .45, lamps=[(-24, 6), (22, 8)])
+        pavilion(sc, 892, 204, 26, 14, .45)
 
-    # light shafts slanting down from the canopy
-    for x0, w, op in [(240, 60, .28), (420, 34, .22), (760, 80, .26), (1010, 40, .2), (1260, 70, .22), (60, 40, .18)]:
-        sc.add(f'<path d="M{x0},-10 L{x0 + w},-10 L{x0 + w + 260},330 L{x0 + 190},330Z" fill="{sc.lin(f"shaft{x0}", [(0, P["glow"], op * 2.2), (.6, P["glow"], op), (1, P["glow"], 0)])}"/>')
+        # light shafts slanting down from the canopy
+        with sc.fx("beam"):
+            for x0, w, op in [(240, 60, .28), (420, 34, .22), (760, 80, .26), (1010, 40, .2), (1260, 70, .22), (60, 40, .18)]:
+                sc.add(f'<path d="M{x0},-10 L{x0 + w},-10 L{x0 + w + 260},330 L{x0 + 190},330Z" fill="{sc.lin(f"shaft{x0}", [(0, P["glow"], op * 2.2), (.6, P["glow"], op), (1, P["glow"], 0)])}"/>')
 
-    # mist through the glade
-    sc.add(f'<rect y="200" width="{W}" height="130" fill="{sc.lin("hz2", [(0, P["mist"], 0), (.5, P["mist"], .6), (1, P["mist"], .85)])}"/>')
+        # mist through the glade
+        sc.add(f'<rect x="-30" y="200" width="{W + 60}" height="130" fill="{sc.lin("hz2", [(0, P["mist"], 0), (.5, P["mist"], .6), (1, P["mist"], .85)])}"/>')
 
-    # ---- the stream ----
-    sc.ridge(244, 4, [(1.4, 1), (3.7, .4)], mix(P["grass"], P["mist"], .4), seed=1.9)
-    sy = 256
-    sc.add(f'<path d="M-20,{sy + 6} C200,{sy - 6} 380,{sy + 12} 640,{sy + 2} S1000,{sy - 8} 1240,{sy} S1500,{sy + 6} 1620,{sy - 2} '
-           f'L1620,{sy + 10} C1400,{sy + 16} 1260,{sy + 10} 1000,{sy + 14} S640,{sy + 22} 420,{sy + 24} S120,{sy + 18} -20,{sy + 28}Z" fill="{P["water"]}"/>')
-    sc.add(f'<path d="M-20,{sy + 6} C200,{sy - 6} 380,{sy + 12} 640,{sy + 2} S1000,{sy - 8} 1240,{sy} S1500,{sy + 6} 1620,{sy - 2}" stroke="{P["water_dark"]}" stroke-width="1.5" fill="none" opacity=".6"/>')
-    glints = "".join(f"M{f(x)},{f(sy + 5 + sc.r(0, 12) * (1 if x < 900 else .6))}h{f(sc.r(8, 26))}" for x in [sc.r(0, W) for _ in range(50)])
-    sc.add(f'<path d="{glints}" stroke="{P["water_light"]}" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>')
-    sc.add("".join(f'<ellipse cx="{f(x)}" cy="{f(sy + 2 + sc.r(4, 18) * (1 - x / 2400))}" rx="{f(sc.r(3, 6))}" ry="{f(sc.r(1.3, 2.4))}" fill="{P["water_dark"]}"/>' for x in [sc.r(0, W) for _ in range(16)]))
-    sc.ridge(286, 4, [(1.6, 1), (4.2, .4)], P["grass"], seed=3.1)
-    bx0, bx1, by = 520, 600, 268  # a little white footbridge over the stream
-    sc.add(f'<path d="M{bx0 - 8},{by + 12} Q{(bx0 + bx1) / 2},{by - 16} {bx1 + 8},{by + 8} L{bx1 + 8},{by + 12} Q{(bx0 + bx1) / 2},{by - 10} {bx0 - 8},{by + 16}Z" fill="{P["white"]}"/>'
-           f'<path d="M{bx0 - 2},{by + 14} Q{(bx0 + bx1) / 2},{by - 2} {bx1 + 2},{by + 11}" stroke="{P["stair_shade"]}" stroke-width="1.2" fill="none"/>'
-           f'<path d="M{bx0 - 8},{by + 4} Q{(bx0 + bx1) / 2},{by - 24} {bx1 + 8},{by}" stroke="{P["white"]}" stroke-width="1" fill="none"/>'
-           + "".join(f'<path d="M{f(x)},{f(by + 10 - 13 * (1 - ((x - (bx0 + bx1) / 2) / 48) ** 2))} v-7" stroke="{P["white"]}" stroke-width=".8"/>' for x in range(bx0, bx1 + 1, 8)))
-    for _ in range(18):
-        sc.add(f'<ellipse cx="{f(sc.r(-40, W + 40))}" cy="{f(sc.r(240, 290))}" rx="{f(sc.r(60, 150))}" ry="{f(sc.r(5, 10))}" fill="{P["mist"]}" opacity="{f(sc.r(.35, .6))}"/>')
+        sc.ridge(244, 4, [(1.4, 1), (3.7, .4)], mix(P["grass"], P["mist"], .4), seed=1.9)
+        sy = 256
+        sc.add(f'<path d="M-30,{sy + 6} C200,{sy - 6} 380,{sy + 12} 640,{sy + 2} S1000,{sy - 8} 1240,{sy} S1500,{sy + 6} 1630,{sy - 2} '
+               f'L1630,{sy + 10} C1400,{sy + 16} 1260,{sy + 10} 1000,{sy + 14} S640,{sy + 22} 420,{sy + 24} S120,{sy + 18} -30,{sy + 28}Z" fill="{P["water"]}"/>')
+        sc.add(f'<path d="M-30,{sy + 6} C200,{sy - 6} 380,{sy + 12} 640,{sy + 2} S1000,{sy - 8} 1240,{sy} S1500,{sy + 6} 1630,{sy - 2}" stroke="{P["water_dark"]}" stroke-width="1.5" fill="none" opacity=".6"/>')
+        xs = sorted(sc.r(0, W) for _ in range(50))
+        with sc.fx("water"):  # glints in five runs, so they shimmer out of step
+            for k in range(5):
+                glints = "".join(f"M{f(x)},{f(sy + 5 + sc.r(0, 12) * (1 if x < 900 else .6))}h{f(sc.r(8, 26))}" for x in xs[k::5])
+                sc.add(f'<path d="{glints}" stroke="{P["water_light"]}" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>')
+        sc.add("".join(f'<ellipse cx="{f(x)}" cy="{f(sy + 2 + sc.r(4, 18) * (1 - x / 2400))}" rx="{f(sc.r(3, 6))}" ry="{f(sc.r(1.3, 2.4))}" fill="{P["water_dark"]}"/>' for x in [sc.r(0, W) for _ in range(16)]))
+        sc.ridge(286, 4, [(1.6, 1), (4.2, .4)], P["grass"], seed=3.1)
+        bx0, bx1, by = 520, 600, 268  # a little white footbridge over the stream
+        with sc.hot("lorien-bridge", "The Footbridge", "A slender white bridge over a cold, clear stream that runs through the glade.", "splash"):
+            sc.add(f'<path d="M{bx0 - 8},{by + 12} Q{(bx0 + bx1) / 2},{by - 16} {bx1 + 8},{by + 8} L{bx1 + 8},{by + 12} Q{(bx0 + bx1) / 2},{by - 10} {bx0 - 8},{by + 16}Z" fill="{P["white"]}"/>'
+                   f'<path d="M{bx0 - 2},{by + 14} Q{(bx0 + bx1) / 2},{by - 2} {bx1 + 2},{by + 11}" stroke="{P["stair_shade"]}" stroke-width="1.2" fill="none"/>'
+                   f'<path d="M{bx0 - 8},{by + 4} Q{(bx0 + bx1) / 2},{by - 24} {bx1 + 8},{by}" stroke="{P["white"]}" stroke-width="1" fill="none"/>'
+                   + "".join(f'<path d="M{f(x)},{f(by + 10 - 13 * (1 - ((x - (bx0 + bx1) / 2) / 48) ** 2))} v-7" stroke="{P["white"]}" stroke-width=".8"/>' for x in range(bx0, bx1 + 1, 8))
+                   + f'<ellipse cx="{(bx0 + bx1) / 2}" cy="{by + 16}" rx="34" ry="3" fill="{P["water_dark"]}" opacity=".5"/>')
+        for _ in range(18):
+            sc.add(f'<ellipse cx="{f(sc.r(-40, W + 40))}" cy="{f(sc.r(240, 290))}" rx="{f(sc.r(60, 150))}" ry="{f(sc.r(5, 10))}" fill="{P["mist"]}" opacity="{f(sc.r(.35, .6))}"/>')
 
     # ---- the great mallorns ----
-    # left: a broad bole with a flet and its ladder of light
-    trunk(sc, 150, 78, 300, 0.12, -10, "t0")
-    bough(sc, 175, 70, 330, 40, 12, .1, -10)
-    bough(sc, 120, 110, 10, 70, 11, .1, -6)
-    talan(sc, 146, 150, 92, .08, lamps=[(-70, 8), (-30, 12), (40, 10), (74, 7)])
-    pavilion(sc, 110, 148, 30, 16, .08)
+    with sc.layer("mallorns", .7):
+        # left: a broad bole with a flet and its ladder of light
+        trunk(sc, 150, 78, 300, 0.12, -10, "t0")
+        bough(sc, 175, 70, 330, 40, 12, .1, -10)
+        bough(sc, 120, 110, 10, 70, 11, .1, -6)
+        talan(sc, 146, 150, 92, .08, lamps=[(-70, 8), (-30, 12), (40, 10), (74, 7)])
+        pavilion(sc, 110, 148, 30, 16, .08)
 
-    # the second great tree, linked to the first by a walkway
-    trunk(sc, 434, 70, 300, .05, 6, "t2")
-    bough(sc, 455, 60, 560, 26, 11, .05, -8)
-    talan(sc, 434, 176, 82, .03, lamps=[(-60, 9), (-18, 13), (34, 10), (64, 6)])
+        # the second great tree, linked to the first by a walkway
+        trunk(sc, 434, 70, 300, .05, 6, "t2")
+        bough(sc, 455, 60, 560, 26, 11, .05, -8)
+        talan(sc, 434, 176, 82, .03, lamps=[(-60, 9), (-18, 13), (34, 10), (64, 6)])
 
-    # the greatest tree, with the white stair winding up it to the high talan
-    cx, w = 712, 104
-    front = stair(sc, cx, w / 2, 304, 132, 2.6, -.6)
-    trunk(sc, cx, w, 304, 0, -6, "t1", 1.1)
-    front()
-    bough(sc, 740, 52, 900, 10, 15, 0, -14)
-    bough(sc, 680, 70, 560, 36, 13, 0, -10)
-    talan(sc, 707, 126, 132, 0, lamps=[(-104, 9), (-60, 14), (-20, 10), (40, 15), (86, 11), (116, 7)])
-    pavilion(sc, 650, 124, 48, 22)
-    pavilion(sc, 772, 124, 34, 18)
-    talan(sc, 704, 40, 80, 0, lamps=[(-50, 7), (52, 9)], rail=True)
-    walkway(sc, 516, 176, 575, 124, 26, .03)
-    walkway(sc, 220, 150, 400, 176, 22, .06)
+        # the greatest tree, with the white stair winding up it to the high talan
+        cx, w = 712, 104
+        front = stair(sc, cx, w / 2, 304, 132, 2.6, -.6)
+        trunk(sc, cx, w, 304, 0, -6, "t1", 1.1)
+        with sc.hot("lorien-stair", "The White Stair", "A pale stair winds round the greatest of the trees, up to the high platforms.", "pulse"):
+            front()
+        bough(sc, 740, 52, 900, 10, 15, 0, -14)
+        bough(sc, 680, 70, 560, 36, 13, 0, -10)
+        lamps = [(-104, 9), (-60, 14), (-20, 10), (40, 15), (86, 11), (116, 7)]
+        with sc.hot("lorien-talan", "The Lamplit Talan", "A wide platform high in the mallorn, where silver lamps glow among the leaves.", "light"):
+            ry = 13.2
+            sc.add('<g class="on-lit" opacity="0">'
+                   + "".join(f'<circle cx="{f(707 + lx)}" cy="{f(126 + ry * math.sqrt(max(0, 1 - (lx / 132) ** 2)) + hang + 6)}" r="34" fill="url(#lampglow)"/>' for lx, hang in lamps)
+                   + f'<ellipse cx="707" cy="112" rx="150" ry="34" fill="url(#lampglow)" opacity=".7"/></g>')
+            talan(sc, 707, 126, 132, 0, lamps=lamps)
+            pavilion(sc, 650, 124, 48, 22)
+            pavilion(sc, 772, 124, 34, 18)
+            sc.add(f'<g class="on-lit" opacity="0"><path d="M628,121 h44 v-14 h-44Z M760,121 h24 v-12 h-24Z" fill="{P["lamp_glow"]}" opacity=".55"/></g>')
+        talan(sc, 704, 40, 80, 0, lamps=[(-50, 7), (52, 9)], rail=True)
+        walkway(sc, 516, 176, 575, 124, 26, .03)
+        walkway(sc, 220, 150, 400, 176, 22, .06)
 
-    # right: two more boles above the cards, with a high talan and lanterns
-    trunk(sc, 1300, 90, 300, .08, 8, "t3")
-    bough(sc, 1270, 60, 1130, 20, 13, .06, -12)
-    bough(sc, 1330, 90, 1470, 56, 12, .06, -10)
-    talan(sc, 1304, 100, 104, .05, lamps=[(-80, 10), (-36, 14), (30, 12), (78, 8)])
-    pavilion(sc, 1350, 98, 36, 18, .05)
-    talan(sc, 1300, 210, 70, .08, lamps=[(-40, 8), (44, 10)])
-    trunk(sc, 1556, 64, 300, .12, -4, "t4")
-    walkway(sc, 1408, 100, 1530, 150, 20, .08)
-    talan(sc, 1552, 150, 60, .1, lamps=[(-34, 7), (30, 9)])
+        # right: two more boles, with a high talan and lanterns
+        trunk(sc, 1300, 90, 300, .08, 8, "t3")
+        bough(sc, 1270, 60, 1130, 20, 13, .06, -12)
+        bough(sc, 1330, 90, 1470, 56, 12, .06, -10)
+        talan(sc, 1304, 100, 104, .05, lamps=[(-80, 10), (-36, 14), (30, 12), (78, 8)])
+        pavilion(sc, 1350, 98, 36, 18, .05)
+        talan(sc, 1300, 210, 70, .08, lamps=[(-40, 8), (44, 10)])
+        trunk(sc, 1556, 64, 300, .12, -4, "t4")
+        walkway(sc, 1408, 100, 1530, 150, 20, .08)
+        talan(sc, 1552, 150, 60, .1, lamps=[(-34, 7), (30, 9)])
 
-    # ---- the golden roof: near foliage hanging into the frame ----
-    # a thinner roof of leaves just above the frame, with light breaking through
-    canopy_band(sc, 2, 18, 34, mix(P["gold"], P["air"], .25), mix(P["gold_light"], P["air"], .2), .6, jitter=10)
-    # long sprays of leaves hanging down from the roof
-    for x, y0, L in [(90, 30, 70), (262, 20, 84), (395, 40, 60), (586, 24, 76), (868, 26, 90), (1000, 30, 64), (1150, 26, 80),
-                     (1420, 30, 72), (1540, 34, 60)]:
-        spray(sc, x, y0, L)
-    for x, y, s_ in [(30, 44, 60), (190, 22, 52), (340, 46, 62), (520, 20, 54), (640, 46, 48), (800, 18, 58), (930, 40, 64),
-                     (1080, 16, 52), (1200, 44, 58), (1360, 20, 56), (1490, 48, 60), (1600, 22, 50), (450, 4, 44), (1290, 0, 46)]:
-        leaves(sc, x + sc.r(-10, 10), y, s_, 0, 9)
+    # ---- the golden roof, drifting leaves, and the near bank ----
+    with sc.layer("near", 1):
+        # a thinner roof of leaves just above the frame, with light breaking through
+        canopy_band(sc, 2, 18, 34, mix(P["gold"], P["air"], .25), mix(P["gold_light"], P["air"], .2), .6, jitter=10)
+        # long sprays of leaves hanging down from the roof, and the clusters they hang from: each sways on its own
+        with sc.fx("sway"):
+            for x, y0, L in [(90, 30, 70), (262, 20, 84), (395, 40, 60), (586, 24, 76), (868, 26, 90), (1000, 30, 64), (1150, 26, 80),
+                             (1420, 30, 72), (1540, 34, 60)]:
+                sc.add("<g>")
+                spray(sc, x, y0, L)
+                sc.add("</g>")
+        clusters = [(30, 44, 60), (190, 22, 52), (340, 46, 62), (520, 20, 54), (640, 46, 48), (800, 18, 58), (930, 40, 64),
+                    (1080, 16, 52), (1200, 44, 58), (1360, 20, 56), (1490, 48, 60), (1600, 22, 50), (450, 4, 44), (1290, 0, 46)]
+        jit = [sc.r(-10, 10) for _ in clusters]
 
-    # drifting gold leaves and motes of light
-    g = []
-    for _ in range(70):
-        x, y = sc.r(0, W), sc.r(60, 300)
-        a = sc.r(-60, 60)
-        g.append(f'<ellipse cx="{f(x)}" cy="{f(y)}" rx="{f(sc.r(1.6, 2.8))}" ry="{f(sc.r(.8, 1.3))}" transform="rotate({f(a)} {f(x)} {f(y)})" fill="{sc.rnd.choice(P["leaf_fall"])}"/>')
-    for _ in range(50):
-        g.append(f'<circle cx="{f(sc.r(0, W))}" cy="{f(sc.r(50, 280))}" r="{f(sc.r(.8, 2))}" fill="{P["white"]}" opacity="{f(sc.r(.4, .8))}"/>')
-    sc.add("".join(g))
+        def clump(items):
+            with sc.fx("sway"):
+                for (x, y, s_), j in items:
+                    sc.add("<g>")
+                    leaves(sc, x + j, y, s_, 0, 9)
+                    sc.add("</g>")
+        pairs = list(zip(clusters, jit))
+        clump(pairs[:5])
+        with sc.hot("lorien-canopy", "The Golden Roof", "Mallorn leaves turn gold in autumn and stay on the boughs all winter long.", "leaves"):
+            clump(pairs[5:7])
+        clump(pairs[7:])
 
-    # ---- the near bank: grass with elanor and niphredil, close to the page colour ----
-    sc.ridge(312, 5, [(1.7, 1), (4.4, .5)], P["grass"], seed=4.4)
-    for x, w in [(150, 78), (434, 70), (712, 104), (1300, 90), (1556, 64)]:  # drifts of fallen gold round the roots
-        sc.add(f'<ellipse cx="{x}" cy="305" rx="{f(w * 1.1)}" ry="4.5" fill="{P["gold_pale"]}" opacity=".45"/>')
-        sc.flowers(300, 312, 14, P["leaf_fall"], 1.1, 2.0, x - w, x + w)
-    sc.tufts(306, 360, 120, [P["grass_dark"], "#b8c2b8", "#c9cfc2", "#b2bdb6"], 5, 13)
-    stars = ""
-    for _ in range(46):  # elanor: little golden stars
-        x, y, r = sc.r(0, W), sc.r(312, 372), sc.r(1.6, 2.6)
-        stars += "M" + " L".join(f"{f(x + (r if k % 2 == 0 else r * .45) * math.cos(k * math.pi / 5 - math.pi / 2))},{f(y + (r if k % 2 == 0 else r * .45) * math.sin(k * math.pi / 5 - math.pi / 2))}" for k in range(10)) + "Z"
-    sc.add(f'<path d="{stars}" fill="{P["elanor"]}"/>')
-    sc.flowers(314, 372, 50, [P["niphredil"]], 1.2, 2.0)
-    sc.flowers(316, 380, 50, P["leaf_fall"], 1.2, 2.2)
-    sc.add(f'<rect y="290" width="{W}" height="110" fill="{sc.lin("hz3", [(0, "#d6dce2", 0), (1, "#d6dce2", .7)])}"/>')
+        # drifting gold leaves (each turns gently as it falls) and motes of light rising in the shafts
+        with sc.fx("sway"):
+            for _ in range(70):
+                x, y = sc.r(0, W), sc.r(60, 300)
+                sc.add(f'<path d="{leafmark(x, y, sc.r(3.6, 6), sc.r(0, 6.28), .4)}" fill="{sc.rnd.choice(P["leaf_fall"])}"/>')
+        with sc.fx("embers"):
+            for _ in range(50):
+                sc.add(f'<circle cx="{f(sc.r(0, W))}" cy="{f(sc.r(50, 280))}" r="{f(sc.r(.8, 2))}" fill="{P["white"]}" opacity="{f(sc.r(.4, .8))}"/>')
+
+        # the near bank: grass with elanor and niphredil, close to the page colour
+        sc.ridge(312, 5, [(1.7, 1), (4.4, .5)], P["grass"], seed=4.4)
+        for x, w in [(150, 78), (434, 70), (712, 104), (1300, 90), (1556, 64)]:  # drifts of fallen gold round the roots
+            sc.add(f'<ellipse cx="{x}" cy="305" rx="{f(w * 1.1)}" ry="4.5" fill="{P["gold_pale"]}" opacity=".45"/>')
+            sc.flowers(300, 312, 14, P["leaf_fall"], 1.1, 2.0, x - w, x + w)
+        sc.tufts(306, 360, 120, [P["grass_dark"], "#b8c2b8", "#c9cfc2", "#b2bdb6"], 5, 13)
+        # pale stones, a fallen bough, ferns, and big fallen leaves in the foreground
+        for x, y, rx in [(250, 344, 22), (282, 350, 13), (1150, 352, 26), (1186, 356, 12), (930, 366, 15)]:
+            sc.add(f'<ellipse cx="{x}" cy="{y}" rx="{rx}" ry="{f(rx * .5)}" fill="#b5bfc2"/><ellipse cx="{x - rx * .2}" cy="{y - rx * .18}" rx="{f(rx * .7)}" ry="{f(rx * .3)}" fill="#d3dadc"/>')
+        sc.add(f'<path d="M520,358 Q600,346 690,352 L692,358 Q600,354 522,364Z" fill="{P["bark"]}"/><path d="M540,354 Q600,346 680,350" stroke="{P["bark_lit"]}" stroke-width="1.2" fill="none"/>'
+               f'<path d="M610,350 q8,-10 18,-12" stroke="{P["bark"]}" stroke-width="2" fill="none"/>')
+        sc.add(f'<path d="{fern(60, 364, 46) + fern(330, 356, 36, -1) + fern(1020, 366, 42) + fern(1250, 352, 34, -1) + fern(1470, 366, 46, -1)}" '
+               f'stroke="#8d9f8c" stroke-width="1.6" fill="none" stroke-linecap="round"/>')
+        big = ""
+        for _ in range(26):
+            big += leafmark(sc.r(0, W), sc.r(320, 392), sc.r(8, 13), sc.r(0, 6.28), .38)
+        sc.add(f'<path d="{big}" fill="{P["gold_shade"]}" opacity=".85"/>')
+        stars = ""
+        for _ in range(46):  # elanor: little golden stars
+            x, y, r = sc.r(0, W), sc.r(312, 372), sc.r(1.6, 2.6)
+            stars += "M" + " L".join(f"{f(x + (r if k % 2 == 0 else r * .45) * math.cos(k * math.pi / 5 - math.pi / 2))},{f(y + (r if k % 2 == 0 else r * .45) * math.sin(k * math.pi / 5 - math.pi / 2))}" for k in range(10)) + "Z"
+        sc.add(f'<path d="{stars}" fill="{P["elanor"]}"/>')
+        sc.flowers(314, 372, 50, [P["niphredil"]], 1.2, 2.0)
+        sc.flowers(316, 380, 50, P["leaf_fall"], 1.2, 2.2)
+        sc.add(f'<rect x="-30" y="290" width="{W + 60}" height="110" fill="{sc.lin("hz3", [(0, "#d6dce2", 0), (1, "#d6dce2", .7)])}"/>')
     return sc
 
 
