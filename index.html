@@ -282,6 +282,18 @@ textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid 
 .wx-days li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 15px; }
 .wx-days .dn { color: var(--muted); }
 .wx-days .hl { white-space: nowrap; }
+.sk { display: block; height: 14px; border-radius: 3px; background: var(--raise); animation: sk 1.6s ease-in-out infinite alternate; }
+.sk.t { width: 92px; height: 52px; }
+.sk.c { width: 60%; height: 18px; margin-bottom: 8px; }
+.sk.s { width: 85%; }
+.sk.f { width: 70%; height: 17px; margin-bottom: 5px; }
+.sk.f + .sk { width: 50%; height: 12px; }
+.wx-days.skel li { grid-template-columns: 44px minmax(0, 1fr); }
+@keyframes sk { to { opacity: .45; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+footer details { flex-basis: 100%; }
+footer summary { cursor: pointer; width: fit-content; }
+footer details p { margin: 8px 0 0; max-width: 68ch; line-height: 1.5; }
 
 /* horizon */
 .cds { list-style: none; margin: 0; padding: 0; display: grid; }
@@ -358,6 +370,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   :root { transition: none; }
   .map .wp.today .halo, .map .eye-glow, .beacons .lit .flame { animation: none !important; }
   .xpbar i, .quest .qbar i, .check svg { transition: none; }
+  .sk { animation: none; }
 }
 </style>
 </head>
@@ -467,7 +480,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     <div class="col c3">
       <section class="panel" id="wxPanel" aria-labelledby="h-wx">
         <div class="phead"><h2 id="h-wx">Skies</h2><button class="linkbtn" type="button" data-edit="wxPanel" id="wxPlace">Change place</button></div>
-        <div id="wxBody"><p class="empty-note">Reading the skies…</p></div>
+        <div id="wxBody"><div role="status"><span class="sr">Loading the forecast</span><div class="wx-now" aria-hidden="true"><span class="sk t"></span><div><span class="sk c"></span><span class="sk s"></span></div></div><div class="wx-facts" aria-hidden="true"><div><span class="sk f"></span><span class="sk"></span></div><div><span class="sk f"></span><span class="sk"></span></div><div><span class="sk f"></span><span class="sk"></span></div></div><ul class="wx-days skel" aria-hidden="true"><li><span class="sk"></span><span class="sk"></span></li><li><span class="sk"></span><span class="sk"></span></li><li><span class="sk"></span><span class="sk"></span></li></ul></div></div>
         <form class="stack ed" id="wxForm">
           <div class="pair">
             <input id="wxCity" placeholder="Town or suburb" autocomplete="off" maxlength="60" aria-label="Town or suburb">
@@ -512,6 +525,11 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   <footer>
     <span>Saved in this browser · <button class="linkbtn" type="button" id="moveBtn">Copy a link to carry it to another device</button></span>
     <span>XP: task 10 · habit 5 · focus 1 a minute · paper 100 · deed 50 · weather by Open-Meteo</span>
+    <details><summary>Your data</summary>
+      <p>Daybook has no accounts and no server. Your tasks, habits, exams and notes are kept in this browser's storage and never sent anywhere. The only way they leave is a link you copy yourself, so treat that link like the notes in it.</p>
+      <p>Two outside services are used. Open-Meteo gets your place's coordinates to send back the forecast, and the town you type when changing place. Google Fonts serves the lettering. Neither one sees your Daybook.</p>
+      <p>Clearing this browser's site data erases your Daybook. Copy a link first if you want a backup.</p>
+    </details>
     <textarea id="moveOut" rows="2" readonly hidden aria-label="Link to move your Daybook"></textarea>
   </footer>
 </div>
@@ -1246,6 +1264,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     82: "Violent showers", 85: "Snow showers", 86: "Heavy snow showers", 95: "Thunderstorm", 96: "Storm with hail", 99: "Storm with hail",
   };
   const DEFAULT_PLACE = { name: "Brisbane", lat: -27.4679, lon: 153.0281 };
+  const WX_SKEL = '<div role="status"><span class="sr">Loading the forecast</span><div class="wx-now" aria-hidden="true"><span class="sk t"></span><div><span class="sk c"></span><span class="sk s"></span></div></div><div class="wx-facts" aria-hidden="true"><div><span class="sk f"></span><span class="sk"></span></div><div><span class="sk f"></span><span class="sk"></span></div><div><span class="sk f"></span><span class="sk"></span></div></div><ul class="wx-days skel" aria-hidden="true"><li><span class="sk"></span><span class="sk"></span></li><li><span class="sk"></span><span class="sk"></span></li><li><span class="sk"></span><span class="sk"></span></li></ul></div>';
   let wxCache = load(WX), wxHits = [], wxError = "", wxTried = 0;
   const place = () => state.place || DEFAULT_PLACE;
   const uvWord = (u) => u >= 11 ? "extreme" : u >= 8 ? "very high" : u >= 6 ? "high" : u >= 3 ? "moderate" : "low";
@@ -1268,7 +1287,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     const p = place();
     $("#h-wx").textContent = `Skies over ${p.name}`;
     const d = wxCache && wxCache.lat === p.lat && wxCache.lon === p.lon ? wxCache.data : null;
-    if (!d || !d.current || !d.daily) { $("#wxBody").innerHTML = `<p class="empty-note">${esc(wxError || `Reading the skies over ${p.name}…`)}</p>`; return; }
+    if (!d || !d.current || !d.daily) { $("#wxBody").innerHTML = wxError ? `<p class="empty-note">${esc(wxError)}</p>` : WX_SKEL; return; }
     const c = d.current, dy = d.daily, uv = Math.round(dy.uv_index_max[0] ?? 0), rain = dy.precipitation_probability_max[0];
     const days = [1, 2].filter((i) => dy.time[i]).map((i) => `<li><span class="dn">${esc(fmtDay(dy.time[i], { weekday: "short" }))}</span>
       <span>${esc(WMO[dy.weather_code[i]] || "–")}${dy.precipitation_probability_max[i] != null ? ` · ${dy.precipitation_probability_max[i]}% rain` : ""}</span>
