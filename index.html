@@ -701,25 +701,71 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   }));
 
   // ---------- move between devices (data rides in the link's #fragment, never sent to a server) ----------
-  const toB64 = (s) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const fromB64 = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+  // Packed as positional arrays (no keys, no ids, today's date and empty fields left out), then deflated.
+  // tasks [text, day?, done?] · habits [name] · countdowns [title, date, time?, kind?] · links [title, url]
+  // log [day, [habit indexes], focus?] · notes · place [name, lat, lon]
+  const KIND_CODE = { exam: "", event: "v", deadline: "d" }, KIND_NAME = { "": "exam", v: "event", d: "deadline" };
+  const trim = (a) => { while (a.length && (a[a.length - 1] === "" || a[a.length - 1] == null || a[a.length - 1] === 0)) a.pop(); return a; };
+  function pack(s) {
+    const t = today(), hi = new Map(s.habits.map((h, i) => [h.id, i]));
+    return trim([
+      s.tasks.map((x) => trim([x.text, x.day === t ? "" : x.day, x.done ? 1 : 0])),
+      s.habits.map((h) => h.name),
+      s.countdowns.map((c) => trim([c.title, c.date, c.time || "", KIND_CODE[c.kind] ?? "v"])),
+      s.links.map((l) => [l.title, l.url]),
+      Object.entries(s.log).map(([k, v]) => trim([k, Object.keys(v.h || {}).filter((id) => hi.has(id)).map((id) => hi.get(id)), v.focus || 0])),
+      s.notes,
+      s.place ? [s.place.name, s.place.lat, s.place.lon] : 0,
+    ]);
+  }
+  function unpack(a) {
+    if (!Array.isArray(a)) throw new Error("bad data");
+    const [tasks = [], habits = [], cds = [], links = [], log = [], notes = "", place = 0] = a;
+    const t = today(), hs = habits.map((name) => ({ id: uid(), name: String(name) }));
+    return normalize({
+      tasks: tasks.map(([text, day, done]) => ({ id: uid(), text: String(text), day: day || t, done: !!done })),
+      habits: hs,
+      countdowns: cds.map(([title, date, time, k]) => ({ id: uid(), title: String(title), date: String(date), time: time || "", kind: KIND_NAME[k || ""] || "event" })),
+      links: links.map(([title, url]) => ({ id: uid(), title: String(title), url: String(url) })),
+      log: Object.fromEntries(log.map(([k, idx = [], focus = 0]) => [k, { h: Object.fromEntries(idx.filter((i) => hs[i]).map((i) => [hs[i].id, true])), ...(focus ? { focus } : {}) }])),
+      notes: typeof notes === "string" ? notes : "",
+      place: Array.isArray(place) ? { name: String(place[0]), lat: Number(place[1]), lon: Number(place[2]) } : null,
+    });
+  }
+  const b64 = (u8) => { let s = ""; for (const b of u8) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+  const unb64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+  const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+  async function encode(s) {
+    const bytes = new TextEncoder().encode(JSON.stringify(pack(s)));
+    if (window.CompressionStream) { try { return "z" + b64(await pipe(bytes, new CompressionStream("deflate-raw"))); } catch (e) {} }
+    return "j" + b64(bytes);
+  }
+  async function decode(code) {
+    let bytes = unb64(code.slice(1));
+    if (code[0] === "z") bytes = await pipe(bytes, new DecompressionStream("deflate-raw"));
+    return unpack(JSON.parse(new TextDecoder().decode(bytes)));
+  }
+
   $("#moveBtn").addEventListener("click", async () => {
-    const link = location.origin + location.pathname + "#import=" + toB64(JSON.stringify(state));
+    const link = location.origin + location.pathname + "#d=" + await encode(state);
     const out = $("#moveOut");
     try { await navigator.clipboard.writeText(link); $("#moveBtn").textContent = "Link copied. Open it on your other device"; }
     catch (e) { out.hidden = false; out.value = link; out.select(); $("#moveBtn").textContent = "Copy this link"; }
   });
   let pending = null;
-  if (location.hash.startsWith("#import=")) {
-    try { pending = normalize(JSON.parse(fromB64(location.hash.slice(8)))); } catch (e) { pending = null; }
+  const hadData = !!load(KEY);
+  if (location.hash.startsWith("#d=")) {
+    const code = location.hash.slice(3);
     history.replaceState(null, "", location.pathname);
-    if (pending) {
-      if (!load(KEY)) { state = pending; keep(KEY, state); pending = null; }
-      else {
-        $("#importText").textContent = `This link carries Daybook data (${pending.tasks.length} tasks, ${pending.countdowns.length} countdowns, ${pending.habits.length} habits). Replace what's saved in this browser?`;
-        $("#importBanner").hidden = false;
-      }
-    }
+    decode(code).then((data) => {
+      if (!hadData) { state = data; commit(); wxCache = null; fetchWeather(); return; }
+      pending = data;
+      $("#importText").textContent = `This link carries Daybook data (${data.tasks.length} tasks, ${data.countdowns.length} countdowns, ${data.habits.length} habits). Replace what's saved in this browser?`;
+      $("#importBanner").hidden = false;
+    }).catch(() => {
+      $("#importText").textContent = "That link's data couldn't be read. It may have been cut off when it was copied.";
+      $("#importYes").hidden = true; $("#importNo").textContent = "Dismiss"; $("#importBanner").hidden = false;
+    });
   }
   $("#importYes").addEventListener("click", () => { state = pending; pending = null; $("#importBanner").hidden = true; wxCache = null; commit(); fetchWeather(); });
   $("#importNo").addEventListener("click", () => { pending = null; $("#importBanner").hidden = true; });
