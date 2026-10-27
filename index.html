@@ -1,308 +1,379 @@
 <!doctype html>
-<html lang="en-AU">
+<html lang="en-AU" data-region="shire">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Daybook</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='5' width='26' height='24' rx='3' fill='%23ffe45c' stroke='%23141a33' stroke-width='2'/%3E%3Cpath d='M3 12h26M10 3v5M22 3v5' stroke='%23141a33' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f7dc8a'/%3E%3Cstop offset='.5' stop-color='%23c9962e'/%3E%3Cstop offset='1' stop-color='%237a5414'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='11.5' fill='none' stroke='url(%23g)' stroke-width='5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Cinzel:wght@500;700;800&display=swap">
 <style>
-/* Layout: a graph-paper day sheet. Date + player bar + highlighter "next up" note on top,
-   the exam run as a full-width track, then three working columns. */
+/* Layout: date + next paper + level on top, the Road to Mount Doom as a full-width map with its stops,
+   then three working columns. The whole shell takes the light of the region you have reached. */
+@property --bg { syntax: "<color>"; inherits: true; initial-value: #dbe3c8; }
+@property --surface { syntax: "<color>"; inherits: true; initial-value: #f4f6ea; }
+@property --raise { syntax: "<color>"; inherits: true; initial-value: #e7ecd8; }
+@property --ink { syntax: "<color>"; inherits: true; initial-value: #1d2716; }
+@property --muted { syntax: "<color>"; inherits: true; initial-value: #4a573c; }
+@property --line { syntax: "<color>"; inherits: true; initial-value: #c3cdae; }
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #2e6328; }
+@property --on-accent { syntax: "<color>"; inherits: true; initial-value: #f4f6ea; }
+@property --good { syntax: "<color>"; inherits: true; initial-value: #2e6328; }
+@property --warn { syntax: "<color>"; inherits: true; initial-value: #9a3f12; }
+
 :root {
-  --paper: #f4f6fb;
-  --grid: rgba(43, 63, 214, .07);
-  --surface: #ffffff;
-  --ink: #141a33;
-  --muted: #5b6385;
-  --line: #d9deee;
-  --accent: #2b3fd6;
-  --accent-soft: rgba(43, 63, 214, .1);
-  --hi: #ffe45c;
-  --on-hi: #221d00;
-  --good: #17845a;
-  --good-soft: rgba(23, 132, 90, .12);
-  --warn: #b84a0e;
-  --font-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
-  --font-body: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* The Shire: moss, honey, hobbit-door green */
+  --bg: #dbe3c8; --surface: #f4f6ea; --raise: #e7ecd8; --ink: #1d2716; --muted: #4a573c; --line: #c3cdae;
+  --accent: #2e6328; --on-accent: #f4f6ea; --good: #2e6328; --warn: #9a3f12;
+  --gold: #d4a243; --gold-hi: #f6dd8f; --gold-lo: #7a5414; --ember: #ff7a2f;
+  --font-display: "Cinzel", "Trajan Pro", "Times New Roman", serif;
+  --font-body: "Alegreya Sans", "Gill Sans", "Segoe UI", system-ui, sans-serif;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
   color-scheme: light;
+  transition: --bg 1.4s ease, --surface 1.4s ease, --raise 1.4s ease, --ink 1.4s ease, --muted 1.4s ease,
+    --line 1.4s ease, --accent 1.4s ease, --on-accent 1.4s ease, --good 1.4s ease, --warn 1.4s ease;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0e1222; --grid: rgba(140, 160, 255, .06); --surface: #151a30; --ink: #e7eaf7;
-    --muted: #9aa3c7; --line: #283055; --accent: #93a1ff; --accent-soft: rgba(147, 161, 255, .14);
-    --hi: #f5d93f; --on-hi: #1e1900; --good: #4fd19b; --good-soft: rgba(79, 209, 155, .14); --warn: #ff9a5c; color-scheme: dark;
-  }
-}
+/* Bree: an inn by lamplight */
+[data-region="bree"] { --bg: #1e1710; --surface: #2a2016; --raise: #352a1d; --ink: #f0e6d6; --muted: #b5a68f; --line: #42352a; --accent: #e8a957; --on-accent: #1e1408; --good: #a7cf8f; --warn: #f4a576; color-scheme: dark; }
+/* Weathertop: moonlit storm on the ruined hill */
+[data-region="weathertop"] { --bg: #151823; --surface: #1e2232; --raise: #282d40; --ink: #e7e9f2; --muted: #a4aac0; --line: #343a50; --accent: #9fb2ea; --on-accent: #10142a; --good: #9fd0a8; --warn: #f2a27a; color-scheme: dark; }
+/* Rivendell: pale stone and autumn amber */
+[data-region="rivendell"] { --bg: #dcdae0; --surface: #f4f3f6; --raise: #e8e6ec; --ink: #25222f; --muted: #575366; --line: #c6c3cf; --accent: #9b4f12; --on-accent: #fbf6f0; --good: #2f6b45; --warn: #9a3412; color-scheme: light; }
+/* Moria: black stone, dwarf gold */
+[data-region="moria"] { --bg: #0f0f11; --surface: #19191d; --raise: #232328; --ink: #e6e1d6; --muted: #a29c90; --line: #2f2f36; --accent: #d6b05a; --on-accent: #171207; --good: #9cc98e; --warn: #f08a5d; color-scheme: dark; }
+/* Lothlórien: silver bark, mallorn gold */
+[data-region="lorien"] { --bg: #dcded9; --surface: #f4f5f2; --raise: #e8eae5; --ink: #1d2420; --muted: #4f5a54; --line: #c5c9c3; --accent: #7d5b0c; --on-accent: #fffaf0; --good: #2a6a45; --warn: #9a3412; color-scheme: light; }
+/* Amon Hen and the Anduin: river light */
+[data-region="amonhen"] { --bg: #d0dce1; --surface: #eef3f5; --raise: #e0e9ed; --ink: #14232a; --muted: #44575f; --line: #b8c8cf; --accent: #1f6480; --on-accent: #eef6f9; --good: #23664a; --warn: #933a12; color-scheme: light; }
+/* Helm's Deep: rain on the wall at night */
+[data-region="helmsdeep"] { --bg: #13161a; --surface: #1c2025; --raise: #262b31; --ink: #e6e8eb; --muted: #a3a9b0; --line: #30363d; --accent: #d7b45e; --on-accent: #17130a; --good: #9ccb93; --warn: #f2a074; color-scheme: dark; }
+/* Minas Tirith: white stone, Gondor blue */
+[data-region="minastirith"] { --bg: #e1e4ea; --surface: #fbfbfd; --raise: #eef0f4; --ink: #19203a; --muted: #4d566c; --line: #cdd2dd; --accent: #263c7a; --on-accent: #f6f8fd; --good: #23654a; --warn: #9a3412; color-scheme: light; }
+/* The Black Gate: ash plain */
+[data-region="blackgate"] { --bg: #16130e; --surface: #211d17; --raise: #2c2720; --ink: #eee6d8; --muted: #ada290; --line: #3a332a; --accent: #ec7d3c; --on-accent: #1a0e06; --good: #a6cf8f; --warn: #ff9b6a; color-scheme: dark; }
+/* Mount Doom: lava light */
+[data-region="mountdoom"] { --bg: #110a07; --surface: #1d120d; --raise: #2a1a12; --ink: #f5e8dc; --muted: #bba08b; --line: #3d261b; --accent: #ff8a3d; --on-accent: #1d0b03; --good: #b5d98f; --warn: #ffb07a; color-scheme: dark; }
+/* Home again: the Shire in harvest gold */
+[data-region="home"] { --bg: #e3dfc4; --surface: #f7f6ec; --raise: #ece9d6; --ink: #22240f; --muted: #535637; --line: #cfcaa6; --accent: #3d6b1f; --on-accent: #f7f6ec; --good: #3d6b1f; --warn: #9a3f12; color-scheme: light; }
 
 * { box-sizing: border-box; }
+html { background: var(--bg); }
 body {
-  margin: 0;
-  background-color: var(--paper);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px;
-  color: var(--ink);
-  font: 15px/1.5 var(--font-body);
-  padding: 28px 16px 40px;
+  margin: 0; min-height: 100vh;
+  background: var(--bg); color: var(--ink);
+  font: 17px/1.5 var(--font-body);
+  font-variant-numeric: lining-nums;
+  padding: 28px 16px 48px;
+  caret-color: var(--accent);
 }
+body::before {
+  /* film grain, very faint, so flat fields read as material */
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+::selection { background: var(--accent); color: var(--on-accent); }
+* { scrollbar-color: var(--line) transparent; scrollbar-width: thin; }
 [hidden] { display: none !important; }
-.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 24px; }
+.wrap { position: relative; z-index: 1; max-width: 1260px; margin: 0 auto; display: grid; gap: 22px; }
 button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+.icon { width: 1em; height: 1em; flex: none; }
 
 /* ---------- banner ---------- */
-.banner { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--surface); border: 2px solid var(--accent); border-radius: 6px; padding: 12px 16px; }
+.banner { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--accent); border-radius: 6px; padding: 12px 16px; }
 .banner p { margin: 0; }
 .banner .row { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- top ---------- */
-.top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 28px; align-items: end; }
-.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.date {
-  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
-  font-size: clamp(3.6rem, 10vw, 7rem); line-height: .82; margin: 6px 0 10px; letter-spacing: .01em;
-}
-.clockline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; font-size: 18px; }
-.clockline .mono { font-size: 22px; font-weight: 600; color: var(--accent); }
-.summary { margin: 8px 0 0; color: var(--muted); max-width: 60ch; }
-.summary b { color: var(--ink); font-weight: 600; }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 20px 32px; align-items: stretch; }
+.when-block { display: grid; align-content: end; gap: 8px; min-width: 0; }
+.date { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.6rem, 6vw, 4.6rem); line-height: .95; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+.reckon { margin: 0; font-size: 18px; color: var(--muted); }
+.reckon b { color: var(--ink); font-weight: 500; }
+.clockline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 18px; }
+.clockline .clk { font-family: var(--font-display); font-weight: 700; font-size: 26px; color: var(--accent); }
+.summary { margin: 0; color: var(--muted); }
+.summary b { color: var(--ink); font-weight: 500; }
 
-/* player bar */
-.player { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: center; margin-top: 16px; max-width: 620px; }
-.lvl { grid-row: span 2; display: grid; place-items: center; width: 64px; height: 64px; padding: 6px; border: 2px solid var(--ink); border-radius: 6px; background: var(--surface); line-height: 1; }
-.lvl small { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--muted); margin-top: 6px; }
-.lvl b { font-family: var(--font-display); font-weight: 800; font-size: 36px; margin-top: -10px; }
-.ptitle { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; align-items: baseline; }
-.ptitle b { font-weight: 600; font-size: 17px; }
-.ptitle span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.xpbar { height: 12px; border-radius: 6px; background: var(--accent-soft); overflow: hidden; position: relative; }
-.xpbar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 6px; transition: width .6s cubic-bezier(.22, 1, .36, 1); }
-.pstats { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.pstats b { color: var(--ink); font-weight: 600; }
+.side { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.nextcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; display: grid; gap: 4px; }
+.nextcard h2 { margin: 0; font-size: 20px; line-height: 1.25; font-weight: 500; text-wrap: balance; }
+.nextcard .big { font-family: var(--font-display); font-weight: 800; font-size: 60px; line-height: 1; color: var(--accent); }
+.nextcard .big small { font-size: 22px; font-weight: 700; margin-left: 8px; color: var(--ink); }
+.nextcard .meta { font-size: 15px; color: var(--muted); }
+.nextcard .then { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 6px; }
+
+.player { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 14px; align-items: center; }
+.emblem { grid-row: span 3; position: relative; width: 66px; height: 66px; display: grid; place-items: center; }
+.emblem svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.emblem b { position: relative; font-family: var(--font-display); font-weight: 800; font-size: 24px; color: var(--ink); }
+.ptitle { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 12px; align-items: baseline; }
+.ptitle b { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.ptitle span { font-size: 14px; color: var(--muted); }
+.xpbar { height: 8px; border-radius: 4px; background: var(--raise); overflow: hidden; position: relative; box-shadow: inset 0 1px 2px rgba(0,0,0,.18); }
+.xpbar i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; background: linear-gradient(90deg, var(--gold-lo), var(--gold) 60%, var(--gold-hi)); transition: width .8s var(--ease-out); }
+.pstats { display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: 14px; color: var(--muted); }
+.pstats b { color: var(--ink); font-weight: 500; }
 .pstats .met b { color: var(--good); }
 
-.nextup {
-  background: var(--hi); color: var(--on-hi); border-radius: 4px; padding: 20px 22px 18px;
-  box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 14px 30px -18px rgba(40, 30, 0, .55);
-  transform: rotate(-.6deg); display: grid; gap: 6px; min-width: 0;
-}
-.nextup .eyebrow { color: inherit; opacity: .75; }
-.nextup h2 { margin: 0; font-size: 20px; line-height: 1.25; font-weight: 600; text-wrap: balance; }
-.nextup .big { font-family: var(--font-display); font-weight: 800; font-size: 64px; line-height: .9; text-transform: uppercase; }
-.nextup .big small { font-size: 28px; margin-left: 6px; font-weight: 600; }
-.nextup .when { font-family: var(--font-mono); font-size: 13px; }
-.nextup .then { font-size: 13px; border-top: 1px dashed rgba(34, 29, 0, .3); padding-top: 8px; margin-top: 4px; }
-.nextup.empty .big { font-size: 34px; }
-
 /* ---------- panels ---------- */
-.grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-.col { display: grid; gap: 20px; min-width: 0; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px 18px; min-width: 0; }
-.phead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.phead h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
-.meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.linkbtn { background: none; border: 0; padding: 2px 4px; font-size: 13px; color: var(--accent); font-weight: 500; }
-.linkbtn:hover { text-decoration: underline; }
-.empty-note { color: var(--muted); font-size: 14px; margin: 4px 0 8px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px 20px; min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 14px; }
+.phead h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: .02em; line-height: 1.1; }
+.meta { font-size: 14px; color: var(--muted); }
+.linkbtn { background: none; border: 0; padding: 2px 4px; font-size: 15px; color: var(--accent); font-weight: 500; }
+.linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
+.empty-note { color: var(--muted); font-size: 15px; margin: 2px 0 6px; }
 
-.addrow { display: flex; gap: 8px; margin-top: 12px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.col { display: grid; gap: 20px; min-width: 0; }
+
+.addrow { display: flex; gap: 8px; margin-top: 14px; }
 .addrow input, .stack input, .stack select {
-  flex: 1; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper);
+  flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise);
 }
-.btn { padding: 9px 14px; border-radius: 5px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); font-weight: 600; }
+.addrow input::placeholder, .stack input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+.btn { padding: 9px 16px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 700; transition: filter .15s, transform .15s; }
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: translateY(1px); }
 .btn.ghost { background: transparent; color: var(--accent); }
 .btn:disabled { opacity: .5; cursor: default; }
-.ed { display: none; }
-.panel.editing .ed { display: revert; }
-.panel.editing form.ed { display: grid; }
-.panel.editing form.addrow.ed { display: flex; }
-.x { border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
-.x:hover { color: var(--warn); background: var(--accent-soft); }
+.panel:not(.editing) .ed { display: none; }
+.x { display: grid; place-items: center; border: 0; background: none; color: var(--muted); width: 28px; height: 28px; border-radius: 5px; padding: 0; }
+.x:hover { color: var(--warn); background: var(--raise); }
+.x .icon { width: 14px; height: 14px; }
 
-/* ---------- exam run ---------- */
-.run { padding-bottom: 14px; }
-.track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(112px, 1fr); overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin; }
-.stop { position: relative; padding: 0 10px 0 0; min-width: 0; display: grid; align-content: start; gap: 8px; }
-.stop::before { content: ""; position: absolute; top: 9px; left: 0; right: 0; height: 3px; background: var(--line); }
-.stop:first-child::before { left: 10px; }
-.stop:last-child::before { right: auto; width: 10px; }
-.stop.cleared::before { background: var(--good); }
-.node { position: relative; width: 21px; height: 21px; border-radius: 50%; border: 3px solid var(--line); background: var(--surface); display: grid; place-items: center; }
-.stop.cleared .node { border-color: var(--good); background: var(--good); }
-.stop.cleared .node svg { opacity: 1; }
-.node svg { width: 11px; height: 11px; opacity: 0; }
-.stop.next .node { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-.stop.today .node { border-color: var(--on-hi); background: var(--hi); box-shadow: 0 0 0 4px var(--hi); }
-.stop.owed .node { border-color: var(--warn); }
-.sday { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; text-transform: uppercase; }
-.sday small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 11px; letter-spacing: .06em; color: var(--muted); text-transform: none; margin-top: 3px; }
-.stop.today .sday small, .stop.next .sday small { color: var(--accent); font-weight: 600; }
-.paper { border: 1px solid var(--line); border-radius: 5px; padding: 7px 9px; font-size: 13px; line-height: 1.3; display: grid; gap: 6px; background: var(--surface); }
-.paper .pt { overflow-wrap: anywhere; font-weight: 500; }
-.stop.today .paper { border-color: var(--on-hi); background: var(--hi); color: var(--on-hi); }
-.paper.sat { background: var(--good-soft); border-color: transparent; }
+/* seals: one symbol, coloured through custom properties so it can live in any state */
+.sealicon { --wax-fill: none; --wax-stroke: var(--line); --wax-dash: 3 3; --star-fill: var(--line); }
+
+/* ---------- the road ---------- */
+.road .phead h2 { font-size: 26px; }
+.mapwrap { position: relative; overflow-x: auto; margin: 0 -8px; padding: 0 8px; }
+.map { display: block; width: 100%; min-width: 760px; height: auto; max-height: clamp(220px, 34vh, 340px); }
+.map .terrain { fill: none; stroke: var(--muted); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+.map .terrain-fill { fill: var(--muted); opacity: .16; }
+.map .river { fill: none; stroke: var(--accent); stroke-width: 2; opacity: .35; stroke-linecap: round; }
+.map .route { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 2 7; stroke-linecap: round; opacity: .8; }
+.map .walked { fill: none; stroke: var(--gold); stroke-width: 3.2; stroke-linecap: round; filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+.map .wp circle { fill: var(--surface); stroke: var(--muted); stroke-width: 2; }
+.map .wp.exam circle { stroke: var(--ink); }
+.map .wp.reached circle { fill: var(--gold); stroke: var(--gold-lo); }
+.map .wp.next circle { stroke: var(--accent); stroke-width: 3; }
+.map .wp.today circle { fill: var(--accent); stroke: var(--accent); }
+.map .wp .halo { fill: none; stroke: var(--accent); stroke-width: 2; opacity: 0; }
+.map .wp.today .halo { animation: halo 2.4s var(--ease-out) infinite; }
+@keyframes halo { 0% { r: 7px; opacity: .7; } 100% { r: 22px; opacity: 0; } }
+.map text { font-family: var(--font-display); font-weight: 700; font-size: 13px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 4px; stroke-linejoin: round; }
+.map text.sub { font-family: var(--font-body); font-weight: 500; font-size: 11.5px; fill: var(--muted); }
+.map .wp:not(.exam) text { fill: var(--muted); font-weight: 500; font-size: 11.5px; }
+.map .marker { filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.map .doom-glow { fill: url(#lava); opacity: .55; }
+.map .eye-body { fill: url(#eyefire); }
+.map .eye-glow { fill: var(--ember); opacity: .25; filter: blur(4px); transform-box: fill-box; transform-origin: center; }
+[data-region="blackgate"] .map .eye-glow, [data-region="mountdoom"] .map .eye-glow { animation: eyeglow 4s ease-in-out infinite; }
+@keyframes eyeglow { 50% { opacity: .45; transform: scale(1.15); } }
+.map .pupil { fill: #120400; }
+.mapfx { position: absolute; inset: 0; pointer-events: none; width: 100%; height: 100%; }
+
+.stops { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(104px, 1fr); gap: 10px; overflow-x: auto; padding: 14px 2px 4px; }
+.stop { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.stop h3 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.15; }
+.stop h3 small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.stop.today h3 small, .stop.next h3 small { color: var(--accent); font-weight: 700; }
+.stop.owed h3 small { color: var(--warn); font-weight: 700; }
+.paper { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 14px; line-height: 1.3; display: grid; gap: 7px; background: var(--raise); }
+.paper .pt { overflow-wrap: anywhere; }
+.stop.today .paper:not(.sat) { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 1px var(--accent); }
+.paper.sat { background: transparent; }
+.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; line-height: 1.3; color: var(--muted); }
+.plist li { display: flex; gap: 5px; align-items: flex-start; overflow-wrap: anywhere; }
+.plist .sealicon { width: 15px; height: 15px; flex: none; margin-top: 1px; --wax-fill: var(--good); --wax-stroke: none; --wax-dash: none; --star-fill: var(--surface); }
 .paper.sat .pt { color: var(--muted); }
-.satbtn { justify-self: start; border: 1px solid currentColor; border-radius: 4px; background: transparent; font-family: var(--font-mono); font-size: 11px; padding: 2px 7px; color: var(--accent); font-weight: 600; }
-.stop.today .satbtn { color: var(--on-hi); }
-.satbtn[aria-pressed="true"] { color: var(--good); border-color: transparent; padding-left: 0; }
+.satbtn { justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--accent); border-radius: 5px; background: var(--accent); color: var(--on-accent); font-size: 13px; padding: 3px 9px; font-weight: 700; }
+.satbtn[aria-pressed="true"] { background: transparent; color: var(--good); border-color: transparent; padding-left: 0; }
+.satbtn .sealicon { width: 22px; height: 22px; --wax-fill: var(--good); --wax-stroke: none; --wax-dash: none; --star-fill: var(--surface); }
 
 /* tasks */
 .tasks { list-style: none; margin: 0; padding: 0; display: grid; }
-.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .task:last-child { border-bottom: 0; }
 .check {
-  width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--muted); border-radius: 4px; background: transparent;
-  display: grid; place-items: center; padding: 0; flex: none;
+  width: 22px; height: 22px; margin-top: 1px; border: 2px solid var(--muted); border-radius: 5px; background: transparent; color: var(--on-accent);
+  display: grid; place-items: center; padding: 0; flex: none; transition: background .15s, border-color .15s;
 }
-.check svg { width: 12px; height: 12px; opacity: 0; }
+.check svg { width: 13px; height: 13px; opacity: 0; transform: scale(.4); transition: opacity .15s, transform .25s var(--ease-out); }
 [aria-pressed="true"] > .check, .check[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
-[aria-pressed="true"] > .check svg, .check[aria-pressed="true"] svg { opacity: 1; }
+[aria-pressed="true"] > .check svg, .check[aria-pressed="true"] svg { opacity: 1; transform: none; }
 .task .txt { overflow-wrap: anywhere; }
 .task.done .txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
-.tag { font-family: var(--font-mono); font-size: 11px; color: var(--warn); margin-left: 6px; white-space: nowrap; }
-.xp-tag { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.tag { font-size: 13px; color: var(--warn); margin-left: 6px; white-space: nowrap; font-weight: 500; }
 
-textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); line-height: 1.55; min-height: 120px;
-  background-image: linear-gradient(transparent 23px, var(--grid) 24px); background-size: 100% 24px; background-attachment: local; }
+textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); line-height: 1.55; min-height: 130px; }
 
 /* quests */
-.quests { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.quest { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 10px; align-items: baseline; }
-.quest .qn { font-weight: 500; }
-.quest .qv { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.quest .qbar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--accent-soft); overflow: hidden; }
-.quest .qbar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s; }
-.quest.done .qn { color: var(--good); }
+.quests { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.quest { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: baseline; }
+.quest .qv { font-size: 14px; color: var(--muted); }
+.quest .qbar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--raise); overflow: hidden; }
+.quest .qbar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .5s var(--ease-out); }
+.quest.done .qn { color: var(--good); font-weight: 500; }
 .quest.done .qbar i { background: var(--good); }
-.quest.done .qv { color: var(--good); font-weight: 600; }
-.qfoot { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
-.qfoot.done { color: var(--good); font-weight: 600; }
+.quest.done .qv { color: var(--good); font-weight: 700; }
+.qfoot { margin: 14px 0 0; font-size: 14px; color: var(--muted); }
+.qfoot.done { color: var(--good); font-weight: 700; }
 
 /* habits */
 .habits { display: grid; gap: 4px; }
 .habit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 6px 0; }
 .habit-btn { display: flex; gap: 10px; align-items: center; text-align: left; background: none; border: 0; padding: 0; min-width: 0; }
 .habit-btn .nm { overflow-wrap: anywhere; }
-.streak { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
-.streak.hot { color: var(--good); font-weight: 600; }
-.strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; padding-left: 30px; }
-.strip i { height: 7px; border-radius: 2px; background: var(--line); }
+.hside { display: flex; align-items: center; gap: 2px; }
+.streak { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.streak.hot { color: var(--good); font-weight: 700; }
+.strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; padding-left: 32px; }
+.strip i { height: 6px; border-radius: 2px; background: var(--raise); }
 .strip i.on { background: var(--accent); }
-.strip i.today { outline: 1px solid var(--accent); outline-offset: 1px; }
+.strip i.today { box-shadow: 0 0 0 1px var(--accent); }
 
-/* focus */
+/* focus + beacons */
+.beacons { display: block; width: 100%; height: auto; margin: -4px 0 6px; overflow: visible; }
+.beacons .ridge { fill: var(--raise); stroke: var(--line); stroke-width: 1.2; }
+.beacons .pyre { stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; }
+.beacons .flame { transform-box: fill-box; transform-origin: 50% 100%; opacity: 0; transform: scale(0); }
+.beacons .lit .flame { opacity: 1; transform: none; animation: flicker 1.7s ease-in-out infinite alternate; }
+.beacons .glow { fill: var(--ember); opacity: 0; filter: blur(6px); transition: opacity .6s; }
+.beacons .lit .glow { opacity: .55; }
+@keyframes flicker { 0% { transform: scale(.94, .9) skewX(-2deg); } 40% { transform: scale(1.03, 1.06) skewX(2deg); } 100% { transform: scale(.98, 1.02) skewX(-1deg); } }
+.beacon-cap { font-size: 14px; color: var(--muted); text-align: center; margin: 0 0 6px; min-height: 1.5em; }
+.beacon-cap b { color: var(--ink); font-weight: 500; }
 .timer { display: grid; justify-items: center; gap: 12px; padding: 4px 0 6px; }
-.timer .face { font-family: var(--font-mono); font-weight: 600; font-size: 56px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.face { font-family: var(--font-display); font-weight: 700; font-size: 58px; line-height: 1; display: flex; }
+.face span { display: inline-block; width: .72em; text-align: center; }
+.face span.c { width: .3em; }
 .timer.running .face { color: var(--accent); }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
-.seg button { border: 0; background: transparent; padding: 5px 12px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 5px 14px; font-size: 14px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--raise); color: var(--ink); font-weight: 700; }
 .timer .row { display: flex; gap: 8px; }
-.bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; margin-top: 14px; border-bottom: 1px solid var(--line); }
+.bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 84px; margin-top: 16px; border-bottom: 1px solid var(--line); }
 .bar { display: grid; align-content: end; justify-items: center; height: 100%; gap: 3px; }
-.bar span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
-.bar i { width: 100%; max-width: 26px; border-radius: 3px 3px 0 0; background: var(--accent-soft); min-height: 2px; }
-.bar.today i { background: var(--accent); }
-.bar.today span { color: var(--ink); font-weight: 600; }
-.barlabels { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+.bar span { font-size: 12px; color: var(--muted); }
+.bar i { width: 100%; max-width: 26px; border-radius: 3px 3px 0 0; background: var(--raise); min-height: 2px; box-shadow: inset 0 0 0 1px var(--line); }
+.bar.today i { background: var(--accent); box-shadow: none; }
+.bar.today span { color: var(--ink); font-weight: 700; }
+.barlabels { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-size: 13px; color: var(--muted); margin-top: 4px; }
 
 /* weather */
 .wx-now { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: center; }
-.wx-temp { font-family: var(--font-display); font-weight: 800; font-size: 64px; line-height: .85; }
-.wx-temp small { font-size: 28px; vertical-align: top; }
-.wx-cond { font-weight: 600; font-size: 17px; }
-.wx-sub { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.wx-temp { font-family: var(--font-display); font-weight: 800; font-size: 58px; line-height: .9; }
+.wx-temp small { font-size: 26px; vertical-align: top; }
+.wx-cond { font-weight: 700; font-size: 18px; }
+.wx-sub { font-size: 14px; color: var(--muted); }
 .wx-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
 .wx-facts div { border-top: 1px solid var(--line); padding-top: 6px; }
-.wx-facts b { display: block; font-family: var(--font-mono); font-size: 15px; font-weight: 600; }
-.wx-facts span { font-size: 12px; color: var(--muted); }
+.wx-facts b { display: block; font-size: 17px; font-weight: 700; }
+.wx-facts span { font-size: 13px; color: var(--muted); }
 .wx-facts .uv-hi b { color: var(--warn); }
 .wx-days { list-style: none; margin: 12px 0 0; padding: 0; display: grid; }
-.wx-days li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; padding: 6px 0; border-top: 1px dashed var(--line); font-size: 14px; }
-.wx-days .dn { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 1px; }
-.wx-days .hl { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
+.wx-days li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.wx-days .dn { color: var(--muted); }
+.wx-days .hl { white-space: nowrap; }
 
-/* countdowns */
+/* horizon */
 .cds { list-style: none; margin: 0; padding: 0; display: grid; }
-.cd { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+.cd { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .cd:last-child { border-bottom: 0; }
-.cd .n { font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: .9; text-align: right; }
-.cd .n small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
-.cd .t { font-weight: 600; overflow-wrap: anywhere; }
-.cd .d { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-.chip { display: inline-block; font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
-.chip.exam { background: var(--hi); color: var(--on-hi); }
-.cd.soon .n { color: var(--warn); }
-.stack { gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cd .n { font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: .95; text-align: right; }
+.cd .n small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cd .t { font-weight: 500; overflow-wrap: anywhere; }
+.cd .d { font-size: 14px; color: var(--muted); }
+.cd.soon .n { color: var(--accent); }
+.stack { display: grid; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .stack .pair { display: flex; gap: 8px; }
 
-/* trophies */
-.trophies { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-.trophy { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 8px; border-radius: 5px; border: 1px dashed var(--line); }
-.trophy svg { grid-row: span 2; width: 30px; height: 30px; }
-.trophy b { font-size: 13px; font-weight: 600; line-height: 1.25; }
-.trophy span { font-size: 12px; color: var(--muted); line-height: 1.3; }
-.trophy.got { border: 1px solid transparent; background: var(--accent-soft); }
-.trophy .medal { fill: var(--line); }
-.trophy.got .medal { fill: var(--hi); stroke: var(--on-hi); }
-.trophy .mk { stroke: var(--muted); }
-.trophy.got .mk { stroke: var(--on-hi); }
+/* deeds */
+.deeds { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.deed { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 1px 10px; align-items: start; padding: 9px 10px; border-radius: 6px; border: 1px solid var(--line); }
+.deed svg { grid-row: span 2; width: 34px; height: 34px; }
+.deed b { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.deed span { font-size: 13px; color: var(--muted); line-height: 1.3; }
+.deed.got { background: var(--raise); border-color: transparent; }
+.deed.got .sealicon { --wax-fill: var(--accent); --wax-stroke: none; --wax-dash: none; --star-fill: var(--on-accent); }
 
 /* links */
 .links { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .links li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-.links a { display: block; padding: 8px 10px; margin: 0 -10px; border-radius: 5px; color: var(--ink); text-decoration: none; min-width: 0; }
-.links a:hover { background: var(--accent-soft); }
-.links a b { display: block; font-weight: 600; color: var(--accent); }
-.links a span { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.links a { display: block; padding: 8px 10px; margin: 0 -10px; border-radius: 6px; color: var(--ink); text-decoration: none; min-width: 0; }
+.links a:hover { background: var(--raise); }
+.links a b { display: block; font-weight: 700; color: var(--accent); }
+.links a span { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
 
-footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
-footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
-#moveOut { width: 100%; font-family: var(--font-mono); font-size: 11px; min-height: 0; }
+footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
+#moveOut { width: 100%; font-size: 12px; min-height: 0; }
 
 /* ---------- rewards ---------- */
-.pop { position: fixed; z-index: 30; pointer-events: none; font-family: var(--font-mono); font-weight: 600; font-size: 14px; color: var(--accent);
-  background: var(--surface); border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; transform: translate(-50%, -100%); }
-.toasts { position: fixed; z-index: 40; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: grid; gap: 8px; justify-items: center; width: min(440px, calc(100vw - 32px)); pointer-events: none; }
-.toast { background: var(--ink); color: var(--paper); border-radius: 6px; padding: 12px 16px; display: grid; gap: 2px; width: 100%; box-shadow: 0 12px 30px -12px rgba(0,0,0,.5); }
-.toast .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--hi); }
-.toast b { font-family: var(--font-display); font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1.05; }
-.toast span { font-size: 13px; opacity: .85; }
+.pop { position: fixed; z-index: 30; pointer-events: none; font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--gold-hi);
+  text-shadow: 0 1px 2px rgba(0,0,0,.75); transform: translate(-50%, -100%); }
+.toasts { position: fixed; z-index: 40; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: grid; gap: 8px; justify-items: center; width: min(460px, calc(100vw - 32px)); pointer-events: none; }
+.toast { width: 100%; background: #17120b; color: #f2e7d2; border-radius: 6px; padding: 14px 18px; display: grid; gap: 3px; text-align: center;
+  border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); box-shadow: 0 18px 40px -16px rgba(0,0,0,.7); }
+.toast b { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1.15; color: #f6dd8f; }
+.toast span { font-size: 15px; color: #d9cbb2; }
+
+/* ---------- milestone stage ---------- */
+.stage { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 45%, rgba(40, 18, 6, .9), rgba(5, 3, 2, .97) 70%); color: #f2e7d2; cursor: pointer; overflow: hidden; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage .inner { position: relative; display: grid; justify-items: center; gap: 10px; text-align: center; padding: 24px; max-width: 760px; }
+.stage .ringbox { width: min(260px, 60vw); aspect-ratio: 1; }
+.stage .ringbox svg { width: 100%; height: 100%; overflow: visible; }
+.stage .title { font-family: var(--font-display); font-weight: 800; font-size: clamp(2.6rem, 8vw, 5.5rem); line-height: 1; color: #f6dd8f; text-shadow: 0 3px 0 rgba(0,0,0,.55); margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.stage .title span { display: inline-block; white-space: pre; }
+.stage .sub { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.1rem, 3vw, 1.6rem); color: #f2e7d2; margin: 0; }
+.stage .note { font-size: 16px; color: #cbb89a; margin: 0; max-width: 46ch; }
+.stage .hint { font-size: 14px; color: #a8957a; margin-top: 8px; }
+.stage .btn { background: var(--gold); border-color: var(--gold); color: #1d1405; margin-top: 8px; }
+.fireglyph { fill: none; stroke: #ffb347; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px #ff7a2f) drop-shadow(0 0 8px rgba(255, 90, 20, .7)); }
+.stageback { position: absolute; inset: 0; pointer-events: none; }
+.doom { position: absolute; left: 50%; bottom: -2px; width: min(900px, 140vw); transform: translateX(-50%); }
+.finale-ring { position: absolute; left: 50%; top: 0; width: 120px; height: 120px; margin-left: -60px; }
+.finale-ring svg { width: 100%; height: 100%; overflow: visible; }
+.stage .inner.finale { align-self: start; margin-top: 10vh; }
+.stage.solid { background: radial-gradient(ellipse at 50% 85%, #3d1406, #120604 55%, #070302 100%); }
 
 @media (max-width: 1100px) {
   .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .col.c3 { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
 }
-@media (max-width: 760px) {
-  body { padding-top: 18px; padding-bottom: 32px; }
+@media (max-width: 780px) {
+  body { padding-top: 18px; padding-bottom: 32px; font-size: 16px; }
   .top { grid-template-columns: minmax(0, 1fr); }
-  .nextup { transform: none; }
   .grid { grid-template-columns: minmax(0, 1fr); }
   .col.c3 { grid-template-columns: minmax(0, 1fr); }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .nextup { animation: settle .5s cubic-bezier(.22, 1, .36, 1) both; }
-  @keyframes settle { from { transform: rotate(-3deg) translateY(-6px); } }
-  @media (max-width: 760px) { @keyframes settle { from { transform: translateY(-6px); } } }
-  .pop { animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
-  @keyframes rise { to { transform: translate(-50%, -260%); opacity: 0; } }
-  .toast { animation: toastin .35s cubic-bezier(.22, 1, .36, 1) both; }
-  @keyframes toastin { from { transform: translateY(12px); opacity: 0; } }
-  .lvl.bump { animation: bump .6s cubic-bezier(.22, 1, .36, 1); }
-  @keyframes bump { 40% { transform: scale(1.15); background: var(--hi); } }
-}
 @media (prefers-reduced-motion: reduce) {
-  .pop { opacity: 0; }
-  .xpbar i, .quest .qbar i { transition: none; }
+  :root { transition: none; }
+  .map .wp.today .halo, .map .eye-glow, .beacons .lit .flame { animation: none !important; }
+  .xpbar i, .quest .qbar i, .check svg { transition: none; }
 }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 14 14"><path d="M3 3l8 8M11 3l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-seal" viewBox="0 0 34 34">
+      <path style="fill:var(--wax-fill);stroke:var(--wax-stroke);stroke-width:1.5;stroke-dasharray:var(--wax-dash)" d="M17 2.5l2.9 2.3 3.6-.8 1.6 3.3 3.5 1.2-.1 3.7 2.6 2.6-1.6 3.3 1.6 3.3-2.6 2.6.1 3.7-3.5 1.2-1.6 3.3-3.6-.8L17 31.5l-2.9-2.3-3.6.8-1.6-3.3-3.5-1.2.1-3.7-2.6-2.6 1.6-3.3-1.6-3.3 2.6-2.6-.1-3.7 3.5-1.2 1.6-3.3 3.6.8z"/>
+      <path style="fill:var(--star-fill)" d="M17 8.5l1.6 5.2 5-2.1-2.9 4.6 5.1 1.8-5.1 1.8 2.9 4.6-5-2.1L17 25.5l-1.6-5.2-5 2.1 2.9-4.6-5.1-1.8 5.1-1.8-2.9-4.6 5 2.1z"/>
+    </symbol>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dd8f"/><stop offset=".45" stop-color="#d4a243"/><stop offset=".75" stop-color="#9c6d1c"/><stop offset="1" stop-color="#f0cf78"/></linearGradient>
+  </defs>
+</svg>
+
 <div class="wrap">
   <div class="banner" id="importBanner" hidden>
     <p id="importText">This link carries Daybook data.</p>
@@ -314,30 +385,39 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   </div>
 
   <header class="top">
-    <div>
-      <div class="eyebrow" id="weekday">&nbsp;</div>
+    <div class="when-block">
       <h1 class="date" id="dateBig">&nbsp;</h1>
-      <div class="clockline"><span class="mono" id="clock"></span><span id="greet"></span></div>
+      <p class="reckon" id="reckon">&nbsp;</p>
+      <div class="clockline"><span class="clk num" id="clock"></span><span id="greet"></span></div>
       <p class="summary" id="summary"></p>
-      <div class="player" id="player" aria-live="polite">
-        <div class="lvl" id="lvlBox"><small>LEVEL</small><b id="lvlNum">1</b></div>
-        <div class="ptitle"><b id="lvlTitle"></b><span id="xpText"></span></div>
-        <div class="xpbar" role="progressbar" aria-label="Progress to next level" id="xpBarWrap"><i id="xpBar" style="width:0"></i></div>
-        <div class="pstats" id="pstats"></div>
+    </div>
+    <div class="side">
+      <section class="nextcard" id="nextup" aria-live="polite"></section>
+      <div class="player" id="player">
+        <div class="emblem" id="emblem">
+          <svg viewBox="0 0 66 66" aria-hidden="true"><circle cx="33" cy="33" r="27" fill="none" stroke="url(#gold)" stroke-width="7"/><circle cx="33" cy="33" r="27" fill="none" stroke="#fff6d8" stroke-opacity=".5" stroke-width="1" stroke-dasharray="30 140" transform="rotate(-120 33 33)"/></svg>
+          <b id="lvlNum">1</b>
+        </div>
+        <div class="ptitle"><b id="lvlTitle"></b><span id="xpText" class="num"></span></div>
+        <div class="xpbar" role="progressbar" aria-label="Progress to next level" aria-valuemin="0" aria-valuemax="100" id="xpBarWrap"><i id="xpBar" style="width:0"></i></div>
+        <div class="pstats num" id="pstats"></div>
       </div>
     </div>
-    <section class="nextup empty" id="nextup" aria-live="polite"></section>
   </header>
 
-  <section class="panel run" aria-labelledby="h-run">
-    <div class="phead"><h2 id="h-run">Exam run</h2><span class="meta" id="runMeta"></span></div>
-    <div class="track" id="track"></div>
+  <section class="panel road" aria-labelledby="h-road">
+    <div class="phead"><h2 id="h-road">The Road to Mount Doom</h2><span class="meta" id="roadMeta"></span></div>
+    <div class="mapwrap" id="mapwrap">
+      <svg class="map" id="map" viewBox="0 0 1000 300" role="img" aria-labelledby="mapTitle"><title id="mapTitle">Map of the road from Bag End to Mount Doom with your exam stops</title></svg>
+      <canvas class="mapfx" id="mapfx" aria-hidden="true"></canvas>
+    </div>
+    <div class="stops" id="stops"></div>
   </section>
 
   <main class="grid">
     <div class="col c1">
       <section class="panel" aria-labelledby="h-today">
-        <div class="phead"><h2 id="h-today">Today</h2><span class="meta" id="taskCount"></span></div>
+        <div class="phead"><h2 id="h-today">Today</h2><span class="meta num" id="taskCount"></span></div>
         <ul class="tasks" id="taskList"></ul>
         <form class="addrow" id="taskForm">
           <input id="taskInput" placeholder="Add something to do today" autocomplete="off" maxlength="200" aria-label="New task">
@@ -345,14 +425,14 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
         </form>
       </section>
       <section class="panel" aria-labelledby="h-notes">
-        <div class="phead"><h2 id="h-notes">Brain dump</h2><span class="meta" id="notesState"></span></div>
-        <textarea id="notes" rows="6" aria-label="Notes" placeholder="Anything rattling around: things to ask the teacher, stuff for tomorrow, ideas."></textarea>
+        <div class="phead"><h2 id="h-notes">The Red Book</h2><span class="meta" id="notesState"></span></div>
+        <textarea id="notes" rows="6" aria-label="Notes" placeholder="Notes for yourself: things to ask a teacher, stuff for tomorrow, ideas."></textarea>
       </section>
     </div>
 
     <div class="col c2">
       <section class="panel" aria-labelledby="h-quests">
-        <div class="phead"><h2 id="h-quests">Daily quests</h2><span class="meta">reset at midnight</span></div>
+        <div class="phead"><h2 id="h-quests">Today's quests</h2><span class="meta">new ones at midnight</span></div>
         <ul class="quests" id="questList"></ul>
         <p class="qfoot" id="questFoot"></p>
       </section>
@@ -365,13 +445,15 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
         </form>
       </section>
       <section class="panel" aria-labelledby="h-focus">
-        <div class="phead"><h2 id="h-focus">Focus</h2><span class="meta" id="focusWeek"></span></div>
+        <div class="phead"><h2 id="h-focus">Focus</h2><span class="meta num" id="focusWeek"></span></div>
+        <svg class="beacons" id="beacons" viewBox="0 0 360 96" role="img" aria-labelledby="beaconTitle"><title id="beaconTitle">Beacons lit today</title></svg>
+        <p class="beacon-cap" id="beaconCap"></p>
         <div class="timer" id="timer">
           <div class="seg" role="group" aria-label="Session length">
             <button type="button" id="len25" data-len="25" aria-pressed="true">25 min</button>
             <button type="button" id="len50" data-len="50" aria-pressed="false">50 min</button>
           </div>
-          <div class="face" id="face" role="timer">25:00</div>
+          <div class="face" id="face" role="timer" aria-label="Time left">25:00</div>
           <div class="row">
             <button class="btn" type="button" id="startBtn">Start</button>
             <button class="btn ghost" type="button" id="resetBtn">Reset</button>
@@ -384,8 +466,8 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
 
     <div class="col c3">
       <section class="panel" id="wxPanel" aria-labelledby="h-wx">
-        <div class="phead"><h2 id="h-wx">Outside</h2><button class="linkbtn" type="button" data-edit="wxPanel" id="wxPlace">Change</button></div>
-        <div id="wxBody"><p class="empty-note">Loading the weather…</p></div>
+        <div class="phead"><h2 id="h-wx">Skies</h2><button class="linkbtn" type="button" data-edit="wxPanel" id="wxPlace">Change place</button></div>
+        <div id="wxBody"><p class="empty-note">Reading the skies…</p></div>
         <form class="stack ed" id="wxForm">
           <div class="pair">
             <input id="wxCity" placeholder="Town or suburb" autocomplete="off" maxlength="60" aria-label="Town or suburb">
@@ -395,7 +477,7 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
         </form>
       </section>
       <section class="panel" id="cdPanel" aria-labelledby="h-cd">
-        <div class="phead"><h2 id="h-cd">Coming up</h2><button class="linkbtn" type="button" data-edit="cdPanel">Edit</button></div>
+        <div class="phead"><h2 id="h-cd">On the horizon</h2><button class="linkbtn" type="button" data-edit="cdPanel">Edit</button></div>
         <ul class="cds" id="cdList"></ul>
         <form class="stack ed" id="cdForm">
           <input id="cdTitle" placeholder="What is it? e.g. Maths AA HL Paper 1" maxlength="80" required aria-label="Event name">
@@ -409,9 +491,9 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
           </div>
         </form>
       </section>
-      <section class="panel" aria-labelledby="h-trophies">
-        <div class="phead"><h2 id="h-trophies">Trophies</h2><span class="meta" id="trophyMeta"></span></div>
-        <ul class="trophies" id="trophyList"></ul>
+      <section class="panel" aria-labelledby="h-deeds">
+        <div class="phead"><h2 id="h-deeds">Deeds</h2><span class="meta num" id="deedMeta"></span></div>
+        <ul class="deeds" id="deedList"></ul>
       </section>
       <section class="panel" id="linksPanel" aria-labelledby="h-links">
         <div class="phead"><h2 id="h-links">Study kit</h2><button class="linkbtn" type="button" data-edit="linksPanel">Edit</button></div>
@@ -428,16 +510,22 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   </main>
 
   <footer>
-    <span>Saved in this browser · <button class="linkbtn" type="button" id="moveBtn">Copy a link to move it to another device</button></span>
-    <span>XP: task 10 · habit 5 · focus 1/min · paper sat 100 · trophy 50 · Weather: Open-Meteo</span>
-    <textarea id="moveOut" rows="2" readonly hidden aria-label="Move link"></textarea>
+    <span>Saved in this browser · <button class="linkbtn" type="button" id="moveBtn">Copy a link to carry it to another device</button></span>
+    <span>XP: task 10 · habit 5 · focus 1 a minute · paper 100 · deed 50 · weather by Open-Meteo</span>
+    <textarea id="moveOut" rows="2" readonly hidden aria-label="Link to move your Daybook"></textarea>
   </footer>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="stage" id="stage" hidden role="dialog" aria-modal="true" aria-labelledby="stageTitle">
+  <div class="stageback" id="stageBack" aria-hidden="true"></div>
+  <canvas id="stagefx" aria-hidden="true"></canvas>
+  <div class="inner" id="stageInner"></div>
+</div>
 
 <script>
 (() => {
   const $ = (s) => document.querySelector(s);
+  const NS = "http://www.w3.org/2000/svg";
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const uid = () => Math.random().toString(36).slice(2, 10);
   const pad = (n) => String(n).padStart(2, "0");
@@ -450,9 +538,12 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   const fmtMins = (m) => m >= 60 ? `${Math.floor(m / 60)}h ${pad(m % 60)}m` : `${m} min`;
   const load = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
   const keep = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const svgUse = (id, cls = "icon") => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const rmq = matchMedia("(prefers-reduced-motion: reduce)");
+  const calm = () => rmq.matches;
+  const easeOut = (t) => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
 
-  const CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.6 2.5L10 3.2" fill="none" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const KEY = "daybook.v1", TIMER = "daybook.timer.v1", WX = "daybook.weather.v1";
+  const KEY = "daybook.v1", TIMER = "daybook.timer.v1", WX = "daybook.weather.v1", UI = "daybook.ui.v1";
 
   // ---------- state ----------
   function normalize(d) {
@@ -475,17 +566,60 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     ],
   };
   let state = normalize(load(KEY) || STARTER);
+  const ui = load(UI) || {};
+  const keepUI = () => keep(UI, ui);
 
   const today = () => dkey(new Date());
   const dayLog = (k = today()) => state.log[k] || {};
   const setDayLog = (patch, k = today()) => { state.log[k] = { ...dayLog(k), ...patch }; };
 
+  // ---------- the Shire calendar: twelve 30-day months, the year starts on 2 Yule (about 23 December) ----------
+  const SR_A = ["Afteryule", "Solmath", "Rethe", "Astron", "Thrimidge", "Forelithe"];
+  const SR_B = ["Afterlithe", "Wedmath", "Halimath", "Winterfilth", "Blotmath", "Foreyule"];
+  const SR_W = ["Sterday", "Sunday", "Monday", "Trewsday", "Hevensday", "Mersday", "Highday"];
+  function shireDate(d) {
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    let start = new Date(day.getFullYear() - 1, 11, 23), gy = day.getFullYear();
+    if (day >= new Date(day.getFullYear(), 11, 23)) { start = new Date(day.getFullYear(), 11, 23); gy++; }
+    const leap = (gy % 4 === 0 && gy % 100 !== 0) || gy % 400 === 0;
+    const i = Math.round((day - start) / 864e5);
+    const after = leap ? 185 : 184;
+    let name;
+    if (i === 0) name = "2 Yule";
+    else if (i <= 180) name = `${(i - 1) % 30 + 1} ${SR_A[Math.floor((i - 1) / 30)]}`;
+    else if (i === 181) name = "1 Lithe";
+    else if (i === 182) name = "Mid-year's Day";
+    else if (leap && i === 183) name = "Overlithe";
+    else if (i === after - 1) name = "2 Lithe";
+    else if (i < after + 180) name = `${(i - after) % 30 + 1} ${SR_B[Math.floor((i - after) / 30)]}`;
+    else name = "1 Yule";
+    const noWeekday = i === 182 || (leap && i === 183);
+    const skip = (i > 182 ? 1 : 0) + (leap && i > 183 ? 1 : 0);
+    return { name, weekday: noWeekday ? "" : SR_W[(i - skip) % 7] };
+  }
+
+  // ---------- the road ----------
+  const WAY = [
+    { id: "bagend", name: "Bag End", x: 50, y: 120, region: "shire", note: "Where every road starts." },
+    { id: "bree", name: "Bree", x: 142, y: 98, region: "bree", note: "Frodo reached the Prancing Pony on 29 September." },
+    { id: "weathertop", name: "Weathertop", x: 232, y: 80, region: "weathertop", note: "The ruined watchtower of Amon Sûl." },
+    { id: "rivendell", name: "Rivendell", x: 326, y: 66, region: "rivendell", note: "The Last Homely House." },
+    { id: "moria", name: "Moria", x: 362, y: 168, region: "moria", note: "The long dark under the Misty Mountains." },
+    { id: "lorien", name: "Lothlórien", x: 456, y: 140, region: "lorien", note: "The golden wood." },
+    { id: "amonhen", name: "Amon Hen", x: 560, y: 176, region: "amonhen", note: "The hill of seeing, above the Anduin." },
+    { id: "helmsdeep", name: "Helm's Deep", x: 470, y: 250, region: "helmsdeep", note: "The fortress in the gorge of the White Mountains." },
+    { id: "minastirith", name: "Minas Tirith", x: 690, y: 246, region: "minastirith", note: "The white city of Gondor." },
+    { id: "blackgate", name: "Black Gate", x: 772, y: 112, region: "blackgate", note: "The Morannon, the gate of Mordor." },
+    { id: "mountdoom", name: "Mount Doom", x: 870, y: 198, region: "mountdoom", note: "Where it began, and where it ends." },
+  ];
+  const BEACONS = ["Amon Dîn", "Eilenach", "Nardol", "Erelas", "Min-Rimmon", "Calenhad", "Halifirien"];
+
   // ---------- game rules ----------
   const XP = { task: 10, habit: 5, paper: 100, trophy: 50, quest: 30, sweep: 40 };
   const DAILY_GOAL = 150;
-  const TITLES = ["Fresh page", "Note-taker", "Highlighter", "Flashcard fiend", "Past-paper grinder", "Markscheme reader",
-    "Command-term pro", "Grade 6 energy", "Grade 7 energy", "Diploma closer", "45-point legend"];
-  const levelStart = (l) => 50 * l * (l - 1);          // XP needed to reach level l: 0, 100, 300, 600, 1000…
+  const TITLES = ["Hobbit of the Shire", "Bree-lander", "Ranger of the North", "Guest of Rivendell", "One of the Fellowship",
+    "Friend of Lothlórien", "Rider of Rohan", "Captain of Gondor", "Hero of the Pelennor", "Ring-bearer", "Lord of the West"];
+  const levelStart = (l) => 50 * l * (l - 1);
   const levelOf = (xp) => { let l = 1; while (xp >= levelStart(l + 1)) l++; return l; };
   const titleOf = (l) => TITLES[Math.min(l, TITLES.length) - 1];
 
@@ -504,7 +638,8 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const q = questsFor(k).filter((x) => x.done).length;
     return (L.t || 0) * XP.task + Object.keys(L.h || {}).length * XP.habit + (L.focus || 0) + q * XP.quest + (q === 3 ? XP.sweep : 0);
   }
-  const exams = () => state.countdowns.filter((c) => c.kind === "exam").sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+  const byDate = (a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || ""));
+  const exams = () => state.countdowns.filter((c) => c.kind === "exam").sort(byDate);
   const papersOf = (c) => Math.max(1, Number(c.papers) || 1);
   const paperCount = () => exams().reduce((n, c) => n + papersOf(c), 0);
   const papersSat = () => exams().filter((c) => c.sat).reduce((n, c) => n + papersOf(c), 0);
@@ -520,23 +655,45 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     while (dayXP(dkey(d)) >= DAILY_GOAL) { n++; d = addDays(d, -1); }
     return n;
   }
+  const beaconsLit = (k = today()) => Math.min(7, Math.floor((dayLog(k).focus || 0) / 25));
 
-  const TROPHIES = [
-    { id: "first-task", name: "First tick", desc: "Finish a task", test: () => Object.values(state.log).some((L) => L.t > 0) },
-    { id: "early", name: "Early bird", desc: "Finish a task before 8am" },
-    { id: "deep-work", name: "Deep work", desc: "Complete a 50-minute focus session" },
-    { id: "three-hours", name: "Three-hour day", desc: "Focus 180 minutes in one day", test: () => (dayLog().focus || 0) >= 180 },
-    { id: "full-house", name: "Full house", desc: "Tick every habit in a day", test: () => state.habits.length > 0 && habitsDone(dayLog()) >= state.habits.length },
-    { id: "sweep", name: "Clean sweep", desc: "Clear all three daily quests", test: () => questsFor().every((q) => q.done) },
-    { id: "overachiever", name: "Overachiever", desc: "Earn 300 XP in one day", test: () => dayXP(today()) >= 300 },
-    { id: "streak-3", name: "On a roll", desc: "Hit the daily goal 3 days running", test: () => streak() >= 3 },
-    { id: "streak-7", name: "Week warrior", desc: "Hit the daily goal 7 days running", test: () => streak() >= 7 },
-    { id: "first-paper", name: "First paper down", desc: "Sit your first exam paper", test: () => papersSat() >= 1 },
-    { id: "halfway", name: "Halfway there", desc: "Sit half of your exam papers", test: () => paperCount() >= 4 && papersSat() * 2 >= paperCount() },
-    { id: "free", name: "Free at last", desc: "Sit every exam paper", test: () => paperCount() >= 4 && papersSat() === paperCount() },
-    { id: "level-5", name: "Grinder", desc: "Reach level 5", test: () => levelOf(totalXP()) >= 5 },
-    { id: "level-10", name: "Diploma closer", desc: "Reach level 10", test: () => levelOf(totalXP()) >= 10 },
+  const DEEDS = [
+    { id: "first-task", name: "The first step", desc: "Finish a task", test: () => Object.values(state.log).some((L) => L.t > 0) },
+    { id: "early", name: "Ride at dawn", desc: "Finish a task before 8am" },
+    { id: "deep-work", name: "The long watch", desc: "Finish a 50-minute focus session" },
+    { id: "three-hours", name: "All seven beacons", desc: "Light every beacon in one day", test: () => beaconsLit() >= 7 },
+    { id: "full-house", name: "Hobbit habits", desc: "Tick every habit in a day", test: () => state.habits.length > 0 && habitsDone(dayLog()) >= state.habits.length },
+    { id: "sweep", name: "Fellowship complete", desc: "Clear all three quests in a day", test: () => questsFor().every((q) => q.done) },
+    { id: "overachiever", name: "Ride of the Rohirrim", desc: "Earn 300 XP in one day", test: () => dayXP(today()) >= 300 },
+    { id: "streak-3", name: "Three hunters", desc: "Hit the daily goal 3 days running", test: () => streak() >= 3 },
+    { id: "streak-7", name: "The long road", desc: "Hit the daily goal 7 days running", test: () => streak() >= 7 },
+    { id: "first-paper", name: "Farther than ever", desc: "Sit your first exam paper", test: () => papersSat() >= 1 },
+    { id: "halfway", name: "Halfway to Mordor", desc: "Sit half of your exam papers", test: () => paperCount() >= 4 && papersSat() * 2 >= paperCount() },
+    { id: "free", name: "The Ring destroyed", desc: "Sit every exam paper", test: () => paperCount() >= 4 && papersSat() === paperCount() },
+    { id: "level-5", name: "One of the Fellowship", desc: "Reach level 5", test: () => levelOf(totalXP()) >= 5 },
+    { id: "level-10", name: "Ring-bearer", desc: "Reach level 10", test: () => levelOf(totalXP()) >= 10 },
   ];
+
+  // ---------- journey model ----------
+  let holdHome = false; // during the finale the page stays in Mordor until you choose to go home
+  function journey() {
+    const t = today(), days = new Map();
+    for (const c of exams()) { if (!days.has(c.date)) days.set(c.date, []); days.get(c.date).push(c); }
+    const keys = [...days.keys()], n = keys.length, route = WAY.slice(1);
+    const stops = keys.map((k, i) => {
+      const wi = Math.min(route.length - 1, n === 1 ? route.length - 1 : Math.round((i * (route.length - 1)) / (n - 1)));
+      const papers = days.get(k), sat = papers.every((c) => c.sat);
+      return { date: k, papers, way: route[wi], wayIndex: wi + 1, sat, reached: sat, owed: !sat && k < t };
+    });
+    let reached = -1, onCalendar = -1;
+    stops.forEach((s, i) => { if (s.sat) reached = i; if (s.date <= t) onCalendar = i; });
+    const home = !holdHome && n > 0 && stops.every((s) => s.sat);
+    const todayStop = stops.findIndex((s) => s.date === t && !s.sat);
+    const region = home ? "home" : onCalendar >= 0 ? stops[onCalendar].way.region : "shire";
+    const markerWay = home ? 0 : reached >= 0 ? stops[reached].wayIndex : 0;
+    const nextIdx = stops.findIndex((s) => !s.sat && s.date > t);
+    return { stops, reached, home, todayStop, region, markerWay, nextIdx, next: stops[nextIdx], owed: stops.filter((s) => s.owed).length };
+  }
 
   // ---------- rewards ----------
   let lastPoint = null, toastQ = [], toastBusy = false;
@@ -545,25 +702,35 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const el = document.createElement("div");
     el.className = "pop"; el.textContent = text;
     el.style.left = pt.x + "px"; el.style.top = pt.y + "px";
-    document.body.appendChild(el); setTimeout(() => el.remove(), 1100);
+    document.body.appendChild(el);
+    if (calm() || !el.animate) { setTimeout(() => el.remove(), 900); return; }
+    el.animate([{ opacity: 0, transform: "translate(-50%, -60%) scale(.8)" }, { opacity: 1, transform: "translate(-50%, -110%) scale(1)", offset: .25 },
+      { opacity: 0, transform: "translate(-50%, -260%) scale(1)" }], { duration: 1100, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = () => el.remove();
   }
-  function toast(kind, title, sub) { toastQ.push({ kind, title, sub }); if (!toastBusy) nextToast(); }
+  function toast(title, sub) { toastQ.push({ title, sub }); if (toastQ.length > 2) toastQ.splice(0, toastQ.length - 2); if (!toastBusy) nextToast(); }
   function nextToast() {
     const t = toastQ.shift(); if (!t) { toastBusy = false; return; }
     toastBusy = true;
     const el = document.createElement("div");
-    el.className = "toast"; el.innerHTML = `<span class="k">${esc(t.kind)}</span><b>${esc(t.title)}</b>${t.sub ? `<span>${esc(t.sub)}</span>` : ""}`;
+    el.className = "toast"; el.innerHTML = `<b>${esc(t.title)}</b>${t.sub ? `<span>${esc(t.sub)}</span>` : ""}`;
     $("#toasts").appendChild(el);
-    setTimeout(() => { el.remove(); nextToast(); }, 2800);
+    if (!calm() && el.animate) el.animate([{ clipPath: "inset(0 50% 0 50%)", opacity: .4 }, { clipPath: "inset(0 0 0 0)", opacity: 1 }], { duration: 480, easing: "cubic-bezier(.16,1,.3,1)" });
+    setTimeout(() => {
+      const done = () => { el.remove(); nextToast(); };
+      if (calm() || !el.animate) return done();
+      el.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(6px)" }], { duration: 220 }).onfinish = done;
+    }, 3000);
   }
+  let finaleDue = false;
   function award(id) {
     if (state.badges[id]) return;
     state.badges[id] = today();
-    const t = TROPHIES.find((x) => x.id === id);
-    toast("Trophy unlocked", t.name, `${t.desc} · +${XP.trophy} XP`);
+    if (id === "free") { finaleDue = true; holdHome = true; return; }
+    const t = DEEDS.find((x) => x.id === id);
+    toast(t.name, `New deed: ${t.desc.toLowerCase()}. +${XP.trophy} XP`);
   }
-  function checkTrophies() {
-    for (let pass = 0; pass < 2; pass++) for (const t of TROPHIES) if (t.test && !state.badges[t.id] && t.test()) award(t.id);
+  function checkDeeds() {
+    for (let pass = 0; pass < 2; pass++) for (const t of DEEDS) if (t.test && !state.badges[t.id] && t.test()) award(t.id);
   }
 
   // ---------- persistence ----------
@@ -584,45 +751,43 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   function commit() {
     const before = totalXP();
     freezeAndPrune(state);
-    checkTrophies();
+    checkDeeds();
     keep(KEY, state);
     const after = totalXP(), lvl = levelOf(after);
     if (after > before) pop(`+${after - before} XP`, lastPoint);
-    if (lvl > shownLevel) {
-      toast("Level up", `Level ${lvl}: ${titleOf(lvl)}`, `${after} XP total. Next level at ${levelStart(lvl + 1)}.`);
-      $("#lvlBox").classList.remove("bump"); void $("#lvlBox").offsetWidth; $("#lvlBox").classList.add("bump");
-    }
-    shownLevel = lvl;
     lastPoint = null;
     renderAll();
+    if (finaleDue) { finaleDue = false; shownLevel = lvl; setTimeout(playFinale, calm() ? 0 : 1400); }
+    else if (lvl > shownLevel) { const from = shownLevel; shownLevel = lvl; playLevelUp(lvl, from); }
+    else shownLevel = lvl;
   }
 
-  // ---------- render ----------
+  // ---------- render: header ----------
   function upcoming() {
     const t = today();
-    return state.countdowns.filter((c) => c.date && c.date >= t && !c.sat)
-      .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+    return state.countdowns.filter((c) => c.date && c.date >= t && !c.sat).sort(byDate);
   }
-  function isoWeek(d) {
-    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
-    return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+  function todaysTasks() {
+    const t = today();
+    return state.tasks.filter((x) => x.day === t || (!x.done && x.day < t))
+      .sort((a, b) => (a.done - b.done) || (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
   }
-
-  function renderHeader() {
-    const now = new Date();
-    $("#weekday").textContent = now.toLocaleDateString("en-AU", { weekday: "long" }) + " · week " + isoWeek(now);
-    $("#dateBig").textContent = now.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+  function renderHeader(J) {
+    const now = new Date(), sr = shireDate(now);
+    $("#dateBig").textContent = now.toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "short" });
+    $("#reckon").innerHTML = `<b>${esc([sr.weekday, sr.name].filter(Boolean).join(", "))}</b> in the Shire calendar`;
     $("#clock").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
     const h = now.getHours();
-    const examToday = upcoming().some((c) => c.kind === "exam" && c.date === today());
-    $("#greet").textContent = examToday ? "Exam day. Eat something, bring water, trust your prep."
-      : h < 5 ? "It's late. Sleep is revision too." : h < 12 ? "Good morning." : h < 18 ? "Good afternoon." : "Good evening.";
-    const list = todaysTasks(), left = list.filter((t) => !t.done).length;
-    const hd = habitsDone(dayLog());
+    let greet;
+    if (J.todayStop >= 0) greet = `Exam day at ${J.stops[J.todayStop].way.name}. Eat something, bring water, trust your prep.`;
+    else if (J.home) greet = "The Ring is destroyed. Welcome home.";
+    else if (h < 5) greet = "Late in the night watch. Sleep is revision too.";
+    else greet = h < 12 ? "Good morning." : h < 18 ? "Good afternoon." : "Good evening.";
+    $("#greet").textContent = greet;
+    const list = todaysTasks(), left = list.filter((t) => !t.done).length, hd = habitsDone(dayLog());
     const parts = [list.length ? `<b>${left}</b> of ${list.length} tasks left` : "No tasks yet"];
-    if (state.habits.length) parts.push(`<b>${hd}</b>/${state.habits.length} habits`);
-    parts.push(`<b>${fmtMins(dayLog().focus || 0)}</b> focused`);
+    if (state.habits.length) parts.push(`<b>${hd}</b> of ${state.habits.length} habits`);
+    parts.push(`<b>${beaconsLit()}</b> of 7 beacons lit`);
     $("#summary").innerHTML = parts.join(" · ");
   }
 
@@ -631,12 +796,12 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const pct = Math.min(100, Math.round(((xp - lo) / (hi - lo)) * 100));
     $("#lvlNum").textContent = l;
     $("#lvlTitle").textContent = titleOf(l);
-    $("#xpText").textContent = `${xp - lo} / ${hi - lo} XP to level ${l + 1}`;
+    $("#xpText").textContent = `${xp - lo} of ${hi - lo} XP to level ${l + 1}`;
     $("#xpBar").style.width = pct + "%";
     $("#xpBarWrap").setAttribute("aria-valuenow", pct);
     const tx = dayXP(today()), s = streak();
-    $("#pstats").innerHTML = `<span class="${tx >= DAILY_GOAL ? "met" : ""}">today <b>${tx}</b>/${DAILY_GOAL} XP${tx >= DAILY_GOAL ? " · goal hit" : ""}</span>
-      <span>streak <b>${s}</b> ${s === 1 ? "day" : "days"}</span><span>total <b>${xp}</b> XP</span>`;
+    $("#pstats").innerHTML = `<span class="${tx >= DAILY_GOAL ? "met" : ""}">today <b>${tx}</b> of ${DAILY_GOAL} XP</span>
+      <span>streak <b>${s}</b> ${s === 1 ? "day" : "days"}</span><span><b>${xp}</b> XP in all</span>`;
   }
 
   function hoursLeft(c) {
@@ -648,74 +813,188 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const mins = Math.floor(ms / 6e4);
     return `${Math.floor(mins / 60)}h ${pad(mins % 60)}m to go`;
   }
-  function renderNextUp() {
+  function renderNextUp(J) {
     const el = $("#nextup"), up = upcoming();
     if (!up.length) {
-      el.className = "nextup empty";
-      el.innerHTML = `<div class="eyebrow">Next up</div><div class="big">Clear skies</div><div class="when">Add an exam or deadline under Coming up to count down to it.</div>`;
+      el.innerHTML = J.home
+        ? `<h2>Nothing on the horizon</h2><div class="big">Home</div><div class="meta">Every paper is sat. Add whatever comes next under On the horizon.</div>`
+        : `<h2>Nothing on the horizon</h2><div class="meta">Add an exam or deadline under On the horizon to count down to it.</div>`;
       return;
     }
     const c = up[0], n = daysUntil(c.date);
+    const stop = J.stops.find((s) => s.date === c.date);
     const big = n === 0 ? "Today" : n === 1 ? "Tomorrow" : `${n}<small>days</small>`;
-    const when = [fmtDay(c.date, { weekday: "long", day: "numeric", month: "short" }), fmtTime(c.time), hoursLeft(c)].filter(Boolean).join(" · ");
+    const meta = [fmtDay(c.date, { weekday: "long", day: "numeric", month: "short" }), fmtTime(c.time), hoursLeft(c), stop ? `at ${stop.way.name}` : ""].filter(Boolean).join(" · ");
     const rest = up.slice(1, 3).map((x) => `${esc(x.title)} (${esc(fmtDay(x.date))})`).join(", ");
-    el.className = "nextup";
-    el.innerHTML = `<div class="eyebrow">${c.kind === "exam" ? "Next exam" : c.kind === "deadline" ? "Next deadline" : "Next up"}</div>
-      <h2>${esc(c.title)}</h2><div class="big">${big}</div><div class="when">${esc(when)}</div>
-      ${rest ? `<div class="then">Then: ${rest}</div>` : ""}`;
+    el.innerHTML = `<h2>${esc(c.title)}</h2><div class="big num">${big}</div><div class="meta">${esc(meta)}</div>
+      ${rest ? `<div class="then">Then ${rest}</div>` : ""}`;
   }
 
-  function renderRun() {
-    const list = exams(), track = $("#track");
-    if (!list.length) {
-      $("#runMeta").textContent = "";
-      track.innerHTML = `<p class="empty-note">Add exams under Coming up (type: Exam) and they line up here. Tick each paper off after you sit it for ${XP.paper} XP.</p>`;
+  // ---------- render: map ----------
+  let mapGeo = null;
+  const shownWay = () => (typeof ui.markerWay === "number" ? ui.markerWay : null);
+  function segments(pts) {
+    // Catmull-Rom through every waypoint, as one cubic per leg
+    const segs = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+      const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+      segs.push(`C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x},${p2.y}`);
+    }
+    return segs;
+  }
+  function ridge(x0, y0, x1, y1, n, h, seed) {
+    let out = "", fill = "";
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1 || 1), x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+      const hh = h * (0.7 + 0.5 * Math.abs(Math.sin(seed + i * 2.3))), w = h * 0.75;
+      out += `M${(x - w).toFixed(1)},${y.toFixed(1)} L${x.toFixed(1)},${(y - hh).toFixed(1)} L${(x + w).toFixed(1)},${y.toFixed(1)} `;
+      fill += `M${x.toFixed(1)},${(y - hh).toFixed(1)} L${(x + w).toFixed(1)},${y.toFixed(1)} L${(x + w * 0.2).toFixed(1)},${y.toFixed(1)}Z `;
+    }
+    return `<path class="terrain-fill" d="${fill}"/><path class="terrain" d="${out}"/>`;
+  }
+  function hills(cx, cy, n) {
+    let d = "";
+    for (let i = 0; i < n; i++) { const x = cx + (i % 3) * 22 - 22, y = cy + Math.floor(i / 3) * 14; d += `M${x - 9},${y} Q${x},${y - 9} ${x + 9},${y} `; }
+    return `<path class="terrain" d="${d}"/>`;
+  }
+  function trees(cx, cy, n) {
+    let d = "";
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996, r = 5 + 3.2 * Math.sqrt(i), x = cx + Math.cos(a) * r * 1.5, y = cy + Math.sin(a) * r * 0.8;
+      d += `M${x.toFixed(1)},${(y + 4).toFixed(1)} v-3 M${(x - 3.2).toFixed(1)},${(y + 1).toFixed(1)} a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 `;
+    }
+    return `<path class="terrain" d="${d}"/>`;
+  }
+  function buildMap(J) {
+    const svg = $("#map");
+    const examWays = new Map();
+    J.stops.forEach((s, i) => { if (!examWays.has(s.wayIndex)) examWays.set(s.wayIndex, []); examWays.get(s.wayIndex).push({ s, i }); });
+    const segs = segments(WAY), d = `M${WAY[0].x},${WAY[0].y} ` + segs.join(" ");
+    const nextIdx = J.nextIdx;
+    const wps = WAY.map((w, wi) => {
+      const hits = examWays.get(wi) || [];
+      const isExam = hits.length > 0;
+      const reached = isExam ? hits.every(({ s }) => s.reached) : wi === 0;
+      const isToday = hits.some(({ i }) => i === J.todayStop);
+      const isNext = !isToday && hits.some(({ i }) => i === nextIdx);
+      const cls = ["wp", isExam ? "exam" : "", reached ? "reached" : "", isToday ? "today" : "", isNext ? "next" : ""].join(" ");
+      const below = ["moria", "mountdoom", "amonhen"].includes(w.id);
+      const ly = below ? w.y + 24 : w.y - 14, sy = below ? w.y + 38 : w.y - 28;
+      const sub = isExam ? hits.map(({ s }) => fmtDay(s.date, { day: "numeric", month: "short" })).join(", ") : "";
+      return `<g class="${cls}"><title>${esc(w.name)}${isExam ? ": " + esc(hits.map(({ s }) => s.papers.map((p) => p.title).join(", ")).join("; ")) : ""}. ${esc(w.note)}</title>
+        <circle class="halo" cx="${w.x}" cy="${w.y}" r="7"/><circle cx="${w.x}" cy="${w.y}" r="${isExam || wi === 0 ? 6.5 : 4}"/>
+        <text x="${w.x}" y="${ly}" text-anchor="middle">${esc(w.name)}</text>${sub ? `<text class="sub" x="${w.x}" y="${sy}" text-anchor="middle">${esc(sub)}</text>` : ""}</g>`;
+    }).join("");
+    svg.innerHTML = `<title id="mapTitle">Map of the road from Bag End to Mount Doom with your exam stops</title>
+      <defs>
+        <radialGradient id="lava" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffd27a"/><stop offset=".4" stop-color="#ff7a2f"/><stop offset="1" stop-color="#ff7a2f" stop-opacity="0"/></radialGradient>
+        <radialGradient id="eyefire" cx="50%" cy="50%" r="55%"><stop offset="0" stop-color="#fff2b0"/><stop offset=".35" stop-color="#ffb347"/><stop offset=".75" stop-color="#e2461b"/><stop offset="1" stop-color="#7a1505"/></radialGradient>
+      </defs>
+      ${hills(60, 140, 6)}
+      ${hills(236, 96, 1)}
+      ${ridge(372, 36, 404, 222, 9, 15, 1)}
+      ${trees(448, 170, 14)}
+      <path class="river" d="M512,20 C520,70 505,110 528,150 S560,205 600,232 S640,270 660,300"/>
+      ${ridge(500, 296, 640, 292, 7, 13, 4)}
+      ${ridge(746, 66, 972, 66, 10, 13, 7)}
+      ${ridge(748, 128, 756, 292, 7, 12, 2)}
+      ${J.home ? "" : `<ellipse class="doom-glow" cx="870" cy="176" rx="28" ry="20"/>`}
+      <path class="terrain-fill" d="M846,206 L864,170 L876,170 L896,206Z" style="opacity:.45"/>
+      <path class="terrain" d="M840,208 L864,170 L876,170 L902,208 M864,170 Q870,164 876,170"/>
+      ${J.home ? `<path class="terrain" d="M932,206 L936,196 L944,198 L948,188 L954,206Z"/>` : `<path class="terrain" d="M942,206 V158 L936,150 L942,146 L948,150 L942,158 M936,206 H948 M938,190 H946 M938,174 H946"/>
+      <g id="eye" transform="translate(942 134)">
+        <ellipse class="eye-glow" cx="0" cy="0" rx="17" ry="9"/>
+        <path class="eye-body" d="M-14,0 Q0,-9 14,0 Q0,9 -14,0Z"/>
+        <ellipse class="pupil" id="pupil" cx="0" cy="0" rx="1.3" ry="6.2"/>
+      </g>`}
+      <path class="route" id="routePath" d="${d}"/>
+      <path class="walked" id="walked" d="${d}"/>
+      ${wps}
+      <g class="marker" id="marker"><circle r="8.5" fill="none" stroke="url(#gold)" stroke-width="4"/><circle r="8.5" fill="none" stroke="#fff6d8" stroke-opacity=".6" stroke-width="1" stroke-dasharray="9 50" transform="rotate(-130)"/></g>`;
+    const route = $("#routePath"), total = route.getTotalLength();
+    const tmp = document.createElementNS(NS, "path");
+    svg.appendChild(tmp);
+    const at = [0];
+    segs.forEach((s, i) => { tmp.setAttribute("d", `M${WAY[i].x},${WAY[i].y} ${s}`); at.push(at[i] + tmp.getTotalLength()); });
+    tmp.remove();
+    mapGeo = { total, at, route, walked: $("#walked"), marker: $("#marker"), len: mapGeo ? mapGeo.len : null };
+    mapGeo.walked.style.strokeDasharray = `${total} ${total}`;
+    setMarker(travelling && mapGeo.len != null ? mapGeo.len : at[shownWay() ?? J.markerWay]);
+  }
+  function setMarker(len) {
+    if (!mapGeo) return;
+    const p = mapGeo.route.getPointAtLength(Math.max(0, Math.min(len, mapGeo.total)));
+    mapGeo.marker.setAttribute("transform", `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
+    mapGeo.walked.style.strokeDashoffset = String(J.home ? 0 : mapGeo.total - len);
+    mapGeo.len = len;
+  }
+  let travelling = null;
+  function travelTo(wayIdx, onArrive) {
+    if (!mapGeo) return;
+    const from = mapGeo.len ?? 0, to = mapGeo.at[wayIdx];
+    ui.markerWay = wayIdx; keepUI();
+    if (travelling) cancelAnimationFrame(travelling);
+    travelling = null;
+    if (calm() || Math.abs(to - from) < 1) { setMarker(to); onArrive && onArrive(); return; }
+    const dur = Math.min(2600, 900 + Math.abs(to - from) * 2.2), t0 = performance.now();
+    const step = (now) => {
+      const k = easeOut((now - t0) / dur);
+      setMarker(from + (to - from) * k);
+      if (k < 1) travelling = requestAnimationFrame(step);
+      else { travelling = null; onArrive && onArrive(); }
+    };
+    travelling = requestAnimationFrame(step);
+  }
+
+  function renderRoad(J) {
+    const box = $("#stops");
+    const total = paperCount(), sat = papersSat();
+    $("#h-road").textContent = J.home ? "There and back again" : "The Road to Mount Doom";
+    if (!J.stops.length) {
+      $("#roadMeta").textContent = "";
+      box.innerHTML = `<p class="empty-note">Add exams under On the horizon (type: Exam) and they become stops on the road. Tick each paper off after you sit it for ${XP.paper} XP.</p>`;
+      buildMap(J);
       return;
     }
-    const byDay = new Map();
-    for (const c of list) { if (!byDay.has(c.date)) byDay.set(c.date, []); byDay.get(c.date).push(c); }
-    const t = today(), total = paperCount(), sat = papersSat();
-    const last = list[list.length - 1].date, toGo = daysUntil(last);
-    $("#runMeta").textContent = `${sat}/${total} papers sat${toGo > 1 ? ` · last one in ${toGo} days` : toGo === 1 ? " · last one tomorrow" : toGo === 0 ? " · last one today" : ""}`;
-    const nextDay = [...byDay.keys()].find((k) => k > t);
-    track.innerHTML = [...byDay.entries()].map(([k, cs]) => {
-      const cleared = cs.every((c) => c.sat), n = daysUntil(k);
-      const owed = !cleared && k < t;
-      const cls = cleared ? "cleared" : k === t ? "today" : owed ? "owed" : k === nextDay ? "next" : "";
-      const sub = cleared ? "cleared" : k === t ? "today" : owed ? "tick it off" : n === 1 ? "tomorrow" : `in ${n} days`;
-      return `<div class="stop ${cls}">
-        <div class="node">${CHECK}</div>
-        <div class="sday">${esc(fmtDay(k, { weekday: "short", day: "numeric" }))}<small>${esc(sub)}</small></div>
-        ${cs.map((c) => `<div class="paper${c.sat ? " sat" : ""}"><span class="pt">${esc(c.title)}${c.time ? ` · ${esc(fmtTime(c.time))}` : ""}</span>
-          ${k <= t ? `<button class="satbtn" type="button" data-act="sat" data-id="${esc(c.id)}" aria-pressed="${!!c.sat}">${c.sat ? "✓ sat it" : `I sat it +${XP.paper * papersOf(c)}`}</button>` : ""}</div>`).join("")}
+    const last = J.stops[J.stops.length - 1].date, toGo = daysUntil(last);
+    const nd = J.next ? daysUntil(J.next.date) : 0;
+    const where = J.home ? "Home again" : J.todayStop >= 0 ? `Today you reach ${J.stops[J.todayStop].way.name}`
+      : J.next ? `${J.reached >= 0 ? `Past ${J.stops[J.reached].way.name}` : "Still in the Shire"}, ${J.next.way.name} ${nd === 1 ? "tomorrow" : `in ${nd} days`}` : "";
+    $("#roadMeta").textContent = [where, `${sat} of ${total} papers sat`, J.owed ? `${J.owed} ${J.owed === 1 ? "stop" : "stops"} to tick off` : "", toGo > 1 ? `Mount Doom in ${toGo} days` : ""].filter(Boolean).join(" · ");
+    const t = today(), nextIdx = J.nextIdx;
+    box.innerHTML = J.stops.map((s, i) => {
+      const n = daysUntil(s.date), owed = s.owed;
+      const cls = s.sat ? "sat" : s.date === t ? "today" : owed ? "owed" : i === nextIdx ? "next" : "";
+      const when = s.sat ? "passed" : s.date === t ? "today" : owed ? "tick off" : n === 1 ? "tomorrow" : `in ${n} days`;
+      const act = cls === "today" || cls === "owed" || cls === "next";
+      return `<div class="stop ${cls}"><h3>${esc(s.way.name)}<small>${esc(fmtDay(s.date, { weekday: "short", day: "numeric", month: "short" }))} · ${esc(when)}</small></h3>
+        ${!act ? `<ul class="plist">${s.papers.map((c) => `<li${c.sat ? ' class="sat"' : ""}>${c.sat ? svgUse("i-seal", "sealicon") : ""}${esc(c.title)}</li>`).join("")}</ul>` : s.papers.map((c) => `<div class="paper${c.sat ? " sat" : ""}"><span class="pt">${esc(c.title)}${c.time ? ` · ${esc(fmtTime(c.time))}` : ""}</span>
+          ${s.date <= t ? `<button class="satbtn" type="button" data-act="sat" data-id="${esc(c.id)}" aria-pressed="${!!c.sat}">${c.sat ? `${svgUse("i-seal", "sealicon")}Sat` : `Sat it · +${XP.paper * papersOf(c)}`}</button>` : ""}</div>`).join("")}
       </div>`;
     }).join("");
+    buildMap(J);
   }
 
-  function todaysTasks() {
-    const t = today();
-    return state.tasks.filter((x) => x.day === t || (!x.done && x.day < t))
-      .sort((a, b) => (a.done - b.done) || (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
-  }
+  // ---------- render: panels ----------
   function renderTasks() {
     const ul = $("#taskList"), list = todaysTasks();
-    $("#taskCount").textContent = list.length ? `${list.filter((t) => t.done).length}/${list.length} done` : "";
-    if (!list.length) { ul.innerHTML = `<li class="empty-note">Nothing on today's list. Add the first thing below. Each task you finish is worth ${XP.task} XP, and anything unfinished rolls over to tomorrow.</li>`; return; }
+    $("#taskCount").textContent = list.length ? `${list.filter((t) => t.done).length} of ${list.length} done` : "";
+    if (!list.length) { ul.innerHTML = `<li class="empty-note">Nothing on today's list. Add the first thing below. Each finished task is worth ${XP.task} XP, and anything unfinished rolls over to tomorrow.</li>`; return; }
     ul.innerHTML = list.map((t) => `<li class="task${t.done ? " done" : ""}">
-      <button class="check" type="button" data-act="toggle-task" data-id="${esc(t.id)}" aria-pressed="${!!t.done}" aria-label="Mark ${esc(t.text)} ${t.done ? "not done" : "done"}">${CHECK}</button>
+      <button class="check" type="button" data-act="toggle-task" data-id="${esc(t.id)}" aria-pressed="${!!t.done}" aria-label="Mark ${esc(t.text)} ${t.done ? "not done" : "done"}">${svgUse("i-check", "")}</button>
       <span class="txt">${esc(t.text)}${!t.done && t.day < today() ? `<span class="tag">from ${esc(fmtDay(t.day, { weekday: "short" }))}</span>` : ""}</span>
-      <button class="x" type="button" data-act="del-task" data-id="${esc(t.id)}" aria-label="Delete ${esc(t.text)}">×</button></li>`).join("");
+      <button class="x" type="button" data-act="del-task" data-id="${esc(t.id)}" aria-label="Delete ${esc(t.text)}">${svgUse("i-x")}</button></li>`).join("");
   }
-
   function renderQuests() {
     const qs = questsFor(), all = qs.every((q) => q.done);
     $("#questList").innerHTML = qs.map((q) => `<li class="quest${q.done ? " done" : ""}">
-      <span class="qn">${esc(q.name)}</span><span class="qv">${q.done ? `+${XP.quest} XP` : `${q.have}/${q.need}`}</span>
+      <span class="qn">${esc(q.name)}</span><span class="qv num">${q.done ? `+${XP.quest} XP` : `${q.have} of ${q.need}`}</span>
       <div class="qbar"><i style="width:${Math.round((q.have / q.need) * 100)}%"></i></div></li>`).join("");
     $("#questFoot").className = "qfoot" + (all ? " done" : "");
-    $("#questFoot").textContent = all ? `Clean sweep. +${XP.sweep} bonus XP banked.` : `Each quest is worth ${XP.quest} XP. Clear all three for a ${XP.sweep} XP bonus.`;
+    $("#questFoot").textContent = all ? `All three done. +${XP.sweep} bonus XP earned.` : `Each quest is worth ${XP.quest} XP. Finish all three for a ${XP.sweep} XP bonus.`;
   }
-
   function habitStreak(id) {
     let d = new Date(), n = 0;
     if (!(dayLog(dkey(d)).h || {})[id]) d = addDays(d, -1);
@@ -724,53 +1003,109 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   }
   function renderHabits() {
     const box = $("#habitList");
-    if (!state.habits.length) { box.innerHTML = `<p class="empty-note">No habits yet. Press Edit to add one, like sleep 8h or 2L of water.</p>`; return; }
+    if (!state.habits.length) { box.innerHTML = `<p class="empty-note">No habits yet. Press Edit to add one, like sleep 8 hours or 2L of water.</p>`; return; }
     const days = Array.from({ length: 14 }, (_, i) => dkey(addDays(new Date(), i - 13)));
     const doneToday = dayLog().h || {};
     box.innerHTML = state.habits.map((h) => {
       const s = habitStreak(h.id);
       return `<div class="habit">
-        <button class="habit-btn" type="button" data-act="toggle-habit" data-id="${esc(h.id)}" aria-pressed="${!!doneToday[h.id]}"><span class="check">${CHECK}</span><span class="nm">${esc(h.name)}</span></button>
-        <span><span class="streak${s >= 3 ? " hot" : ""}">${s ? `${s}-day streak` : `+${XP.habit} XP`}</span><button class="x ed" type="button" data-act="del-habit" data-id="${esc(h.id)}" aria-label="Remove ${esc(h.name)}">×</button></span>
+        <button class="habit-btn" type="button" data-act="toggle-habit" data-id="${esc(h.id)}" aria-pressed="${!!doneToday[h.id]}"><span class="check">${svgUse("i-check", "")}</span><span class="nm">${esc(h.name)}</span></button>
+        <span class="hside"><span class="streak${s >= 3 ? " hot" : ""}">${s ? `${s}-day streak` : `+${XP.habit} XP`}</span><button class="x ed" type="button" data-act="del-habit" data-id="${esc(h.id)}" aria-label="Remove ${esc(h.name)}">${svgUse("i-x")}</button></span>
         <div class="strip" aria-hidden="true">${days.map((k, i) => `<i class="${(dayLog(k).h || {})[h.id] ? "on" : ""}${i === 13 ? " today" : ""}" title="${esc(fmtDay(k))}"></i>`).join("")}</div>
       </div>`;
     }).join("");
+  }
+
+  // beacons: seven pyres on the hills between Minas Tirith and Rohan
+  const BX = (i) => 30 + i * 50, BY = (i) => 46 + (i % 2 ? 10 : 0) + (i === 3 ? -6 : 0);
+  function buildBeacons() {
+    const svg = $("#beacons");
+    let ridgeD = `M0,96 L0,78 `;
+    for (let i = 0; i < 7; i++) ridgeD += `L${BX(i) - 18},${BY(i) + 22} L${BX(i)},${BY(i)} L${BX(i) + 18},${BY(i) + 22} `;
+    ridgeD += `L360,78 L360,96Z`;
+    svg.innerHTML = `<title id="beaconTitle">Beacons lit today</title>
+      <defs><linearGradient id="flameg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#c2280c"/><stop offset=".45" stop-color="#ff7a2f"/><stop offset=".8" stop-color="#ffc861"/><stop offset="1" stop-color="#fff1b8"/></linearGradient></defs>
+      <path class="ridge" d="${ridgeD}"/>
+      ${Array.from({ length: 7 }, (_, i) => `<g class="beacon" id="bc${i}"><title>${BEACONS[i]}</title>
+        <ellipse class="glow" cx="${BX(i)}" cy="${BY(i) - 12}" rx="16" ry="14"/>
+        <path class="pyre" d="M${BX(i) - 7},${BY(i)} L${BX(i) + 7},${BY(i) - 6} M${BX(i) + 7},${BY(i)} L${BX(i) - 7},${BY(i) - 6} M${BX(i) - 5},${BY(i) - 3} H${BX(i) + 5}"/>
+        <path class="flame" fill="url(#flameg)" d="M${BX(i)},${BY(i) - 30} C${BX(i) + 3},${BY(i) - 22} ${BX(i) + 10},${BY(i) - 16} ${BX(i) + 8},${BY(i) - 7} C${BX(i) + 6},${BY(i) - 1} ${BX(i) - 6},${BY(i) - 1} ${BX(i) - 8},${BY(i) - 7} C${BX(i) - 10},${BY(i) - 15} ${BX(i) - 2},${BY(i) - 19} ${BX(i)},${BY(i) - 30}Z" style="animation-delay:${(-i * 0.37).toFixed(2)}s"/>
+      </g>`).join("")}`;
+  }
+  let beaconShown = 0, relayRunning = false;
+  function renderBeacons() {
+    const lit = beaconsLit();
+    if (lit < beaconShown) beaconShown = lit;
+    for (let i = 0; i < 7; i++) $(`#bc${i}`).classList.toggle("lit", i < beaconShown);
+    const left = 25 - ((dayLog().focus || 0) % 25);
+    $("#beaconCap").innerHTML = lit >= 7 ? `<b>All seven beacons are lit.</b> Gondor calls, and you answered.`
+      : lit === 0 ? `Every 25 minutes of focus lights a beacon. <b>${BEACONS[0]}</b> is first.`
+      : `<b>${lit} lit</b>, last was ${BEACONS[lit - 1]}. ${left} more minutes lights <b>${BEACONS[lit]}</b>.`;
+    if (lit > beaconShown && !relayRunning) lightRelay();
+  }
+  function lightRelay() {
+    // a spark leaps from the last lit pyre to the next, which then flares
+    const svg = $("#beacons");
+    relayRunning = true;
+    const next = () => {
+      const target = beaconsLit();
+      if (beaconShown >= target) { relayRunning = false; return; }
+      const i = beaconShown, g = $(`#bc${i}`), fl = g.querySelector(".flame");
+      const finish = () => {
+        beaconShown = i + 1;
+        g.classList.add("lit");
+        if (!calm() && fl.animate) fl.animate([{ transform: "scale(0)", filter: "brightness(2.2)" }, { transform: "scale(1.5,1.7)", filter: "brightness(1.8)", offset: .35 }, { transform: "none", filter: "none" }], { duration: 900, easing: "cubic-bezier(.16,1,.3,1)" });
+        setTimeout(next, calm() ? 0 : 380);
+      };
+      if (calm()) return finish();
+      const spark = document.createElementNS(NS, "circle");
+      spark.setAttribute("r", "3"); spark.setAttribute("fill", "#ffd27a");
+      spark.style.filter = "drop-shadow(0 0 4px #ff7a2f)";
+      svg.appendChild(spark);
+      const x0 = i === 0 ? -10 : BX(i - 1), y0 = i === 0 ? 70 : BY(i - 1) - 24, x1 = BX(i), y1 = BY(i) - 14, t0 = performance.now(), dur = 620;
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 2);
+        const x = x0 + (x1 - x0) * e, y = y0 + (y1 - y0) * e - Math.sin(Math.PI * e) * 26;
+        spark.setAttribute("cx", x.toFixed(1)); spark.setAttribute("cy", y.toFixed(1));
+        if (k < 1) requestAnimationFrame(step); else { spark.remove(); finish(); }
+      };
+      requestAnimationFrame(step);
+    };
+    next();
   }
 
   function renderFocusStats() {
     const days = Array.from({ length: 7 }, (_, i) => dkey(addDays(new Date(), i - 6)));
     const vals = days.map((k) => dayLog(k).focus || 0);
     const max = Math.max(60, ...vals);
-    $("#focusWeek").textContent = `week ${fmtMins(vals.reduce((a, b) => a + b, 0))} · 1 XP/min`;
+    $("#focusWeek").textContent = `${fmtMins(vals.reduce((a, b) => a + b, 0))} this week`;
     $("#bars").innerHTML = days.map((k, i) => `<div class="bar${i === 6 ? " today" : ""}" title="${esc(fmtDay(k))}: ${vals[i]} min">
-      ${vals[i] ? `<span>${vals[i]}</span>` : ""}<i style="height:${Math.round((vals[i] / max) * 72)}px"></i></div>`).join("");
+      ${vals[i] ? `<span class="num">${vals[i]}</span>` : ""}<i style="height:${Math.round((vals[i] / max) * 64)}px"></i></div>`).join("");
     $("#barLabels").innerHTML = days.map((k) => `<span>${esc(fmtDay(k, { weekday: "narrow" }))}</span>`).join("");
   }
 
-  function renderCountdowns() {
+  function renderCountdowns(J) {
     const ul = $("#cdList"), up = upcoming(), editing = $("#cdPanel").classList.contains("editing");
-    if (!up.length) { ul.innerHTML = `<li class="empty-note">Nothing coming up. Press Edit to add exams, deadlines or anything you're counting down to.</li>`; return; }
+    if (!up.length) { ul.innerHTML = `<li class="empty-note">Nothing on the horizon. Press Edit to add exams, deadlines or anything you're counting down to.</li>`; return; }
     const shown = editing ? up : up.slice(0, 5);
     ul.innerHTML = shown.map((c) => {
-      const n = daysUntil(c.date);
+      const n = daysUntil(c.date), stop = c.kind === "exam" ? J.stops.find((s) => s.date === c.date) : null;
       const [big, unit] = n === 0 ? ["Today", ""] : n === 1 ? ["Tmrw", ""] : [String(n), "days"];
       return `<li class="cd${n <= 2 ? " soon" : ""}">
-        <div class="n">${esc(big)}${unit ? `<small>${unit}</small>` : ""}</div>
-        <div><div class="t">${esc(c.title)}<span class="chip ${c.kind === "exam" ? "exam" : ""}">${esc(c.kind || "event")}</span></div>
-        <div class="d">${esc([fmtDay(c.date), fmtTime(c.time)].filter(Boolean).join(" · "))}</div></div>
-        <button class="x ed" type="button" data-act="del-cd" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.title)}">×</button></li>`;
-    }).join("") + (up.length > shown.length ? `<li class="empty-note">+${up.length - shown.length} more. The full list is in the exam run above.</li>` : "");
+        <div class="n num">${esc(big)}${unit ? `<small>${unit}</small>` : ""}</div>
+        <div><div class="t">${esc(c.title)}</div>
+        <div class="d">${esc([fmtDay(c.date), fmtTime(c.time), stop ? stop.way.name : c.kind === "deadline" ? "deadline" : c.kind === "event" ? "event" : ""].filter(Boolean).join(" · "))}</div></div>
+        <button class="x ed" type="button" data-act="del-cd" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.title)}">${svgUse("i-x")}</button></li>`;
+    }).join("") + (up.length > shown.length ? `<li class="empty-note">${up.length - shown.length} more on the road above.</li>` : "");
   }
 
-  function renderTrophies() {
-    const got = TROPHIES.filter((t) => state.badges[t.id]).length;
-    $("#trophyMeta").textContent = `${got}/${TROPHIES.length}`;
-    $("#trophyList").innerHTML = TROPHIES.map((t) => {
+  function renderDeeds() {
+    const got = DEEDS.filter((t) => state.badges[t.id]).length;
+    $("#deedMeta").textContent = `${got} of ${DEEDS.length}`;
+    $("#deedList").innerHTML = DEEDS.map((t) => {
       const has = !!state.badges[t.id];
-      return `<li class="trophy${has ? " got" : ""}">
-        <svg viewBox="0 0 30 30" aria-hidden="true"><path class="medal" stroke-width="1.5" d="M15 2l3.4 3.6 4.9-.6.9 4.9 4.3 2.4-2.1 4.5 2.1 4.5-4.3 2.4-.9 4.9-4.9-.6L15 31.6l-3.4-3.6-4.9.6-.9-4.9-4.3-2.4 2.1-4.5-2.1-4.5 4.3-2.4.9-4.9 4.9.6z" transform="scale(.94) translate(1 -1)"/>
-        ${has ? '<path class="mk" d="M10 15.5l3.2 3 6.6-7" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' : '<path class="mk" d="M12 13.5a3 3 0 1 1 4.2 2.7c-.8.4-1.2 1-1.2 1.8M15 20.6v.1" fill="none" stroke-width="2" stroke-linecap="round"/>'}</svg>
-        <b>${esc(t.name)}</b><span>${has ? `Unlocked ${esc(fmtDay(state.badges[t.id], { day: "numeric", month: "short" }))}` : esc(t.desc)}</span></li>`;
+      return `<li class="deed${has ? " got" : ""}">${svgUse("i-seal", "sealicon")}
+        <b>${esc(t.name)}</b><span>${has ? `Done ${esc(fmtDay(state.badges[t.id], { day: "numeric", month: "short" }))} · ${esc(t.desc)}` : esc(t.desc)}</span></li>`;
     }).join("");
   }
 
@@ -780,18 +1115,35 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     ul.innerHTML = state.links.map((l) => {
       let host = ""; try { host = new URL(l.url).host; } catch (e) {}
       return `<li><a href="${esc(l.url)}" target="_blank" rel="noopener"><b>${esc(l.title)}</b><span>${esc(l.note || host)}</span></a>
-      <button class="x ed" type="button" data-act="del-link" data-id="${esc(l.id)}" aria-label="Remove ${esc(l.title)}">×</button></li>`;
+      <button class="x ed" type="button" data-act="del-link" data-id="${esc(l.id)}" aria-label="Remove ${esc(l.title)}">${svgUse("i-x")}</button></li>`;
     }).join("");
   }
-
   function renderNotes() {
     const ta = $("#notes");
     if (document.activeElement !== ta && ta.value !== state.notes) ta.value = state.notes;
   }
 
-  function renderAll() {
-    renderHeader(); renderPlayer(); renderNextUp(); renderRun(); renderTasks(); renderQuests(); renderHabits();
-    renderFocusStats(); renderCountdowns(); renderTrophies(); renderLinks(); renderNotes(); renderWeather();
+  let J = journey(), travelDelay = 0, stampId = null;
+  function stampSeal() {
+    if (!stampId) return;
+    const seal = document.querySelector(`.satbtn[data-id="${stampId}"] .sealicon`); stampId = null;
+    if (!seal || calm() || !seal.animate) return;
+    seal.animate([{ transform: "scale(1.7) rotate(-14deg)", opacity: 0, filter: "blur(2px)" }, { transform: "scale(.92) rotate(2deg)", opacity: 1, filter: "blur(0)", offset: .7 }, { transform: "none", opacity: 1 }],
+      { duration: 450, easing: "cubic-bezier(.16,1,.3,1)" });
+  }
+  function renderAll(opts = {}) {
+    J = journey();
+    document.documentElement.dataset.region = J.region;
+    renderHeader(J); renderPlayer(); renderNextUp(J); renderRoad(J); renderTasks(); renderQuests(); renderHabits();
+    renderBeacons(); renderFocusStats(); renderCountdowns(J); renderDeeds(); renderLinks(); renderNotes(); renderWeather();
+    // the Ring walks to wherever the journey now stands
+    stampSeal();
+    if (mapGeo && shownWay() !== J.markerWay && !opts.noTravel) {
+      const way = J.markerWay, arrivedAt = WAY[way];
+      setTimeout(() => travelTo(way, () => { if (way > 0) emberBurst(arrivedAt); }), travelDelay);
+    }
+    travelDelay = 0;
+    ambient();
   }
 
   // ---------- actions ----------
@@ -800,9 +1152,9 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     if (editBtn) {
       const p = document.getElementById(editBtn.dataset.edit);
       const on = p.classList.toggle("editing");
-      editBtn.textContent = on ? "Done" : (editBtn.id === "wxPlace" ? "Change" : "Edit");
+      editBtn.textContent = on ? "Done" : (editBtn.id === "wxPlace" ? "Change place" : "Edit");
       if (on && editBtn.id === "wxPlace") $("#wxCity").focus();
-      if (p.id === "cdPanel") renderCountdowns();
+      if (p.id === "cdPanel") renderCountdowns(J);
       return;
     }
     const b = e.target.closest("[data-act]");
@@ -828,7 +1180,12 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       case "sat": {
         const c = state.countdowns.find((x) => x.id === id); if (!c) return;
         c.sat = !c.sat;
-        if (c.sat) toast("Paper down", c.title, `+${XP.paper * papersOf(c)} XP · ${papersSat()}/${paperCount()} papers sat`);
+        if (c.sat) {
+          const stop = journey().stops.find((s) => s.date === c.date);
+          const done = stop && stop.papers.every((p) => p.sat);
+          if (papersSat() < paperCount() || paperCount() < 4) toast(done ? `${stop.way.name} reached` : "Paper sat", `${c.title}. +${XP.paper * papersOf(c)} XP · ${papersSat()} of ${paperCount()} papers`);
+          travelDelay = calm() ? 0 : 480; stampId = id;
+        }
         break;
       }
       case "del-habit": state.habits = state.habits.filter((x) => x.id !== id); break;
@@ -837,7 +1194,7 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       case "pick-place": {
         const p = wxHits[Number(b.dataset.i)]; if (!p) return;
         state.place = { name: p.name, lat: p.latitude, lon: p.longitude };
-        $("#wxPanel").classList.remove("editing"); $("#wxResults").innerHTML = ""; $("#wxCity").value = "";
+        $("#wxPanel").classList.remove("editing"); $("#wxPlace").textContent = "Change place"; $("#wxResults").innerHTML = ""; $("#wxCity").value = "";
         wxCache = null; keep(WX, null); fetchWeather();
         break;
       }
@@ -873,10 +1230,9 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     state.links.push({ id: uid(), title, url });
     $("#linkTitle").value = ""; $("#linkUrl").value = ""; commit();
   });
-
   let notesTimer = null;
   $("#notes").addEventListener("input", () => {
-    $("#notesState").textContent = "typing…";
+    $("#notesState").textContent = "writing…";
     clearTimeout(notesTimer);
     notesTimer = setTimeout(() => { state.notes = $("#notes").value; commit(); $("#notesState").textContent = "saved"; }, 600);
   });
@@ -894,7 +1250,6 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   const place = () => state.place || DEFAULT_PLACE;
   const uvWord = (u) => u >= 11 ? "extreme" : u >= 8 ? "very high" : u >= 6 ? "high" : u >= 3 ? "moderate" : "low";
   const clock = (iso) => iso ? iso.slice(11, 16).replace(/^0/, "") : "–";
-
   async function fetchWeather() {
     const p = place();
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}` +
@@ -911,25 +1266,19 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   }
   function renderWeather() {
     const p = place();
+    $("#h-wx").textContent = `Skies over ${p.name}`;
     const d = wxCache && wxCache.lat === p.lat && wxCache.lon === p.lon ? wxCache.data : null;
-    if (!d || !d.current || !d.daily) {
-      $("#wxBody").innerHTML = `<p class="empty-note">${esc(wxError || `Loading the weather for ${p.name}…`)}</p>`;
-      return;
-    }
-    const c = d.current, dy = d.daily, uv = Math.round(dy.uv_index_max[0] ?? 0);
-    const rain = dy.precipitation_probability_max[0];
+    if (!d || !d.current || !d.daily) { $("#wxBody").innerHTML = `<p class="empty-note">${esc(wxError || `Reading the skies over ${p.name}…`)}</p>`; return; }
+    const c = d.current, dy = d.daily, uv = Math.round(dy.uv_index_max[0] ?? 0), rain = dy.precipitation_probability_max[0];
     const days = [1, 2].filter((i) => dy.time[i]).map((i) => `<li><span class="dn">${esc(fmtDay(dy.time[i], { weekday: "short" }))}</span>
       <span>${esc(WMO[dy.weather_code[i]] || "–")}${dy.precipitation_probability_max[i] != null ? ` · ${dy.precipitation_probability_max[i]}% rain` : ""}</span>
-      <span class="hl">${Math.round(dy.temperature_2m_max[i])}° / ${Math.round(dy.temperature_2m_min[i])}°</span></li>`).join("");
+      <span class="hl num">${Math.round(dy.temperature_2m_max[i])}° / ${Math.round(dy.temperature_2m_min[i])}°</span></li>`).join("");
     const age = Math.round((Date.now() - wxCache.at) / 6e4);
     $("#wxBody").innerHTML = `
-      <div class="wx-now">
-        <div class="wx-temp">${Math.round(c.temperature_2m)}<small>°</small></div>
+      <div class="wx-now"><div class="wx-temp num">${Math.round(c.temperature_2m)}<small>°</small></div>
         <div><div class="wx-cond">${esc(WMO[c.weather_code] || "–")}</div>
-          <div class="wx-sub">feels ${Math.round(c.apparent_temperature)}° · ${esc(p.name)}</div>
-          <div class="wx-sub">today ${Math.round(dy.temperature_2m_max[0])}° / ${Math.round(dy.temperature_2m_min[0])}°</div></div>
-      </div>
-      <div class="wx-facts">
+          <div class="wx-sub num">feels like ${Math.round(c.apparent_temperature)}° · today ${Math.round(dy.temperature_2m_max[0])}° / ${Math.round(dy.temperature_2m_min[0])}°</div></div></div>
+      <div class="wx-facts num">
         <div><b>${rain ?? "–"}%</b><span>rain chance</span></div>
         <div class="${uv >= 6 ? "uv-hi" : ""}"><b>UV ${uv}</b><span>${uvWord(uv)}</span></div>
         <div><b>${esc(clock(dy.sunset[0]))}</b><span>sunset</span></div>
@@ -959,19 +1308,21 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       audio = audio || new (window.AudioContext || window.webkitAudioContext)();
       [0, .22, .44].forEach((t, i) => {
         const o = audio.createOscillator(), g = audio.createGain();
-        o.frequency.value = [660, 880, 990][i]; o.connect(g); g.connect(audio.destination);
-        const s = audio.currentTime + t; g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(.25, s + .02); g.gain.exponentialRampToValueAtTime(.0001, s + .35);
-        o.start(s); o.stop(s + .4);
+        o.frequency.value = [523, 659, 784][i]; o.type = "triangle"; o.connect(g); g.connect(audio.destination);
+        const s = audio.currentTime + t; g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(.22, s + .02); g.gain.exponentialRampToValueAtTime(.0001, s + .6);
+        o.start(s); o.stop(s + .65);
       });
     } catch (e) {}
   }
   function renderTimer() {
     const s = Math.max(0, T.running ? Math.round((T.endsAt - Date.now()) / 1000) : T.left);
-    $("#face").textContent = `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+    const txt = `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+    $("#face").innerHTML = [...txt].map((ch) => `<span${ch === ":" ? ' class="c"' : ""}>${ch}</span>`).join("");
+    $("#face").setAttribute("aria-label", `${Math.floor(s / 60)} minutes ${s % 60} seconds left`);
     $("#timer").classList.toggle("running", T.running);
     $("#startBtn").textContent = T.running ? "Pause" : (T.left < T.len * 60 ? "Resume" : "Start");
     $("#len25").setAttribute("aria-pressed", T.len === 25); $("#len50").setAttribute("aria-pressed", T.len === 50);
-    document.title = T.running ? `${$("#face").textContent} · Daybook` : "Daybook";
+    document.title = T.running ? `${txt} · Daybook` : "Daybook";
   }
   function finishSession() {
     const len = T.len;
@@ -979,7 +1330,8 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     chime();
     setDayLog({ focus: (dayLog().focus || 0) + len });
     if (len >= 50) award("deep-work");
-    toast("Session done", `${len} minutes focused`, `+${len} XP. Take a 5 minute break.`);
+    const lit = beaconsLit();
+    toast(lit ? `${BEACONS[lit - 1]} is lit` : "Session done", `${len} minutes focused. +${len} XP. Take five before the next one.`);
     const r = $("#face").getBoundingClientRect(); lastPoint = { x: r.left + r.width / 2, y: r.top };
     commit();
     renderTimer();
@@ -996,6 +1348,186 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const len = Number(b.dataset.len);
     T = { len, left: len * 60, endsAt: null, running: false }; keep(TIMER, T); renderTimer();
   }));
+
+  // ---------- fire: particles for the map and the stage ----------
+  function fireField(canvas) {
+    const ctx = canvas.getContext("2d");
+    let parts = [], raf = 0, inTick = false, w = 0, h = 0, ambientRate = 0, ambientAt = null;
+    const size = () => { const dpr = Math.min(2, devicePixelRatio || 1); w = canvas.clientWidth; h = canvas.clientHeight; canvas.width = w * dpr; canvas.height = h * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    const spawn = (x, y, n, power) => {
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + (Math.random() - .5) * 1.8, v = (0.6 + Math.random() * 2.4) * power;
+        parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: 50 + Math.random() * 70, r: 0.8 + Math.random() * 2.2 * Math.min(power, 2.2) });
+      }
+      if (!raf && !inTick) raf = requestAnimationFrame(tick);
+    };
+    function tick() {
+      raf = 0; inTick = true;
+      ctx.clearRect(0, 0, w, h);
+      if (ambientAt && ambientRate && !document.hidden && Math.random() < ambientRate) { const a = ambientAt(); spawn(a.x + (Math.random() - .5) * 18, a.y, 1, .35); }
+      ctx.globalCompositeOperation = "lighter";
+      parts = parts.filter((p) => p.life < p.max);
+      for (const p of parts) {
+        p.life++; p.x += p.vx + Math.sin((p.life + p.x) * .05) * .25; p.y += p.vy; p.vy -= .012; p.vx *= .99;
+        const k = 1 - p.life / p.max, r = p.r * (0.6 + k * 0.6);
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3);
+        g.addColorStop(0, `rgba(255,${180 + 60 * k | 0},${90 * k | 0},${(0.9 * k).toFixed(3)})`); g.addColorStop(1, "rgba(255,90,20,0)");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalCompositeOperation = "source-over";
+      inTick = false;
+      if (!raf && (parts.length || (ambientAt && ambientRate && !document.hidden))) raf = requestAnimationFrame(tick);
+    }
+    size(); addEventListener("resize", size);
+    return {
+      spawn, size,
+      ambient(rate, at) { ambientRate = rate; ambientAt = at; if (rate && !raf) raf = requestAnimationFrame(tick); },
+      stop() { parts = []; ambientRate = 0; cancelAnimationFrame(raf); raf = 0; ctx.clearRect(0, 0, w, h); },
+    };
+  }
+  const mapFire = fireField($("#mapfx"));
+  let mapVisible = true;
+  if ("IntersectionObserver" in window) new IntersectionObserver((es) => { mapVisible = es[0].isIntersecting; ambient(); }).observe($("#mapwrap"));
+  function mapPoint(x, y) {
+    const box = $("#map").getBoundingClientRect(), c = $("#mapfx").getBoundingClientRect();
+    return { x: box.left - c.left + (x / 1000) * box.width, y: box.top - c.top + (y / 300) * box.height };
+  }
+  function emberBurst(w) { if (calm()) return; mapFire.size(); const p = mapPoint(w.x, w.y); mapFire.spawn(p.x, p.y, 40, 1.4); }
+  function ambient() {
+    // embers drift off Mount Doom only once the road nears Mordor; quiet everywhere else
+    const near = ["blackgate", "mountdoom"].includes(J.region);
+    if (calm() || !near || !mapVisible) { mapFire.ambient(0, null); return; }
+    mapFire.ambient(.25, () => mapPoint(870, 172));
+  }
+  // the Eye follows the pointer, a little
+  let eyeRaf = 0, pointer = null;
+  addEventListener("pointermove", (e) => {
+    pointer = e;
+    if (eyeRaf || calm()) return;
+    eyeRaf = requestAnimationFrame(() => {
+      eyeRaf = 0;
+      const eye = $("#eye"), pupil = $("#pupil"); if (!eye || !pupil) return;
+      const r = eye.getBoundingClientRect(), dx = pointer.clientX - (r.left + r.width / 2), dy = pointer.clientY - (r.top + r.height / 2);
+      const d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 400);
+      pupil.setAttribute("cx", ((dx / d) * 6 * k).toFixed(2)); pupil.setAttribute("cy", ((dy / d) * 1.6 * k).toFixed(2));
+    });
+  }, { passive: true });
+
+  // ---------- milestone stage ----------
+  const stage = $("#stage"), stageInner = $("#stageInner");
+  const stageFire = fireField($("#stagefx"));
+  let stageClose = null, stageReturn = null;
+  stage.tabIndex = -1;
+  function openStage(html, opts = {}) {
+    stageReturn = document.activeElement;
+    stageInner.innerHTML = html;
+    stageInner.className = "inner" + (opts.cls ? " " + opts.cls : "");
+    stage.classList.toggle("solid", !!opts.solid);
+    $("#stageBack").innerHTML = opts.back || "";
+    stage.hidden = false; stageFire.size();
+    if (!calm() && stage.animate) stage.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450, easing: "ease-out" });
+    const timer = setTimeout(() => stageClose && stageClose(), opts.duration || 7000);
+    stageClose = () => {
+      stageClose = null; clearTimeout(timer);
+      const done = () => { stage.hidden = true; stage.classList.remove("solid"); stageFire.stop(); stageInner.innerHTML = ""; $("#stageBack").innerHTML = ""; if (opts.onClose) opts.onClose(); if (stageReturn && stageReturn.focus) stageReturn.focus({ preventScroll: true }); };
+      if (calm() || !stage.animate) return done();
+      stage.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, easing: "ease-in" }).onfinish = done;
+    };
+    setTimeout(() => (stageInner.querySelector("button") || stage).focus({ preventScroll: true }), 50);
+  }
+  stage.addEventListener("click", () => stageClose && stageClose());
+  addEventListener("keydown", (e) => { if (stageClose && (e.key === "Escape" || e.key === "Enter" || e.key === " ")) { e.preventDefault(); stageClose(); } });
+
+  const letters = (text, delay, step) => [...text].map((ch, i) => `<span data-d="${delay + i * step}">${ch === " " ? " " : esc(ch)}</span>`).join("");
+  function revealLetters(root) {
+    if (calm()) return;
+    root.querySelectorAll(".title span").forEach((s) => s.animate && s.animate(
+      [{ opacity: 0, filter: "blur(14px)", transform: "translateY(10px) scale(1.15)" }, { opacity: 1, filter: "blur(0)", transform: "none" }],
+      { duration: 900, delay: Number(s.dataset.d) || 0, easing: "cubic-bezier(.16,1,.3,1)", fill: "backwards" }));
+  }
+  function fade(el, delay, dur = 700, from = "translateY(8px)") {
+    if (!el || calm() || !el.animate) return;
+    el.animate([{ opacity: 0, transform: from }, { opacity: 1, transform: "none" }], { duration: dur, delay, easing: "cubic-bezier(.16,1,.3,1)", fill: "backwards" });
+  }
+  // fire letters: an invented flowing script that kindles around the Ring
+  function fireScript(r, count) {
+    const G = ["M-3,4 C-3,-2 3,-2 3,4 M0,-6 V4", "M-4,3 C-1,-5 4,-4 2,2 C1,5 -3,4 -2,1", "M-3,-4 C1,-6 4,0 0,2 C-3,4 -1,6 3,5 M-3,-7 h.1",
+      "M-4,4 C-4,-3 0,-3 0,2 C0,-3 4,-3 4,4", "M-1,-6 C3,-3 -3,1 1,5 M-4,-1 h.1 M4,-2 h.1"];
+    let d = "";
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 - Math.PI / 2, x = Math.cos(a) * r, y = Math.sin(a) * r;
+      d += `<path class="fireglyph" pathLength="1" d="${G[(i * 7) % 5]}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${((a * 180) / Math.PI + 90).toFixed(1)}) scale(${1 + (i % 3) * 0.08})"/>`;
+    }
+    return d;
+  }
+  function ringSVG() {
+    return `<svg viewBox="-130 -130 260 260" aria-hidden="true">
+      <defs>
+        <linearGradient id="rg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2bf"/><stop offset=".25" stop-color="#e6b54f"/><stop offset=".55" stop-color="#8a5c12"/><stop offset=".8" stop-color="#e2ad45"/><stop offset="1" stop-color="#fff0b0"/></linearGradient>
+        <radialGradient id="rglow"><stop offset=".55" stop-color="#ff9a3c" stop-opacity="0"/><stop offset=".72" stop-color="#ff9a3c" stop-opacity=".35"/><stop offset="1" stop-color="#ff5a14" stop-opacity="0"/></radialGradient>
+      </defs>
+      <circle r="128" fill="url(#rglow)"/>
+      <g class="spin"><circle r="70" fill="none" stroke="url(#rg1)" stroke-width="22"/>
+        <circle r="70" fill="none" stroke="#fffbe6" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="60 380" transform="rotate(-140)"/>
+        <circle r="59" fill="none" stroke="#5a3a08" stroke-opacity=".6" stroke-width="1.5"/></g>
+      <g class="script">${fireScript(70, 28)}</g>
+    </svg>`;
+  }
+  function playLevelUp(lvl, from) {
+    openStage(`<div class="ringbox">${ringSVG()}</div>
+      <h2 class="title" id="stageTitle">${letters(`Level ${lvl}`, 1300, 70)}</h2>
+      <p class="sub">${esc(titleOf(lvl))}</p>
+      <p class="note">${lvl - from > 1 ? `Up ${lvl - from} levels. ` : ""}${totalXP()} XP in all. The next level comes at ${levelStart(lvl + 1)} XP.</p>
+      <p class="hint">Click anywhere or press Enter to carry on</p>`, { duration: 7500 });
+    const box = stageInner.querySelector(".ringbox"), spin = stageInner.querySelector(".spin");
+    revealLetters(stageInner);
+    fade(stageInner.querySelector(".sub"), 2000); fade(stageInner.querySelector(".note"), 2400); fade(stageInner.querySelector(".hint"), 3200, 600, "none");
+    if (calm() || !box.animate) return;
+    box.animate([{ transform: "perspective(700px) scale(.3) rotateX(70deg) rotateY(-720deg)", opacity: 0, filter: "blur(8px)" },
+      { transform: "perspective(700px) scale(1) rotateX(14deg) rotateY(0)", opacity: 1, filter: "blur(0)" }], { duration: 1700, easing: "cubic-bezier(.16,1,.3,1)", fill: "both" });
+    spin.animate([{ transform: "rotate(0)" }, { transform: "rotate(360deg)" }], { duration: 22000, iterations: Infinity });
+    stageInner.querySelectorAll(".fireglyph").forEach((p, i) => p.animate([{ strokeDasharray: "1 1", strokeDashoffset: 1, opacity: 0 }, { strokeDasharray: "1 1", strokeDashoffset: 0, opacity: 1 }],
+      { duration: 500, delay: 900 + i * 28, easing: "ease-out", fill: "backwards" }));
+    stageInner.querySelector(".script").animate([{ opacity: .7 }, { opacity: 1 }], { duration: 1600, delay: 1800, iterations: Infinity, direction: "alternate" });
+    setTimeout(() => {
+      if (stage.hidden) return;
+      const r = box.getBoundingClientRect(), s = stage.getBoundingClientRect();
+      for (let i = 0; i < 6; i++) setTimeout(() => stageFire.spawn(r.left - s.left + r.width / 2 + (Math.random() - .5) * r.width * .7, r.top - s.top + r.height * .6, 14, 1.6), i * 120);
+    }, 700);
+  }
+  function playFinale() {
+    const back = `<svg class="doom" viewBox="0 0 900 260" aria-hidden="true">
+        <defs><radialGradient id="crater" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff0b0"/><stop offset=".35" stop-color="#ff9a3c"/><stop offset=".75" stop-color="#c2280c"/><stop offset="1" stop-color="#5a0d03"/></radialGradient>
+          <linearGradient id="slope" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a160a"/><stop offset=".25" stop-color="#1c0b05"/><stop offset="1" stop-color="#0d0503"/></linearGradient></defs>
+        <path d="M0,260 L170,170 L240,140 L292,104 L322,108 L352,86 L384,92 L408,72 L492,72 L516,90 L548,84 L578,106 L612,100 L668,140 L740,172 L900,260Z" fill="url(#slope)"/>
+        <ellipse class="craterglow" cx="450" cy="74" rx="40" ry="7" fill="url(#crater)"/>
+      </svg>
+      <div class="finale-ring">${ringSVG()}</div>`;
+    openStage(`<h2 class="title" id="stageTitle">${letters("It is done.", 2300, 80)}</h2>
+      <p class="sub">There and back again</p>
+      <p class="note">All ${paperCount()} papers sat. The road turns home, and Daybook keeps your habits, quests and XP for whatever comes next.</p>
+      <button class="btn" type="button">Go home</button>`, { duration: 16000, back, cls: "finale", solid: true, onClose: () => { holdHome = false; renderAll(); } });
+    const box = $("#stageBack .finale-ring");
+    const doom = $("#stageBack .doom").getBoundingClientRect(), sb = stage.getBoundingClientRect();
+    const craterY = doom.top - sb.top + doom.height * (78 / 260) - 60;
+    revealLetters(stageInner);
+    fade(stageInner.querySelector(".sub"), 3600); fade(stageInner.querySelector(".note"), 4200); fade(stageInner.querySelector(".btn"), 4800);
+    if (calm() || !box.animate) { box.style.display = "none"; return; }
+    const fall = box.animate([
+      { transform: "translateY(-160px) rotate(-30deg) scale(1)", opacity: 1, filter: "brightness(1)" },
+      { transform: `translateY(${craterY - 20}px) rotate(160deg) scale(.55)`, opacity: 1, filter: "brightness(1.6)", offset: .85 },
+      { transform: `translateY(${craterY + 30}px) rotate(200deg) scale(.15)`, opacity: 0, filter: "brightness(3)" }],
+      { duration: 1900, easing: "cubic-bezier(.55,0,.9,.5)", fill: "forwards" });
+    fall.onfinish = () => {
+      if (stage.hidden) return;
+      const s = stage.getBoundingClientRect();
+      for (let i = 0; i < 8; i++) setTimeout(() => stageFire.spawn(s.width / 2 + (Math.random() - .5) * 160, craterY + 70, 30, 2.6), i * 90);
+      stage.animate([{ boxShadow: "inset 0 0 0 9999px rgba(255,160,60,.55)" }, { boxShadow: "inset 0 0 0 9999px rgba(255,160,60,0)" }], { duration: 700, easing: "ease-out" });
+      stage.animate([{ transform: "translate(0,0)" }, { transform: "translate(-6px,3px)" }, { transform: "translate(5px,-4px)" }, { transform: "translate(-3px,2px)" }, { transform: "translate(0,0)" }], { duration: 420 });
+      const glow = stage.querySelector(".craterglow");
+      if (glow) glow.animate([{ opacity: 1 }, { opacity: .6 }], { duration: 1400, iterations: Infinity, direction: "alternate" });
+    };
+  }
 
   // ---------- move between devices (data rides in the link's #fragment, never sent to a server) ----------
   // Packed as positional arrays (no keys, no ids, today's date and empty fields left out), then deflated.
@@ -1050,7 +1582,6 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     if (!s.place && add.place) s.place = add.place;
     return { state: s, added };
   }
-
   const b64 = (u8) => { let s = ""; for (const b of u8) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
   const unb64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
   const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
@@ -1064,7 +1595,6 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     if (code[0] === "z") bytes = await pipe(bytes, new DecompressionStream("deflate-raw"));
     return unpack(JSON.parse(new TextDecoder().decode(bytes)));
   }
-
   $("#moveBtn").addEventListener("click", async () => {
     const link = location.origin + location.pathname + "#d=" + await encode(state);
     const out = $("#moveOut");
@@ -1102,14 +1632,24 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     renderTimer();
     const now = new Date();
     if (today() !== lastDay) { lastDay = today(); commit(); return; }
-    if (now.getMinutes() !== lastMin) { lastMin = now.getMinutes(); renderHeader(); renderNextUp(); }
+    if (now.getMinutes() !== lastMin) { lastMin = now.getMinutes(); renderHeader(J); renderNextUp(J); }
     const stale = !wxCache || Date.now() - wxCache.at > 30 * 6e4;
     if (stale && Date.now() - wxTried > 5 * 6e4) { wxTried = Date.now(); fetchWeather(); }
   }, 1000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) ambient(); });
+  if (rmq.addEventListener) rmq.addEventListener("change", () => renderAll({ noTravel: true }));
+  addEventListener("resize", () => { if (mapGeo && mapGeo.len != null) setMarker(mapGeo.len); });
 
+  // ---------- boot ----------
   freezeAndPrune(state); keep(KEY, state);
   shownLevel = levelOf(totalXP());
-  renderAll(); renderTimer();
+  buildBeacons();
+  beaconShown = beaconsLit();
+  renderAll({ noTravel: true });
+  // if the journey moved on while you were away, walk the Ring there once the page has settled
+  if (shownWay() !== null && shownWay() !== J.markerWay) setTimeout(() => renderAll(), 900);
+  else { ui.markerWay = J.markerWay; keepUI(); }
+  renderTimer();
   if (T.running && Date.now() >= T.endsAt) finishSession();
 })();
 </script>
