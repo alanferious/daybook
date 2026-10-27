@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
 <style>
-/* Layout: a graph-paper day sheet. Date + highlighter "next up" note on top, three working columns below. */
+/* Layout: a graph-paper day sheet. Date + player bar + highlighter "next up" note on top,
+   the exam run as a full-width track, then three working columns. */
 :root {
   --paper: #f4f6fb;
   --grid: rgba(43, 63, 214, .07);
@@ -22,6 +23,7 @@
   --hi: #ffe45c;
   --on-hi: #221d00;
   --good: #17845a;
+  --good-soft: rgba(23, 132, 90, .12);
   --warn: #b84a0e;
   --font-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
   --font-body: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -32,7 +34,7 @@
   :root {
     --paper: #0e1222; --grid: rgba(140, 160, 255, .06); --surface: #151a30; --ink: #e7eaf7;
     --muted: #9aa3c7; --line: #283055; --accent: #93a1ff; --accent-soft: rgba(147, 161, 255, .14);
-    --hi: #f5d93f; --on-hi: #1e1900; --good: #4fd19b; --warn: #ff9a5c; color-scheme: dark;
+    --hi: #f5d93f; --on-hi: #1e1900; --good: #4fd19b; --good-soft: rgba(79, 209, 155, .14); --warn: #ff9a5c; color-scheme: dark;
   }
 }
 
@@ -47,7 +49,7 @@ body {
   padding: 28px 16px 40px;
 }
 [hidden] { display: none !important; }
-.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 28px; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 24px; }
 button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -56,7 +58,7 @@ button { cursor: pointer; }
 /* ---------- banner ---------- */
 .banner { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--surface); border: 2px solid var(--accent); border-radius: 6px; padding: 12px 16px; }
 .banner p { margin: 0; }
-.banner .row { display: flex; gap: 8px; }
+.banner .row { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- top ---------- */
 .top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 28px; align-items: end; }
@@ -67,8 +69,22 @@ button { cursor: pointer; }
 }
 .clockline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; font-size: 18px; }
 .clockline .mono { font-size: 22px; font-weight: 600; color: var(--accent); }
-.summary { margin: 10px 0 0; color: var(--muted); max-width: 60ch; }
+.summary { margin: 8px 0 0; color: var(--muted); max-width: 60ch; }
 .summary b { color: var(--ink); font-weight: 600; }
+
+/* player bar */
+.player { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; align-items: center; margin-top: 16px; max-width: 620px; }
+.lvl { grid-row: span 2; display: grid; place-items: center; width: 64px; height: 64px; border: 2px solid var(--ink); border-radius: 6px; background: var(--surface); line-height: 1; }
+.lvl small { font-family: var(--font-mono); font-size: 10px; letter-spacing: .14em; color: var(--muted); margin-top: 6px; }
+.lvl b { font-family: var(--font-display); font-weight: 800; font-size: 36px; margin-top: -10px; }
+.ptitle { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; align-items: baseline; }
+.ptitle b { font-weight: 600; font-size: 17px; }
+.ptitle span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.xpbar { height: 12px; border-radius: 6px; background: var(--accent-soft); overflow: hidden; position: relative; }
+.xpbar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 6px; transition: width .6s cubic-bezier(.22, 1, .36, 1); }
+.pstats { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.pstats b { color: var(--ink); font-weight: 600; }
+.pstats .met b { color: var(--good); }
 
 .nextup {
   background: var(--hi); color: var(--on-hi); border-radius: 4px; padding: 20px 22px 18px;
@@ -83,7 +99,7 @@ button { cursor: pointer; }
 .nextup .then { font-size: 13px; border-top: 1px dashed rgba(34, 29, 0, .3); padding-top: 8px; margin-top: 4px; }
 .nextup.empty .big { font-size: 34px; }
 
-/* ---------- grid ---------- */
+/* ---------- panels ---------- */
 .grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .col { display: grid; gap: 20px; min-width: 0; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px 18px; min-width: 0; }
@@ -108,6 +124,33 @@ button { cursor: pointer; }
 .x { border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
 .x:hover { color: var(--warn); background: var(--accent-soft); }
 
+/* ---------- exam run ---------- */
+.run { padding-bottom: 14px; }
+.track { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(112px, 1fr); overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin; }
+.stop { position: relative; padding: 0 10px 0 0; min-width: 0; display: grid; align-content: start; gap: 8px; }
+.stop::before { content: ""; position: absolute; top: 9px; left: 0; right: 0; height: 3px; background: var(--line); }
+.stop:first-child::before { left: 10px; }
+.stop:last-child::before { right: auto; width: 10px; }
+.stop.cleared::before { background: var(--good); }
+.node { position: relative; width: 21px; height: 21px; border-radius: 50%; border: 3px solid var(--line); background: var(--surface); display: grid; place-items: center; }
+.stop.cleared .node { border-color: var(--good); background: var(--good); }
+.stop.cleared .node svg { opacity: 1; }
+.node svg { width: 11px; height: 11px; opacity: 0; }
+.stop.next .node { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.stop.today .node { border-color: var(--on-hi); background: var(--hi); box-shadow: 0 0 0 4px var(--hi); }
+.stop.owed .node { border-color: var(--warn); }
+.sday { font-family: var(--font-display); font-weight: 800; font-size: 22px; line-height: 1; text-transform: uppercase; }
+.sday small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 11px; letter-spacing: .06em; color: var(--muted); text-transform: none; margin-top: 3px; }
+.stop.today .sday small, .stop.next .sday small { color: var(--accent); font-weight: 600; }
+.paper { border: 1px solid var(--line); border-radius: 5px; padding: 7px 9px; font-size: 13px; line-height: 1.3; display: grid; gap: 6px; background: var(--surface); }
+.paper .pt { overflow-wrap: anywhere; font-weight: 500; }
+.stop.today .paper { border-color: var(--on-hi); background: var(--hi); color: var(--on-hi); }
+.paper.sat { background: var(--good-soft); border-color: transparent; }
+.paper.sat .pt { color: var(--muted); }
+.satbtn { justify-self: start; border: 1px solid currentColor; border-radius: 4px; background: transparent; font-family: var(--font-mono); font-size: 11px; padding: 2px 7px; color: var(--accent); font-weight: 600; }
+.stop.today .satbtn { color: var(--on-hi); }
+.satbtn[aria-pressed="true"] { color: var(--good); border-color: transparent; padding-left: 0; }
+
 /* tasks */
 .tasks { list-style: none; margin: 0; padding: 0; display: grid; }
 .task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px dashed var(--line); }
@@ -122,9 +165,23 @@ button { cursor: pointer; }
 .task .txt { overflow-wrap: anywhere; }
 .task.done .txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
 .tag { font-family: var(--font-mono); font-size: 11px; color: var(--warn); margin-left: 6px; white-space: nowrap; }
+.xp-tag { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
 
 textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); line-height: 1.55; min-height: 120px;
   background-image: linear-gradient(transparent 23px, var(--grid) 24px); background-size: 100% 24px; background-attachment: local; }
+
+/* quests */
+.quests { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.quest { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 10px; align-items: baseline; }
+.quest .qn { font-weight: 500; }
+.quest .qv { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.quest .qbar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--accent-soft); overflow: hidden; }
+.quest .qbar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s; }
+.quest.done .qn { color: var(--good); }
+.quest.done .qbar i { background: var(--good); }
+.quest.done .qv { color: var(--good); font-weight: 600; }
+.qfoot { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.qfoot.done { color: var(--good); font-weight: 600; }
 
 /* habits */
 .habits { display: grid; gap: 4px; }
@@ -184,6 +241,18 @@ textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid 
 .stack { gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
 .stack .pair { display: flex; gap: 8px; }
 
+/* trophies */
+.trophies { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.trophy { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 2px 10px; align-items: start; padding: 8px; border-radius: 5px; border: 1px dashed var(--line); }
+.trophy svg { grid-row: span 2; width: 30px; height: 30px; }
+.trophy b { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.trophy span { font-size: 12px; color: var(--muted); line-height: 1.3; }
+.trophy.got { border: 1px solid transparent; background: var(--accent-soft); }
+.trophy .medal { fill: var(--line); }
+.trophy.got .medal { fill: var(--hi); stroke: var(--on-hi); }
+.trophy .mk { stroke: var(--muted); }
+.trophy.got .mk { stroke: var(--on-hi); }
+
 /* links */
 .links { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .links li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
@@ -195,6 +264,15 @@ textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid 
 footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
 #moveOut { width: 100%; font-family: var(--font-mono); font-size: 11px; min-height: 0; }
+
+/* ---------- rewards ---------- */
+.pop { position: fixed; z-index: 30; pointer-events: none; font-family: var(--font-mono); font-weight: 600; font-size: 14px; color: var(--accent);
+  background: var(--surface); border: 1px solid var(--accent); border-radius: 4px; padding: 1px 6px; transform: translate(-50%, -100%); }
+.toasts { position: fixed; z-index: 40; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: grid; gap: 8px; justify-items: center; width: min(440px, calc(100vw - 32px)); pointer-events: none; }
+.toast { background: var(--ink); color: var(--paper); border-radius: 6px; padding: 12px 16px; display: grid; gap: 2px; width: 100%; box-shadow: 0 12px 30px -12px rgba(0,0,0,.5); }
+.toast .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--hi); }
+.toast b { font-family: var(--font-display); font-weight: 800; font-size: 24px; text-transform: uppercase; line-height: 1.05; }
+.toast span { font-size: 13px; opacity: .85; }
 
 @media (max-width: 1100px) {
   .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -211,16 +289,27 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   .nextup { animation: settle .5s cubic-bezier(.22, 1, .36, 1) both; }
   @keyframes settle { from { transform: rotate(-3deg) translateY(-6px); } }
   @media (max-width: 760px) { @keyframes settle { from { transform: translateY(-6px); } } }
+  .pop { animation: rise 1s cubic-bezier(.22, 1, .36, 1) forwards; }
+  @keyframes rise { to { transform: translate(-50%, -260%); opacity: 0; } }
+  .toast { animation: toastin .35s cubic-bezier(.22, 1, .36, 1) both; }
+  @keyframes toastin { from { transform: translateY(12px); opacity: 0; } }
+  .lvl.bump { animation: bump .6s cubic-bezier(.22, 1, .36, 1); }
+  @keyframes bump { 40% { transform: scale(1.15); background: var(--hi); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pop { opacity: 0; }
+  .xpbar i, .quest .qbar i { transition: none; }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="banner" id="importBanner" hidden>
-    <p id="importText">This link carries Daybook data from another device.</p>
+    <p id="importText">This link carries Daybook data.</p>
     <div class="row">
-      <button class="btn" type="button" id="importYes">Replace what's here</button>
-      <button class="btn ghost" type="button" id="importNo">Keep this device's</button>
+      <button class="btn" type="button" id="importAdd">Add to mine</button>
+      <button class="btn ghost" type="button" id="importReplace">Replace mine</button>
+      <button class="btn ghost" type="button" id="importNo">Ignore</button>
     </div>
   </div>
 
@@ -230,9 +319,20 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       <h1 class="date" id="dateBig">&nbsp;</h1>
       <div class="clockline"><span class="mono" id="clock"></span><span id="greet"></span></div>
       <p class="summary" id="summary"></p>
+      <div class="player" id="player" aria-live="polite">
+        <div class="lvl" id="lvlBox"><small>LEVEL</small><b id="lvlNum">1</b></div>
+        <div class="ptitle"><b id="lvlTitle"></b><span id="xpText"></span></div>
+        <div class="xpbar" role="progressbar" aria-label="Progress to next level" id="xpBarWrap"><i id="xpBar" style="width:0"></i></div>
+        <div class="pstats" id="pstats"></div>
+      </div>
     </div>
     <section class="nextup empty" id="nextup" aria-live="polite"></section>
   </header>
+
+  <section class="panel run" aria-labelledby="h-run">
+    <div class="phead"><h2 id="h-run">Exam run</h2><span class="meta" id="runMeta"></span></div>
+    <div class="track" id="track"></div>
+  </section>
 
   <main class="grid">
     <div class="col c1">
@@ -251,6 +351,11 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     </div>
 
     <div class="col c2">
+      <section class="panel" aria-labelledby="h-quests">
+        <div class="phead"><h2 id="h-quests">Daily quests</h2><span class="meta">reset at midnight</span></div>
+        <ul class="quests" id="questList"></ul>
+        <p class="qfoot" id="questFoot"></p>
+      </section>
       <section class="panel" id="habitsPanel" aria-labelledby="h-habits">
         <div class="phead"><h2 id="h-habits">Habits</h2><button class="linkbtn" type="button" data-edit="habitsPanel">Edit</button></div>
         <div class="habits" id="habitList"></div>
@@ -279,7 +384,7 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
 
     <div class="col c3">
       <section class="panel" id="wxPanel" aria-labelledby="h-wx">
-        <div class="phead"><h2 id="h-wx">Outside</h2><button class="linkbtn" type="button" data-edit="wxPanel" id="wxPlace">Set place</button></div>
+        <div class="phead"><h2 id="h-wx">Outside</h2><button class="linkbtn" type="button" data-edit="wxPanel" id="wxPlace">Change</button></div>
         <div id="wxBody"><p class="empty-note">Loading the weather…</p></div>
         <form class="stack ed" id="wxForm">
           <div class="pair">
@@ -293,7 +398,7 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
         <div class="phead"><h2 id="h-cd">Coming up</h2><button class="linkbtn" type="button" data-edit="cdPanel">Edit</button></div>
         <ul class="cds" id="cdList"></ul>
         <form class="stack ed" id="cdForm">
-          <input id="cdTitle" placeholder="What is it? e.g. English Paper 2" maxlength="80" required aria-label="Event name">
+          <input id="cdTitle" placeholder="What is it? e.g. Maths AA HL Paper 1" maxlength="80" required aria-label="Event name">
           <div class="pair">
             <input id="cdDate" type="date" required aria-label="Date">
             <input id="cdTime" type="time" aria-label="Start time (optional)">
@@ -303,6 +408,10 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
             <button class="btn" type="submit">Add</button>
           </div>
         </form>
+      </section>
+      <section class="panel" aria-labelledby="h-trophies">
+        <div class="phead"><h2 id="h-trophies">Trophies</h2><span class="meta" id="trophyMeta"></span></div>
+        <ul class="trophies" id="trophyList"></ul>
       </section>
       <section class="panel" id="linksPanel" aria-labelledby="h-links">
         <div class="phead"><h2 id="h-links">Study kit</h2><button class="linkbtn" type="button" data-edit="linksPanel">Edit</button></div>
@@ -320,10 +429,11 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
 
   <footer>
     <span>Saved in this browser · <button class="linkbtn" type="button" id="moveBtn">Copy a link to move it to another device</button></span>
-    <span>Weather: Open-Meteo</span>
+    <span>XP: task 10 · habit 5 · focus 1/min · paper sat 100 · trophy 50 · Weather: Open-Meteo</span>
     <textarea id="moveOut" rows="2" readonly hidden aria-label="Move link"></textarea>
   </footer>
 </div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
 
 <script>
 (() => {
@@ -354,6 +464,8 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       log: d.log && typeof d.log === "object" ? d.log : {},
       notes: typeof d.notes === "string" ? d.notes : "",
       place: d.place && typeof d.place === "object" ? d.place : null,
+      xpBank: Number(d.xpBank) || 0,
+      badges: d.badges && typeof d.badges === "object" ? d.badges : {},
     };
   }
   const STARTER = {
@@ -364,22 +476,131 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   };
   let state = normalize(load(KEY) || STARTER);
 
-  function prune(s) {
-    const cutoff = dkey(addDays(new Date(), -90)), oldDone = dkey(addDays(new Date(), -30));
-    for (const k of Object.keys(s.log)) if (k < cutoff) delete s.log[k];
-    s.tasks = s.tasks.filter((t) => !(t.done && t.day < oldDone));
-    s.countdowns = s.countdowns.filter((c) => !c.date || c.date >= cutoff);
-  }
-  function commit() { prune(state); keep(KEY, state); renderAll(); }
-
   const today = () => dkey(new Date());
   const dayLog = (k = today()) => state.log[k] || {};
   const setDayLog = (patch, k = today()) => { state.log[k] = { ...dayLog(k), ...patch }; };
 
+  // ---------- game rules ----------
+  const XP = { task: 10, habit: 5, paper: 100, trophy: 50, quest: 30, sweep: 40 };
+  const DAILY_GOAL = 150;
+  const TITLES = ["Fresh page", "Note-taker", "Highlighter", "Flashcard fiend", "Past-paper grinder", "Markscheme reader",
+    "Command-term pro", "Grade 6 energy", "Grade 7 energy", "Diploma closer", "45-point legend"];
+  const levelStart = (l) => 50 * l * (l - 1);          // XP needed to reach level l: 0, 100, 300, 600, 1000…
+  const levelOf = (xp) => { let l = 1; while (xp >= levelStart(l + 1)) l++; return l; };
+  const titleOf = (l) => TITLES[Math.min(l, TITLES.length) - 1];
+
+  const habitsDone = (L) => { const ids = new Set(state.habits.map((h) => h.id)); return Object.keys(L.h || {}).filter((id) => ids.has(id)).length; };
+  function questsFor(k = today()) {
+    const L = dayLog(k), hn = state.habits.length;
+    return [
+      { name: "Finish 3 tasks", have: Math.min(L.t || 0, 3), need: 3 },
+      { name: "Focus for 50 minutes", have: Math.min(L.focus || 0, 50), need: 50 },
+      { name: hn ? "Tick every habit" : "Tick every habit (add one first)", have: hn ? habitsDone(L) : 0, need: Math.max(hn, 1) },
+    ].map((q) => ({ ...q, done: q.have >= q.need }));
+  }
+  function dayXP(k) {
+    const L = dayLog(k);
+    if (k < today() && typeof L.xp === "number") return L.xp;
+    const q = questsFor(k).filter((x) => x.done).length;
+    return (L.t || 0) * XP.task + Object.keys(L.h || {}).length * XP.habit + (L.focus || 0) + q * XP.quest + (q === 3 ? XP.sweep : 0);
+  }
+  const exams = () => state.countdowns.filter((c) => c.kind === "exam").sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+  const papersOf = (c) => Math.max(1, Number(c.papers) || 1);
+  const paperCount = () => exams().reduce((n, c) => n + papersOf(c), 0);
+  const papersSat = () => exams().filter((c) => c.sat).reduce((n, c) => n + papersOf(c), 0);
+  function totalXP() {
+    let xp = state.xpBank;
+    for (const k of Object.keys(state.log)) xp += dayXP(k);
+    for (const c of state.countdowns) if (c.sat) xp += XP.paper * papersOf(c);
+    return xp + Object.keys(state.badges).length * XP.trophy;
+  }
+  function streak() {
+    let d = new Date(), n = 0;
+    if (dayXP(dkey(d)) < DAILY_GOAL) d = addDays(d, -1);
+    while (dayXP(dkey(d)) >= DAILY_GOAL) { n++; d = addDays(d, -1); }
+    return n;
+  }
+
+  const TROPHIES = [
+    { id: "first-task", name: "First tick", desc: "Finish a task", test: () => Object.values(state.log).some((L) => L.t > 0) },
+    { id: "early", name: "Early bird", desc: "Finish a task before 8am" },
+    { id: "deep-work", name: "Deep work", desc: "Complete a 50-minute focus session" },
+    { id: "three-hours", name: "Three-hour day", desc: "Focus 180 minutes in one day", test: () => (dayLog().focus || 0) >= 180 },
+    { id: "full-house", name: "Full house", desc: "Tick every habit in a day", test: () => state.habits.length > 0 && habitsDone(dayLog()) >= state.habits.length },
+    { id: "sweep", name: "Clean sweep", desc: "Clear all three daily quests", test: () => questsFor().every((q) => q.done) },
+    { id: "overachiever", name: "Overachiever", desc: "Earn 300 XP in one day", test: () => dayXP(today()) >= 300 },
+    { id: "streak-3", name: "On a roll", desc: "Hit the daily goal 3 days running", test: () => streak() >= 3 },
+    { id: "streak-7", name: "Week warrior", desc: "Hit the daily goal 7 days running", test: () => streak() >= 7 },
+    { id: "first-paper", name: "First paper down", desc: "Sit your first exam paper", test: () => papersSat() >= 1 },
+    { id: "halfway", name: "Halfway there", desc: "Sit half of your exam papers", test: () => paperCount() >= 4 && papersSat() * 2 >= paperCount() },
+    { id: "free", name: "Free at last", desc: "Sit every exam paper", test: () => paperCount() >= 4 && papersSat() === paperCount() },
+    { id: "level-5", name: "Grinder", desc: "Reach level 5", test: () => levelOf(totalXP()) >= 5 },
+    { id: "level-10", name: "Diploma closer", desc: "Reach level 10", test: () => levelOf(totalXP()) >= 10 },
+  ];
+
+  // ---------- rewards ----------
+  let lastPoint = null, toastQ = [], toastBusy = false;
+  function pop(text, pt) {
+    if (!pt) return;
+    const el = document.createElement("div");
+    el.className = "pop"; el.textContent = text;
+    el.style.left = pt.x + "px"; el.style.top = pt.y + "px";
+    document.body.appendChild(el); setTimeout(() => el.remove(), 1100);
+  }
+  function toast(kind, title, sub) { toastQ.push({ kind, title, sub }); if (!toastBusy) nextToast(); }
+  function nextToast() {
+    const t = toastQ.shift(); if (!t) { toastBusy = false; return; }
+    toastBusy = true;
+    const el = document.createElement("div");
+    el.className = "toast"; el.innerHTML = `<span class="k">${esc(t.kind)}</span><b>${esc(t.title)}</b>${t.sub ? `<span>${esc(t.sub)}</span>` : ""}`;
+    $("#toasts").appendChild(el);
+    setTimeout(() => { el.remove(); nextToast(); }, 2800);
+  }
+  function award(id) {
+    if (state.badges[id]) return;
+    state.badges[id] = today();
+    const t = TROPHIES.find((x) => x.id === id);
+    toast("Trophy unlocked", t.name, `${t.desc} · +${XP.trophy} XP`);
+  }
+  function checkTrophies() {
+    for (let pass = 0; pass < 2; pass++) for (const t of TROPHIES) if (t.test && !state.badges[t.id] && t.test()) award(t.id);
+  }
+
+  // ---------- persistence ----------
+  function freezeAndPrune(s) {
+    const t = today(), cutoff = dkey(addDays(new Date(), -90)), oldDone = dkey(addDays(new Date(), -30));
+    for (const k of Object.keys(s.log)) {
+      if (k < t && typeof s.log[k].xp !== "number") s.log[k].xp = dayXP(k);
+      if (k < cutoff) { s.xpBank += s.log[k].xp; delete s.log[k]; }
+    }
+    s.tasks = s.tasks.filter((x) => !(x.done && x.day < oldDone));
+    s.countdowns = s.countdowns.filter((c) => {
+      if (!c.date || c.date >= cutoff) return true;
+      if (c.sat) s.xpBank += XP.paper * papersOf(c);
+      return false;
+    });
+  }
+  let shownLevel = levelOf(totalXP());
+  function commit() {
+    const before = totalXP();
+    freezeAndPrune(state);
+    checkTrophies();
+    keep(KEY, state);
+    const after = totalXP(), lvl = levelOf(after);
+    if (after > before) pop(`+${after - before} XP`, lastPoint);
+    if (lvl > shownLevel) {
+      toast("Level up", `Level ${lvl}: ${titleOf(lvl)}`, `${after} XP total. Next level at ${levelStart(lvl + 1)}.`);
+      $("#lvlBox").classList.remove("bump"); void $("#lvlBox").offsetWidth; $("#lvlBox").classList.add("bump");
+    }
+    shownLevel = lvl;
+    lastPoint = null;
+    renderAll();
+  }
+
   // ---------- render ----------
   function upcoming() {
     const t = today();
-    return state.countdowns.filter((c) => c.date && c.date >= t)
+    return state.countdowns.filter((c) => c.date && c.date >= t && !c.sat)
       .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
   }
   function isoWeek(d) {
@@ -398,11 +619,24 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     $("#greet").textContent = examToday ? "Exam day. Eat something, bring water, trust your prep."
       : h < 5 ? "It's late. Sleep is revision too." : h < 12 ? "Good morning." : h < 18 ? "Good afternoon." : "Good evening.";
     const list = todaysTasks(), left = list.filter((t) => !t.done).length;
-    const hd = state.habits.filter((x) => (dayLog().h || {})[x.id]).length;
+    const hd = habitsDone(dayLog());
     const parts = [list.length ? `<b>${left}</b> of ${list.length} tasks left` : "No tasks yet"];
     if (state.habits.length) parts.push(`<b>${hd}</b>/${state.habits.length} habits`);
     parts.push(`<b>${fmtMins(dayLog().focus || 0)}</b> focused`);
     $("#summary").innerHTML = parts.join(" · ");
+  }
+
+  function renderPlayer() {
+    const xp = totalXP(), l = levelOf(xp), lo = levelStart(l), hi = levelStart(l + 1);
+    const pct = Math.min(100, Math.round(((xp - lo) / (hi - lo)) * 100));
+    $("#lvlNum").textContent = l;
+    $("#lvlTitle").textContent = titleOf(l);
+    $("#xpText").textContent = `${xp - lo} / ${hi - lo} XP to level ${l + 1}`;
+    $("#xpBar").style.width = pct + "%";
+    $("#xpBarWrap").setAttribute("aria-valuenow", pct);
+    const tx = dayXP(today()), s = streak();
+    $("#pstats").innerHTML = `<span class="${tx >= DAILY_GOAL ? "met" : ""}">today <b>${tx}</b>/${DAILY_GOAL} XP${tx >= DAILY_GOAL ? " · goal hit" : ""}</span>
+      <span>streak <b>${s}</b> ${s === 1 ? "day" : "days"}</span><span>total <b>${xp}</b> XP</span>`;
   }
 
   function hoursLeft(c) {
@@ -431,6 +665,33 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       ${rest ? `<div class="then">Then: ${rest}</div>` : ""}`;
   }
 
+  function renderRun() {
+    const list = exams(), track = $("#track");
+    if (!list.length) {
+      $("#runMeta").textContent = "";
+      track.innerHTML = `<p class="empty-note">Add exams under Coming up (type: Exam) and they line up here. Tick each paper off after you sit it for ${XP.paper} XP.</p>`;
+      return;
+    }
+    const byDay = new Map();
+    for (const c of list) { if (!byDay.has(c.date)) byDay.set(c.date, []); byDay.get(c.date).push(c); }
+    const t = today(), total = paperCount(), sat = papersSat();
+    const last = list[list.length - 1].date, toGo = daysUntil(last);
+    $("#runMeta").textContent = `${sat}/${total} papers sat${toGo > 1 ? ` · last one in ${toGo} days` : toGo === 1 ? " · last one tomorrow" : toGo === 0 ? " · last one today" : ""}`;
+    const nextDay = [...byDay.keys()].find((k) => k > t);
+    track.innerHTML = [...byDay.entries()].map(([k, cs]) => {
+      const cleared = cs.every((c) => c.sat), n = daysUntil(k);
+      const owed = !cleared && k < t;
+      const cls = cleared ? "cleared" : k === t ? "today" : owed ? "owed" : k === nextDay ? "next" : "";
+      const sub = cleared ? "cleared" : k === t ? "today" : owed ? "tick it off" : n === 1 ? "tomorrow" : `in ${n} days`;
+      return `<div class="stop ${cls}">
+        <div class="node">${CHECK}</div>
+        <div class="sday">${esc(fmtDay(k, { weekday: "short", day: "numeric" }))}<small>${esc(sub)}</small></div>
+        ${cs.map((c) => `<div class="paper${c.sat ? " sat" : ""}"><span class="pt">${esc(c.title)}${c.time ? ` · ${esc(fmtTime(c.time))}` : ""}</span>
+          ${k <= t ? `<button class="satbtn" type="button" data-act="sat" data-id="${esc(c.id)}" aria-pressed="${!!c.sat}">${c.sat ? "✓ sat it" : `I sat it +${XP.paper * papersOf(c)}`}</button>` : ""}</div>`).join("")}
+      </div>`;
+    }).join("");
+  }
+
   function todaysTasks() {
     const t = today();
     return state.tasks.filter((x) => x.day === t || (!x.done && x.day < t))
@@ -439,14 +700,23 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   function renderTasks() {
     const ul = $("#taskList"), list = todaysTasks();
     $("#taskCount").textContent = list.length ? `${list.filter((t) => t.done).length}/${list.length} done` : "";
-    if (!list.length) { ul.innerHTML = `<li class="empty-note">Nothing on today's list. Add the first thing below. Anything you don't finish rolls over to tomorrow.</li>`; return; }
+    if (!list.length) { ul.innerHTML = `<li class="empty-note">Nothing on today's list. Add the first thing below. Each task you finish is worth ${XP.task} XP, and anything unfinished rolls over to tomorrow.</li>`; return; }
     ul.innerHTML = list.map((t) => `<li class="task${t.done ? " done" : ""}">
       <button class="check" type="button" data-act="toggle-task" data-id="${esc(t.id)}" aria-pressed="${!!t.done}" aria-label="Mark ${esc(t.text)} ${t.done ? "not done" : "done"}">${CHECK}</button>
       <span class="txt">${esc(t.text)}${!t.done && t.day < today() ? `<span class="tag">from ${esc(fmtDay(t.day, { weekday: "short" }))}</span>` : ""}</span>
       <button class="x" type="button" data-act="del-task" data-id="${esc(t.id)}" aria-label="Delete ${esc(t.text)}">×</button></li>`).join("");
   }
 
-  function streakOf(id) {
+  function renderQuests() {
+    const qs = questsFor(), all = qs.every((q) => q.done);
+    $("#questList").innerHTML = qs.map((q) => `<li class="quest${q.done ? " done" : ""}">
+      <span class="qn">${esc(q.name)}</span><span class="qv">${q.done ? `+${XP.quest} XP` : `${q.have}/${q.need}`}</span>
+      <div class="qbar"><i style="width:${Math.round((q.have / q.need) * 100)}%"></i></div></li>`).join("");
+    $("#questFoot").className = "qfoot" + (all ? " done" : "");
+    $("#questFoot").textContent = all ? `Clean sweep. +${XP.sweep} bonus XP banked.` : `Each quest is worth ${XP.quest} XP. Clear all three for a ${XP.sweep} XP bonus.`;
+  }
+
+  function habitStreak(id) {
     let d = new Date(), n = 0;
     if (!(dayLog(dkey(d)).h || {})[id]) d = addDays(d, -1);
     while ((dayLog(dkey(d)).h || {})[id]) { n++; d = addDays(d, -1); }
@@ -458,10 +728,10 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const days = Array.from({ length: 14 }, (_, i) => dkey(addDays(new Date(), i - 13)));
     const doneToday = dayLog().h || {};
     box.innerHTML = state.habits.map((h) => {
-      const s = streakOf(h.id);
+      const s = habitStreak(h.id);
       return `<div class="habit">
         <button class="habit-btn" type="button" data-act="toggle-habit" data-id="${esc(h.id)}" aria-pressed="${!!doneToday[h.id]}"><span class="check">${CHECK}</span><span class="nm">${esc(h.name)}</span></button>
-        <span><span class="streak${s >= 3 ? " hot" : ""}">${s ? `${s}-day streak` : "–"}</span><button class="x ed" type="button" data-act="del-habit" data-id="${esc(h.id)}" aria-label="Remove ${esc(h.name)}">×</button></span>
+        <span><span class="streak${s >= 3 ? " hot" : ""}">${s ? `${s}-day streak` : `+${XP.habit} XP`}</span><button class="x ed" type="button" data-act="del-habit" data-id="${esc(h.id)}" aria-label="Remove ${esc(h.name)}">×</button></span>
         <div class="strip" aria-hidden="true">${days.map((k, i) => `<i class="${(dayLog(k).h || {})[h.id] ? "on" : ""}${i === 13 ? " today" : ""}" title="${esc(fmtDay(k))}"></i>`).join("")}</div>
       </div>`;
     }).join("");
@@ -471,16 +741,17 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const days = Array.from({ length: 7 }, (_, i) => dkey(addDays(new Date(), i - 6)));
     const vals = days.map((k) => dayLog(k).focus || 0);
     const max = Math.max(60, ...vals);
-    $("#focusWeek").textContent = `week ${fmtMins(vals.reduce((a, b) => a + b, 0))}`;
+    $("#focusWeek").textContent = `week ${fmtMins(vals.reduce((a, b) => a + b, 0))} · 1 XP/min`;
     $("#bars").innerHTML = days.map((k, i) => `<div class="bar${i === 6 ? " today" : ""}" title="${esc(fmtDay(k))}: ${vals[i]} min">
       ${vals[i] ? `<span>${vals[i]}</span>` : ""}<i style="height:${Math.round((vals[i] / max) * 72)}px"></i></div>`).join("");
     $("#barLabels").innerHTML = days.map((k) => `<span>${esc(fmtDay(k, { weekday: "narrow" }))}</span>`).join("");
   }
 
   function renderCountdowns() {
-    const ul = $("#cdList"), up = upcoming();
+    const ul = $("#cdList"), up = upcoming(), editing = $("#cdPanel").classList.contains("editing");
     if (!up.length) { ul.innerHTML = `<li class="empty-note">Nothing coming up. Press Edit to add exams, deadlines or anything you're counting down to.</li>`; return; }
-    ul.innerHTML = up.map((c) => {
+    const shown = editing ? up : up.slice(0, 5);
+    ul.innerHTML = shown.map((c) => {
       const n = daysUntil(c.date);
       const [big, unit] = n === 0 ? ["Today", ""] : n === 1 ? ["Tmrw", ""] : [String(n), "days"];
       return `<li class="cd${n <= 2 ? " soon" : ""}">
@@ -488,6 +759,18 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
         <div><div class="t">${esc(c.title)}<span class="chip ${c.kind === "exam" ? "exam" : ""}">${esc(c.kind || "event")}</span></div>
         <div class="d">${esc([fmtDay(c.date), fmtTime(c.time)].filter(Boolean).join(" · "))}</div></div>
         <button class="x ed" type="button" data-act="del-cd" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.title)}">×</button></li>`;
+    }).join("") + (up.length > shown.length ? `<li class="empty-note">+${up.length - shown.length} more. The full list is in the exam run above.</li>` : "");
+  }
+
+  function renderTrophies() {
+    const got = TROPHIES.filter((t) => state.badges[t.id]).length;
+    $("#trophyMeta").textContent = `${got}/${TROPHIES.length}`;
+    $("#trophyList").innerHTML = TROPHIES.map((t) => {
+      const has = !!state.badges[t.id];
+      return `<li class="trophy${has ? " got" : ""}">
+        <svg viewBox="0 0 30 30" aria-hidden="true"><path class="medal" stroke-width="1.5" d="M15 2l3.4 3.6 4.9-.6.9 4.9 4.3 2.4-2.1 4.5 2.1 4.5-4.3 2.4-.9 4.9-4.9-.6L15 31.6l-3.4-3.6-4.9.6-.9-4.9-4.3-2.4 2.1-4.5-2.1-4.5 4.3-2.4.9-4.9 4.9.6z" transform="scale(.94) translate(1 -1)"/>
+        ${has ? '<path class="mk" d="M10 15.5l3.2 3 6.6-7" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' : '<path class="mk" d="M12 13.5a3 3 0 1 1 4.2 2.7c-.8.4-1.2 1-1.2 1.8M15 20.6v.1" fill="none" stroke-width="2" stroke-linecap="round"/>'}</svg>
+        <b>${esc(t.name)}</b><span>${has ? `Unlocked ${esc(fmtDay(state.badges[t.id], { day: "numeric", month: "short" }))}` : esc(t.desc)}</span></li>`;
     }).join("");
   }
 
@@ -507,8 +790,8 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   }
 
   function renderAll() {
-    renderHeader(); renderNextUp(); renderTasks(); renderHabits(); renderFocusStats();
-    renderCountdowns(); renderLinks(); renderNotes(); renderWeather();
+    renderHeader(); renderPlayer(); renderNextUp(); renderRun(); renderTasks(); renderQuests(); renderHabits();
+    renderFocusStats(); renderCountdowns(); renderTrophies(); renderLinks(); renderNotes(); renderWeather();
   }
 
   // ---------- actions ----------
@@ -519,15 +802,20 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
       const on = p.classList.toggle("editing");
       editBtn.textContent = on ? "Done" : (editBtn.id === "wxPlace" ? "Change" : "Edit");
       if (on && editBtn.id === "wxPlace") $("#wxCity").focus();
+      if (p.id === "cdPanel") renderCountdowns();
       return;
     }
     const b = e.target.closest("[data-act]");
     if (!b) return;
     const id = b.dataset.id;
+    const r = b.getBoundingClientRect();
+    lastPoint = { x: r.left + r.width / 2, y: r.top };
     switch (b.dataset.act) {
       case "toggle-task": {
         const t = state.tasks.find((x) => x.id === id); if (!t) return;
-        t.done = !t.done; if (t.done) t.day = today();
+        const L = dayLog();
+        if (!t.done) { t.done = true; t.day = today(); setDayLog({ t: (L.t || 0) + 1 }); if (new Date().getHours() < 8) award("early"); }
+        else { t.done = false; setDayLog({ t: Math.max(0, (L.t || 0) - 1) }); }
         break;
       }
       case "del-task": state.tasks = state.tasks.filter((x) => x.id !== id); break;
@@ -537,12 +825,18 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
         setDayLog({ h });
         break;
       }
+      case "sat": {
+        const c = state.countdowns.find((x) => x.id === id); if (!c) return;
+        c.sat = !c.sat;
+        if (c.sat) toast("Paper down", c.title, `+${XP.paper * papersOf(c)} XP · ${papersSat()}/${paperCount()} papers sat`);
+        break;
+      }
       case "del-habit": state.habits = state.habits.filter((x) => x.id !== id); break;
       case "del-cd": state.countdowns = state.countdowns.filter((x) => x.id !== id); break;
       case "del-link": state.links = state.links.filter((x) => x.id !== id); break;
       case "pick-place": {
-        const r = wxHits[Number(b.dataset.i)]; if (!r) return;
-        state.place = { name: r.name, region: [r.admin1, r.country_code].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude };
+        const p = wxHits[Number(b.dataset.i)]; if (!p) return;
+        state.place = { name: p.name, lat: p.latitude, lon: p.longitude };
         $("#wxPanel").classList.remove("editing"); $("#wxResults").innerHTML = ""; $("#wxCity").value = "";
         wxCache = null; keep(WX, null); fetchWeather();
         break;
@@ -595,7 +889,7 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     71: "Light snow", 73: "Snow", 75: "Heavy snow", 77: "Snow grains", 80: "Light showers", 81: "Showers",
     82: "Violent showers", 85: "Snow showers", 86: "Heavy snow showers", 95: "Thunderstorm", 96: "Storm with hail", 99: "Storm with hail",
   };
-  const DEFAULT_PLACE = { name: "Brisbane", region: "Queensland, AU", lat: -27.4679, lon: 153.0281 };
+  const DEFAULT_PLACE = { name: "Brisbane", lat: -27.4679, lon: 153.0281 };
   let wxCache = load(WX), wxHits = [], wxError = "", wxTried = 0;
   const place = () => state.place || DEFAULT_PLACE;
   const uvWord = (u) => u >= 11 ? "extreme" : u >= 8 ? "very high" : u >= 6 ? "high" : u >= 3 ? "moderate" : "low";
@@ -617,7 +911,6 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   }
   function renderWeather() {
     const p = place();
-    $("#wxPlace").textContent = $("#wxPanel").classList.contains("editing") ? "Done" : "Change";
     const d = wxCache && wxCache.lat === p.lat && wxCache.lon === p.lon ? wxCache.data : null;
     if (!d || !d.current || !d.daily) {
       $("#wxBody").innerHTML = `<p class="empty-note">${esc(wxError || `Loading the weather for ${p.name}…`)}</p>`;
@@ -684,7 +977,11 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     const len = T.len;
     T = { len, left: len * 60, endsAt: null, running: false }; keep(TIMER, T);
     chime();
-    setDayLog({ focus: (dayLog().focus || 0) + len }); commit();
+    setDayLog({ focus: (dayLog().focus || 0) + len });
+    if (len >= 50) award("deep-work");
+    toast("Session done", `${len} minutes focused`, `+${len} XP. Take a 5 minute break.`);
+    const r = $("#face").getBoundingClientRect(); lastPoint = { x: r.left + r.width / 2, y: r.top };
+    commit();
     renderTimer();
   }
   $("#startBtn").addEventListener("click", () => {
@@ -702,8 +999,8 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
 
   // ---------- move between devices (data rides in the link's #fragment, never sent to a server) ----------
   // Packed as positional arrays (no keys, no ids, today's date and empty fields left out), then deflated.
-  // tasks [text, day?, done?] · habits [name] · countdowns [title, date, time?, kind?] · links [title, url]
-  // log [day, [habit indexes], focus?] · notes · place [name, lat, lon]
+  // tasks [text, day?, done?] · habits [name] · countdowns [title, date, time?, kind?, papers?, sat?] · links [title, url]
+  // log [day, [habit indexes], focus?, tasks done?, frozen xp?] · notes · place [name, lat, lon] · xpBank · trophies [[id, day]]
   const KIND_CODE = { exam: "", event: "v", deadline: "d" }, KIND_NAME = { "": "exam", v: "event", d: "deadline" };
   const trim = (a) => { while (a.length && (a[a.length - 1] === "" || a[a.length - 1] == null || a[a.length - 1] === 0)) a.pop(); return a; };
   function pack(s) {
@@ -711,27 +1008,49 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     return trim([
       s.tasks.map((x) => trim([x.text, x.day === t ? "" : x.day, x.done ? 1 : 0])),
       s.habits.map((h) => h.name),
-      s.countdowns.map((c) => trim([c.title, c.date, c.time || "", KIND_CODE[c.kind] ?? "v"])),
+      s.countdowns.map((c) => trim([c.title, c.date, c.time || "", KIND_CODE[c.kind] ?? "v", papersOf(c) > 1 ? papersOf(c) : 0, c.sat ? 1 : 0])),
       s.links.map((l) => [l.title, l.url]),
-      Object.entries(s.log).map(([k, v]) => trim([k, Object.keys(v.h || {}).filter((id) => hi.has(id)).map((id) => hi.get(id)), v.focus || 0])),
+      Object.entries(s.log).map(([k, v]) => trim([k, Object.keys(v.h || {}).filter((id) => hi.has(id)).map((id) => hi.get(id)), v.focus || 0, v.t || 0, typeof v.xp === "number" ? v.xp : ""])),
       s.notes,
       s.place ? [s.place.name, s.place.lat, s.place.lon] : 0,
+      s.xpBank || 0,
+      Object.entries(s.badges),
     ]);
   }
   function unpack(a) {
     if (!Array.isArray(a)) throw new Error("bad data");
-    const [tasks = [], habits = [], cds = [], links = [], log = [], notes = "", place = 0] = a;
+    const [tasks = [], habits = [], cds = [], links = [], log = [], notes = "", place = 0, xpBank = 0, badges = []] = a;
     const t = today(), hs = habits.map((name) => ({ id: uid(), name: String(name) }));
     return normalize({
       tasks: tasks.map(([text, day, done]) => ({ id: uid(), text: String(text), day: day || t, done: !!done })),
       habits: hs,
-      countdowns: cds.map(([title, date, time, k]) => ({ id: uid(), title: String(title), date: String(date), time: time || "", kind: KIND_NAME[k || ""] || "event" })),
+      countdowns: cds.map(([title, date, time, k, papers, sat]) => ({ id: uid(), title: String(title), date: String(date), time: time || "", kind: KIND_NAME[k || ""] || "event", papers: Number(papers) || 1, sat: !!sat })),
       links: links.map(([title, url]) => ({ id: uid(), title: String(title), url: String(url) })),
-      log: Object.fromEntries(log.map(([k, idx = [], focus = 0]) => [k, { h: Object.fromEntries(idx.filter((i) => hs[i]).map((i) => [hs[i].id, true])), ...(focus ? { focus } : {}) }])),
+      log: Object.fromEntries(log.map(([k, idx = [], focus = 0, done = 0, xp = ""]) => [k, {
+        h: Object.fromEntries(idx.filter((i) => hs[i]).map((i) => [hs[i].id, true])),
+        ...(focus ? { focus } : {}), ...(done ? { t: done } : {}), ...(typeof xp === "number" ? { xp } : {}),
+      }])),
       notes: typeof notes === "string" ? notes : "",
       place: Array.isArray(place) ? { name: String(place[0]), lat: Number(place[1]), lon: Number(place[2]) } : null,
+      xpBank, badges: Object.fromEntries(badges),
     });
   }
+  // Add what's new from an imported sheet without touching progress already here.
+  function merge(base, add) {
+    const s = normalize(JSON.parse(JSON.stringify(base))), low = (x) => String(x).toLowerCase();
+    const cds = new Set(s.countdowns.map((c) => low(c.title) + "|" + c.date));
+    const tks = new Set(s.tasks.map((x) => low(x.text)));
+    const hbs = new Set(s.habits.map((h) => low(h.name)));
+    const lks = new Set(s.links.map((l) => l.url));
+    let added = 0;
+    for (const c of add.countdowns) if (!cds.has(low(c.title) + "|" + c.date)) { s.countdowns.push(c); added++; }
+    for (const x of add.tasks) if (!tks.has(low(x.text))) { s.tasks.push(x); added++; }
+    for (const h of add.habits) if (!hbs.has(low(h.name))) { s.habits.push(h); added++; }
+    for (const l of add.links) if (!lks.has(l.url)) { s.links.push(l); added++; }
+    if (!s.place && add.place) s.place = add.place;
+    return { state: s, added };
+  }
+
   const b64 = (u8) => { let s = ""; for (const b of u8) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
   const unb64 = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
   const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
@@ -754,21 +1073,27 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
   });
   let pending = null;
   const hadData = !!load(KEY);
+  function closeBanner() { pending = null; $("#importBanner").hidden = true; }
   if (location.hash.startsWith("#d=")) {
     const code = location.hash.slice(3);
     history.replaceState(null, "", location.pathname);
     decode(code).then((data) => {
-      if (!hadData) { state = data; commit(); wxCache = null; fetchWeather(); return; }
+      if (!hadData) { state = merge(normalize(STARTER), data).state; shownLevel = levelOf(totalXP()); commit(); wxCache = null; fetchWeather(); return; }
       pending = data;
-      $("#importText").textContent = `This link carries Daybook data (${data.tasks.length} tasks, ${data.countdowns.length} countdowns, ${data.habits.length} habits). Replace what's saved in this browser?`;
+      const n = merge(state, data).added;
+      $("#importText").textContent = n
+        ? `This link has ${n} new ${n === 1 ? "item" : "items"} (exams, tasks, habits or links). Add them, or replace everything here with the link's copy?`
+        : "Everything in this link is already here. You can still replace this browser's copy with it.";
+      $("#importAdd").hidden = !n;
       $("#importBanner").hidden = false;
     }).catch(() => {
       $("#importText").textContent = "That link's data couldn't be read. It may have been cut off when it was copied.";
-      $("#importYes").hidden = true; $("#importNo").textContent = "Dismiss"; $("#importBanner").hidden = false;
+      $("#importAdd").hidden = true; $("#importReplace").hidden = true; $("#importNo").textContent = "Dismiss"; $("#importBanner").hidden = false;
     });
   }
-  $("#importYes").addEventListener("click", () => { state = pending; pending = null; $("#importBanner").hidden = true; wxCache = null; commit(); fetchWeather(); });
-  $("#importNo").addEventListener("click", () => { pending = null; $("#importBanner").hidden = true; });
+  $("#importAdd").addEventListener("click", () => { state = merge(state, pending).state; closeBanner(); commit(); });
+  $("#importReplace").addEventListener("click", () => { state = pending; closeBanner(); shownLevel = levelOf(totalXP()); wxCache = null; commit(); fetchWeather(); });
+  $("#importNo").addEventListener("click", closeBanner);
 
   // ---------- clock ----------
   let lastDay = today(), lastMin = -1;
@@ -776,13 +1101,14 @@ footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
     if (T.running && Date.now() >= T.endsAt) finishSession();
     renderTimer();
     const now = new Date();
-    if (today() !== lastDay) { lastDay = today(); renderAll(); return; }
+    if (today() !== lastDay) { lastDay = today(); commit(); return; }
     if (now.getMinutes() !== lastMin) { lastMin = now.getMinutes(); renderHeader(); renderNextUp(); }
     const stale = !wxCache || Date.now() - wxCache.at > 30 * 6e4;
     if (stale && Date.now() - wxTried > 5 * 6e4) { wxTried = Date.now(); fetchWeather(); }
   }, 1000);
 
-  keep(KEY, state);
+  freezeAndPrune(state); keep(KEY, state);
+  shownLevel = levelOf(totalXP());
   renderAll(); renderTimer();
   if (T.running && Date.now() >= T.endsAt) finishSession();
 })();
