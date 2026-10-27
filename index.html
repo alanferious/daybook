@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daybook</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='5' width='26' height='24' rx='3' fill='%23ffe45c' stroke='%23141a33' stroke-width='2'/%3E%3Cpath d='M3 12h26M10 3v5M22 3v5' stroke='%23141a33' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;600&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<style>
+/* Layout: a graph-paper day sheet. Date + highlighter "next up" note on top, three working columns below. */
+:root {
+  --paper: #f4f6fb;
+  --grid: rgba(43, 63, 214, .07);
+  --surface: #ffffff;
+  --ink: #141a33;
+  --muted: #5b6385;
+  --line: #d9deee;
+  --accent: #2b3fd6;
+  --accent-soft: rgba(43, 63, 214, .1);
+  --hi: #ffe45c;
+  --on-hi: #221d00;
+  --good: #17845a;
+  --warn: #b84a0e;
+  --font-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --font-body: "Schibsted Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1222; --grid: rgba(140, 160, 255, .06); --surface: #151a30; --ink: #e7eaf7;
+    --muted: #9aa3c7; --line: #283055; --accent: #93a1ff; --accent-soft: rgba(147, 161, 255, .14);
+    --hi: #f5d93f; --on-hi: #1e1900; --good: #4fd19b; --warn: #ff9a5c; color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding: 28px 16px 40px;
+}
+[hidden] { display: none !important; }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 28px; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------- banner ---------- */
+.banner { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--surface); border: 2px solid var(--accent); border-radius: 6px; padding: 12px 16px; }
+.banner p { margin: 0; }
+.banner .row { display: flex; gap: 8px; }
+
+/* ---------- top ---------- */
+.top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 28px; align-items: end; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.date {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+  font-size: clamp(3.6rem, 10vw, 7rem); line-height: .82; margin: 6px 0 10px; letter-spacing: .01em;
+}
+.clockline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; font-size: 18px; }
+.clockline .mono { font-size: 22px; font-weight: 600; color: var(--accent); }
+.summary { margin: 10px 0 0; color: var(--muted); max-width: 60ch; }
+.summary b { color: var(--ink); font-weight: 600; }
+
+.nextup {
+  background: var(--hi); color: var(--on-hi); border-radius: 4px; padding: 20px 22px 18px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.08), 0 14px 30px -18px rgba(40, 30, 0, .55);
+  transform: rotate(-.6deg); display: grid; gap: 6px; min-width: 0;
+}
+.nextup .eyebrow { color: inherit; opacity: .75; }
+.nextup h2 { margin: 0; font-size: 20px; line-height: 1.25; font-weight: 600; text-wrap: balance; }
+.nextup .big { font-family: var(--font-display); font-weight: 800; font-size: 64px; line-height: .9; text-transform: uppercase; }
+.nextup .big small { font-size: 28px; margin-left: 6px; font-weight: 600; }
+.nextup .when { font-family: var(--font-mono); font-size: 13px; }
+.nextup .then { font-size: 13px; border-top: 1px dashed rgba(34, 29, 0, .3); padding-top: 8px; margin-top: 4px; }
+.nextup.empty .big { font-size: 34px; }
+
+/* ---------- grid ---------- */
+.grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.col { display: grid; gap: 20px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px 18px; min-width: 0; }
+.phead { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.phead h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+.meta { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.linkbtn { background: none; border: 0; padding: 2px 4px; font-size: 13px; color: var(--accent); font-weight: 500; }
+.linkbtn:hover { text-decoration: underline; }
+.empty-note { color: var(--muted); font-size: 14px; margin: 4px 0 8px; }
+
+.addrow { display: flex; gap: 8px; margin-top: 12px; }
+.addrow input, .stack input, .stack select {
+  flex: 1; min-width: 0; padding: 9px 11px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper);
+}
+.btn { padding: 9px 14px; border-radius: 5px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); font-weight: 600; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: default; }
+.ed { display: none; }
+.panel.editing .ed { display: revert; }
+.panel.editing form.ed { display: grid; }
+.panel.editing form.addrow.ed { display: flex; }
+.x { border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
+.x:hover { color: var(--warn); background: var(--accent-soft); }
+
+/* tasks */
+.tasks { list-style: none; margin: 0; padding: 0; display: grid; }
+.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.task:last-child { border-bottom: 0; }
+.check {
+  width: 20px; height: 20px; margin-top: 1px; border: 2px solid var(--muted); border-radius: 4px; background: transparent;
+  display: grid; place-items: center; padding: 0; flex: none;
+}
+.check svg { width: 12px; height: 12px; opacity: 0; }
+[aria-pressed="true"] > .check, .check[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+[aria-pressed="true"] > .check svg, .check[aria-pressed="true"] svg { opacity: 1; }
+.task .txt { overflow-wrap: anywhere; }
+.task.done .txt { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
+.tag { font-family: var(--font-mono); font-size: 11px; color: var(--warn); margin-left: 6px; white-space: nowrap; }
+
+textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper); line-height: 1.55; min-height: 120px;
+  background-image: linear-gradient(transparent 23px, var(--grid) 24px); background-size: 100% 24px; background-attachment: local; }
+
+/* habits */
+.habits { display: grid; gap: 4px; }
+.habit { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 6px 0; }
+.habit-btn { display: flex; gap: 10px; align-items: center; text-align: left; background: none; border: 0; padding: 0; min-width: 0; }
+.habit-btn .nm { overflow-wrap: anywhere; }
+.streak { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.streak.hot { color: var(--good); font-weight: 600; }
+.strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; padding-left: 30px; }
+.strip i { height: 7px; border-radius: 2px; background: var(--line); }
+.strip i.on { background: var(--accent); }
+.strip i.today { outline: 1px solid var(--accent); outline-offset: 1px; }
+
+/* focus */
+.timer { display: grid; justify-items: center; gap: 12px; padding: 4px 0 6px; }
+.timer .face { font-family: var(--font-mono); font-weight: 600; font-size: 56px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.timer.running .face { color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.timer .row { display: flex; gap: 8px; }
+.bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 92px; margin-top: 14px; border-bottom: 1px solid var(--line); }
+.bar { display: grid; align-content: end; justify-items: center; height: 100%; gap: 3px; }
+.bar span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+.bar i { width: 100%; max-width: 26px; border-radius: 3px 3px 0 0; background: var(--accent-soft); min-height: 2px; }
+.bar.today i { background: var(--accent); }
+.bar.today span { color: var(--ink); font-weight: 600; }
+.barlabels { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* weather */
+.wx-now { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: center; }
+.wx-temp { font-family: var(--font-display); font-weight: 800; font-size: 64px; line-height: .85; }
+.wx-temp small { font-size: 28px; vertical-align: top; }
+.wx-cond { font-weight: 600; font-size: 17px; }
+.wx-sub { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.wx-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.wx-facts div { border-top: 1px solid var(--line); padding-top: 6px; }
+.wx-facts b { display: block; font-family: var(--font-mono); font-size: 15px; font-weight: 600; }
+.wx-facts span { font-size: 12px; color: var(--muted); }
+.wx-facts .uv-hi b { color: var(--warn); }
+.wx-days { list-style: none; margin: 12px 0 0; padding: 0; display: grid; }
+.wx-days li { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; padding: 6px 0; border-top: 1px dashed var(--line); font-size: 14px; }
+.wx-days .dn { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 1px; }
+.wx-days .hl { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
+
+/* countdowns */
+.cds { list-style: none; margin: 0; padding: 0; display: grid; }
+.cd { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+.cd:last-child { border-bottom: 0; }
+.cd .n { font-family: var(--font-display); font-weight: 800; font-size: 34px; line-height: .9; text-align: right; }
+.cd .n small { display: block; font-family: var(--font-mono); font-weight: 400; font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-top: 2px; }
+.cd .t { font-weight: 600; overflow-wrap: anywhere; }
+.cd .d { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.chip { display: inline-block; font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; vertical-align: 2px; }
+.chip.exam { background: var(--hi); color: var(--on-hi); }
+.cd.soon .n { color: var(--warn); }
+.stack { gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.stack .pair { display: flex; gap: 8px; }
+
+/* links */
+.links { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.links li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.links a { display: block; padding: 8px 10px; margin: 0 -10px; border-radius: 5px; color: var(--ink); text-decoration: none; min-width: 0; }
+.links a:hover { background: var(--accent-soft); }
+.links a b { display: block; font-weight: 600; color: var(--accent); }
+.links a span { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+
+footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+footer .linkbtn { font-family: var(--font-mono); font-size: 12px; }
+#moveOut { width: 100%; font-family: var(--font-mono); font-size: 11px; min-height: 0; }
+
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .col.c3 { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
+}
+@media (max-width: 760px) {
+  body { padding-top: 18px; padding-bottom: 32px; }
+  .top { grid-template-columns: minmax(0, 1fr); }
+  .nextup { transform: none; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .col.c3 { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nextup { animation: settle .5s cubic-bezier(.22, 1, .36, 1) both; }
+  @keyframes settle { from { transform: rotate(-3deg) translateY(-6px); } }
+  @media (max-width: 760px) { @keyframes settle { from { transform: translateY(-6px); } } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner" id="importBanner" hidden>
+    <p id="importText">This link carries Daybook data from another device.</p>
+    <div class="row">
+      <button class="btn" type="button" id="importYes">Replace what's here</button>
+      <button class="btn ghost" type="button" id="importNo">Keep this device's</button>
+    </div>
+  </div>
+
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="weekday">&nbsp;</div>
+      <h1 class="date" id="dateBig">&nbsp;</h1>
+      <div class="clockline"><span class="mono" id="clock"></span><span id="greet"></span></div>
+      <p class="summary" id="summary"></p>
+    </div>
+    <section class="nextup empty" id="nextup" aria-live="polite"></section>
+  </header>
+
+  <main class="grid">
+    <div class="col c1">
+      <section class="panel" aria-labelledby="h-today">
+        <div class="phead"><h2 id="h-today">Today</h2><span class="meta" id="taskCount"></span></div>
+        <ul class="tasks" id="taskList"></ul>
+        <form class="addrow" id="taskForm">
+          <input id="taskInput" placeholder="Add something to do today" autocomplete="off" maxlength="200" aria-label="New task">
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="h-notes">
+        <div class="phead"><h2 id="h-notes">Brain dump</h2><span class="meta" id="notesState"></span></div>
+        <textarea id="notes" rows="6" aria-label="Notes" placeholder="Anything rattling around: things to ask the teacher, stuff for tomorrow, ideas."></textarea>
+      </section>
+    </div>
+
+    <div class="col c2">
+      <section class="panel" id="habitsPanel" aria-labelledby="h-habits">
+        <div class="phead"><h2 id="h-habits">Habits</h2><button class="linkbtn" type="button" data-edit="habitsPanel">Edit</button></div>
+        <div class="habits" id="habitList"></div>
+        <form class="addrow ed" id="habitForm">
+          <input id="habitInput" placeholder="New habit, e.g. Read 10 pages" autocomplete="off" maxlength="60" aria-label="New habit">
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="h-focus">
+        <div class="phead"><h2 id="h-focus">Focus</h2><span class="meta" id="focusWeek"></span></div>
+        <div class="timer" id="timer">
+          <div class="seg" role="group" aria-label="Session length">
+            <button type="button" id="len25" data-len="25" aria-pressed="true">25 min</button>
+            <button type="button" id="len50" data-len="50" aria-pressed="false">50 min</button>
+          </div>
+          <div class="face" id="face" role="timer">25:00</div>
+          <div class="row">
+            <button class="btn" type="button" id="startBtn">Start</button>
+            <button class="btn ghost" type="button" id="resetBtn">Reset</button>
+          </div>
+        </div>
+        <div class="bars" id="bars" aria-label="Minutes focused, last 7 days"></div>
+        <div class="barlabels" id="barLabels"></div>
+      </section>
+    </div>
+
+    <div class="col c3">
+      <section class="panel" id="wxPanel" aria-labelledby="h-wx">
+        <div class="phead"><h2 id="h-wx">Outside</h2><button class="linkbtn" type="button" data-edit="wxPanel" id="wxPlace">Set place</button></div>
+        <div id="wxBody"><p class="empty-note">Loading the weather…</p></div>
+        <form class="stack ed" id="wxForm">
+          <div class="pair">
+            <input id="wxCity" placeholder="Town or suburb" autocomplete="off" maxlength="60" aria-label="Town or suburb">
+            <button class="btn" type="submit">Find</button>
+          </div>
+          <div id="wxResults" class="links"></div>
+        </form>
+      </section>
+      <section class="panel" id="cdPanel" aria-labelledby="h-cd">
+        <div class="phead"><h2 id="h-cd">Coming up</h2><button class="linkbtn" type="button" data-edit="cdPanel">Edit</button></div>
+        <ul class="cds" id="cdList"></ul>
+        <form class="stack ed" id="cdForm">
+          <input id="cdTitle" placeholder="What is it? e.g. English Paper 2" maxlength="80" required aria-label="Event name">
+          <div class="pair">
+            <input id="cdDate" type="date" required aria-label="Date">
+            <input id="cdTime" type="time" aria-label="Start time (optional)">
+          </div>
+          <div class="pair">
+            <select id="cdKind" aria-label="Type"><option value="exam">Exam</option><option value="event">Event</option><option value="deadline">Deadline</option></select>
+            <button class="btn" type="submit">Add</button>
+          </div>
+        </form>
+      </section>
+      <section class="panel" id="linksPanel" aria-labelledby="h-links">
+        <div class="phead"><h2 id="h-links">Study kit</h2><button class="linkbtn" type="button" data-edit="linksPanel">Edit</button></div>
+        <ul class="links" id="linkList"></ul>
+        <form class="stack ed" id="linkForm">
+          <input id="linkTitle" placeholder="Name" maxlength="60" required aria-label="Link name">
+          <div class="pair">
+            <input id="linkUrl" type="url" placeholder="https://…" required aria-label="Link address">
+            <button class="btn" type="submit">Add</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span>Saved in this browser · <button class="linkbtn" type="button" id="moveBtn">Copy a link to move it to another device</button></span>
+    <span>Weather: Open-Meteo</span>
+    <textarea id="moveOut" rows="2" readonly hidden aria-label="Move link"></textarea>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const pad = (n) => String(n).padStart(2, "0");
+  const dkey = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const fromKey = (k) => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const daysUntil = (key) => Math.round((fromKey(key) - fromKey(dkey(new Date()))) / 864e5);
+  const fmtDay = (key, opts = { weekday: "short", day: "numeric", month: "short" }) => fromKey(key).toLocaleDateString("en-AU", opts);
+  const fmtTime = (t) => { if (!t) return ""; const [h, m] = t.split(":").map(Number); return `${h % 12 || 12}:${pad(m)}${h >= 12 ? "pm" : "am"}`; };
+  const fmtMins = (m) => m >= 60 ? `${Math.floor(m / 60)}h ${pad(m % 60)}m` : `${m} min`;
+  const load = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+  const keep = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+  const CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.6 2.5L10 3.2" fill="none" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const KEY = "daybook.v1", TIMER = "daybook.timer.v1", WX = "daybook.weather.v1";
+
+  // ---------- state ----------
+  function normalize(d) {
+    d = d && typeof d === "object" ? d : {};
+    const arr = (x) => Array.isArray(x) ? x.filter((i) => i && typeof i === "object") : [];
+    return {
+      v: 1,
+      tasks: arr(d.tasks), habits: arr(d.habits), countdowns: arr(d.countdowns), links: arr(d.links),
+      log: d.log && typeof d.log === "object" ? d.log : {},
+      notes: typeof d.notes === "string" ? d.notes : "",
+      place: d.place && typeof d.place === "object" ? d.place : null,
+    };
+  }
+  const STARTER = {
+    habits: [
+      { id: "h1", name: "Sleep 8 hours" }, { id: "h2", name: "Drink 2L of water" },
+      { id: "h3", name: "Move for 20 min" }, { id: "h4", name: "Phone away by 11pm" },
+    ],
+  };
+  let state = normalize(load(KEY) || STARTER);
+
+  function prune(s) {
+    const cutoff = dkey(addDays(new Date(), -90)), oldDone = dkey(addDays(new Date(), -30));
+    for (const k of Object.keys(s.log)) if (k < cutoff) delete s.log[k];
+    s.tasks = s.tasks.filter((t) => !(t.done && t.day < oldDone));
+    s.countdowns = s.countdowns.filter((c) => !c.date || c.date >= cutoff);
+  }
+  function commit() { prune(state); keep(KEY, state); renderAll(); }
+
+  const today = () => dkey(new Date());
+  const dayLog = (k = today()) => state.log[k] || {};
+  const setDayLog = (patch, k = today()) => { state.log[k] = { ...dayLog(k), ...patch }; };
+
+  // ---------- render ----------
+  function upcoming() {
+    const t = today();
+    return state.countdowns.filter((c) => c.date && c.date >= t)
+      .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+  }
+  function isoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+    return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+  }
+
+  function renderHeader() {
+    const now = new Date();
+    $("#weekday").textContent = now.toLocaleDateString("en-AU", { weekday: "long" }) + " · week " + isoWeek(now);
+    $("#dateBig").textContent = now.toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+    $("#clock").textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const h = now.getHours();
+    const examToday = upcoming().some((c) => c.kind === "exam" && c.date === today());
+    $("#greet").textContent = examToday ? "Exam day. Eat something, bring water, trust your prep."
+      : h < 5 ? "It's late. Sleep is revision too." : h < 12 ? "Good morning." : h < 18 ? "Good afternoon." : "Good evening.";
+    const list = todaysTasks(), left = list.filter((t) => !t.done).length;
+    const hd = state.habits.filter((x) => (dayLog().h || {})[x.id]).length;
+    const parts = [list.length ? `<b>${left}</b> of ${list.length} tasks left` : "No tasks yet"];
+    if (state.habits.length) parts.push(`<b>${hd}</b>/${state.habits.length} habits`);
+    parts.push(`<b>${fmtMins(dayLog().focus || 0)}</b> focused`);
+    $("#summary").innerHTML = parts.join(" · ");
+  }
+
+  function hoursLeft(c) {
+    if (!c.time) return "";
+    const [h, m] = c.time.split(":").map(Number);
+    const target = fromKey(c.date); target.setHours(h, m, 0, 0);
+    const ms = target - Date.now();
+    if (ms <= 0) return c.date === today() ? "started" : "";
+    const mins = Math.floor(ms / 6e4);
+    return `${Math.floor(mins / 60)}h ${pad(mins % 60)}m to go`;
+  }
+  function renderNextUp() {
+    const el = $("#nextup"), up = upcoming();
+    if (!up.length) {
+      el.className = "nextup empty";
+      el.innerHTML = `<div class="eyebrow">Next up</div><div class="big">Clear skies</div><div class="when">Add an exam or deadline under Coming up to count down to it.</div>`;
+      return;
+    }
+    const c = up[0], n = daysUntil(c.date);
+    const big = n === 0 ? "Today" : n === 1 ? "Tomorrow" : `${n}<small>days</small>`;
+    const when = [fmtDay(c.date, { weekday: "long", day: "numeric", month: "short" }), fmtTime(c.time), hoursLeft(c)].filter(Boolean).join(" · ");
+    const rest = up.slice(1, 3).map((x) => `${esc(x.title)} (${esc(fmtDay(x.date))})`).join(", ");
+    el.className = "nextup";
+    el.innerHTML = `<div class="eyebrow">${c.kind === "exam" ? "Next exam" : c.kind === "deadline" ? "Next deadline" : "Next up"}</div>
+      <h2>${esc(c.title)}</h2><div class="big">${big}</div><div class="when">${esc(when)}</div>
+      ${rest ? `<div class="then">Then: ${rest}</div>` : ""}`;
+  }
+
+  function todaysTasks() {
+    const t = today();
+    return state.tasks.filter((x) => x.day === t || (!x.done && x.day < t))
+      .sort((a, b) => (a.done - b.done) || (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+  }
+  function renderTasks() {
+    const ul = $("#taskList"), list = todaysTasks();
+    $("#taskCount").textContent = list.length ? `${list.filter((t) => t.done).length}/${list.length} done` : "";
+    if (!list.length) { ul.innerHTML = `<li class="empty-note">Nothing on today's list. Add the first thing below. Anything you don't finish rolls over to tomorrow.</li>`; return; }
+    ul.innerHTML = list.map((t) => `<li class="task${t.done ? " done" : ""}">
+      <button class="check" type="button" data-act="toggle-task" data-id="${esc(t.id)}" aria-pressed="${!!t.done}" aria-label="Mark ${esc(t.text)} ${t.done ? "not done" : "done"}">${CHECK}</button>
+      <span class="txt">${esc(t.text)}${!t.done && t.day < today() ? `<span class="tag">from ${esc(fmtDay(t.day, { weekday: "short" }))}</span>` : ""}</span>
+      <button class="x" type="button" data-act="del-task" data-id="${esc(t.id)}" aria-label="Delete ${esc(t.text)}">×</button></li>`).join("");
+  }
+
+  function streakOf(id) {
+    let d = new Date(), n = 0;
+    if (!(dayLog(dkey(d)).h || {})[id]) d = addDays(d, -1);
+    while ((dayLog(dkey(d)).h || {})[id]) { n++; d = addDays(d, -1); }
+    return n;
+  }
+  function renderHabits() {
+    const box = $("#habitList");
+    if (!state.habits.length) { box.innerHTML = `<p class="empty-note">No habits yet. Press Edit to add one, like sleep 8h or 2L of water.</p>`; return; }
+    const days = Array.from({ length: 14 }, (_, i) => dkey(addDays(new Date(), i - 13)));
+    const doneToday = dayLog().h || {};
+    box.innerHTML = state.habits.map((h) => {
+      const s = streakOf(h.id);
+      return `<div class="habit">
+        <button class="habit-btn" type="button" data-act="toggle-habit" data-id="${esc(h.id)}" aria-pressed="${!!doneToday[h.id]}"><span class="check">${CHECK}</span><span class="nm">${esc(h.name)}</span></button>
+        <span><span class="streak${s >= 3 ? " hot" : ""}">${s ? `${s}-day streak` : "–"}</span><button class="x ed" type="button" data-act="del-habit" data-id="${esc(h.id)}" aria-label="Remove ${esc(h.name)}">×</button></span>
+        <div class="strip" aria-hidden="true">${days.map((k, i) => `<i class="${(dayLog(k).h || {})[h.id] ? "on" : ""}${i === 13 ? " today" : ""}" title="${esc(fmtDay(k))}"></i>`).join("")}</div>
+      </div>`;
+    }).join("");
+  }
+
+  function renderFocusStats() {
+    const days = Array.from({ length: 7 }, (_, i) => dkey(addDays(new Date(), i - 6)));
+    const vals = days.map((k) => dayLog(k).focus || 0);
+    const max = Math.max(60, ...vals);
+    $("#focusWeek").textContent = `week ${fmtMins(vals.reduce((a, b) => a + b, 0))}`;
+    $("#bars").innerHTML = days.map((k, i) => `<div class="bar${i === 6 ? " today" : ""}" title="${esc(fmtDay(k))}: ${vals[i]} min">
+      ${vals[i] ? `<span>${vals[i]}</span>` : ""}<i style="height:${Math.round((vals[i] / max) * 72)}px"></i></div>`).join("");
+    $("#barLabels").innerHTML = days.map((k) => `<span>${esc(fmtDay(k, { weekday: "narrow" }))}</span>`).join("");
+  }
+
+  function renderCountdowns() {
+    const ul = $("#cdList"), up = upcoming();
+    if (!up.length) { ul.innerHTML = `<li class="empty-note">Nothing coming up. Press Edit to add exams, deadlines or anything you're counting down to.</li>`; return; }
+    ul.innerHTML = up.map((c) => {
+      const n = daysUntil(c.date);
+      const [big, unit] = n === 0 ? ["Today", ""] : n === 1 ? ["Tmrw", ""] : [String(n), "days"];
+      return `<li class="cd${n <= 2 ? " soon" : ""}">
+        <div class="n">${esc(big)}${unit ? `<small>${unit}</small>` : ""}</div>
+        <div><div class="t">${esc(c.title)}<span class="chip ${c.kind === "exam" ? "exam" : ""}">${esc(c.kind || "event")}</span></div>
+        <div class="d">${esc([fmtDay(c.date), fmtTime(c.time)].filter(Boolean).join(" · "))}</div></div>
+        <button class="x ed" type="button" data-act="del-cd" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.title)}">×</button></li>`;
+    }).join("");
+  }
+
+  function renderLinks() {
+    const ul = $("#linkList");
+    if (!state.links.length) { ul.innerHTML = `<li class="empty-note">Keep your study apps one click away. Press Edit to add a link.</li>`; return; }
+    ul.innerHTML = state.links.map((l) => {
+      let host = ""; try { host = new URL(l.url).host; } catch (e) {}
+      return `<li><a href="${esc(l.url)}" target="_blank" rel="noopener"><b>${esc(l.title)}</b><span>${esc(l.note || host)}</span></a>
+      <button class="x ed" type="button" data-act="del-link" data-id="${esc(l.id)}" aria-label="Remove ${esc(l.title)}">×</button></li>`;
+    }).join("");
+  }
+
+  function renderNotes() {
+    const ta = $("#notes");
+    if (document.activeElement !== ta && ta.value !== state.notes) ta.value = state.notes;
+  }
+
+  function renderAll() {
+    renderHeader(); renderNextUp(); renderTasks(); renderHabits(); renderFocusStats();
+    renderCountdowns(); renderLinks(); renderNotes(); renderWeather();
+  }
+
+  // ---------- actions ----------
+  document.addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-edit]");
+    if (editBtn) {
+      const p = document.getElementById(editBtn.dataset.edit);
+      const on = p.classList.toggle("editing");
+      editBtn.textContent = on ? "Done" : (editBtn.id === "wxPlace" ? "Change" : "Edit");
+      if (on && editBtn.id === "wxPlace") $("#wxCity").focus();
+      return;
+    }
+    const b = e.target.closest("[data-act]");
+    if (!b) return;
+    const id = b.dataset.id;
+    switch (b.dataset.act) {
+      case "toggle-task": {
+        const t = state.tasks.find((x) => x.id === id); if (!t) return;
+        t.done = !t.done; if (t.done) t.day = today();
+        break;
+      }
+      case "del-task": state.tasks = state.tasks.filter((x) => x.id !== id); break;
+      case "toggle-habit": {
+        const h = { ...(dayLog().h || {}) };
+        if (h[id]) delete h[id]; else h[id] = true;
+        setDayLog({ h });
+        break;
+      }
+      case "del-habit": state.habits = state.habits.filter((x) => x.id !== id); break;
+      case "del-cd": state.countdowns = state.countdowns.filter((x) => x.id !== id); break;
+      case "del-link": state.links = state.links.filter((x) => x.id !== id); break;
+      case "pick-place": {
+        const r = wxHits[Number(b.dataset.i)]; if (!r) return;
+        state.place = { name: r.name, region: [r.admin1, r.country_code].filter(Boolean).join(", "), lat: r.latitude, lon: r.longitude };
+        $("#wxPanel").classList.remove("editing"); $("#wxResults").innerHTML = ""; $("#wxCity").value = "";
+        wxCache = null; keep(WX, null); fetchWeather();
+        break;
+      }
+      default: return;
+    }
+    commit();
+  });
+
+  $("#taskForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("#taskInput").value.trim(); if (!v) return;
+    state.tasks.push({ id: uid(), text: v, day: today(), done: false });
+    $("#taskInput").value = ""; commit();
+  });
+  $("#habitForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const v = $("#habitInput").value.trim(); if (!v) return;
+    state.habits.push({ id: uid(), name: v });
+    $("#habitInput").value = ""; commit();
+  });
+  $("#cdForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = $("#cdTitle").value.trim(), date = $("#cdDate").value;
+    if (!title || !date) return;
+    state.countdowns.push({ id: uid(), title, date, time: $("#cdTime").value || "", kind: $("#cdKind").value });
+    $("#cdTitle").value = ""; $("#cdDate").value = ""; $("#cdTime").value = ""; commit();
+  });
+  $("#linkForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = $("#linkTitle").value.trim(); let url = $("#linkUrl").value.trim();
+    if (!title || !url) return;
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    state.links.push({ id: uid(), title, url });
+    $("#linkTitle").value = ""; $("#linkUrl").value = ""; commit();
+  });
+
+  let notesTimer = null;
+  $("#notes").addEventListener("input", () => {
+    $("#notesState").textContent = "typing…";
+    clearTimeout(notesTimer);
+    notesTimer = setTimeout(() => { state.notes = $("#notes").value; commit(); $("#notesState").textContent = "saved"; }, 600);
+  });
+
+  // ---------- weather (Open-Meteo, no key) ----------
+  const WMO = {
+    0: "Clear", 1: "Mostly clear", 2: "Partly cloudy", 3: "Overcast", 45: "Fog", 48: "Freezing fog",
+    51: "Light drizzle", 53: "Drizzle", 55: "Heavy drizzle", 56: "Freezing drizzle", 57: "Freezing drizzle",
+    61: "Light rain", 63: "Rain", 65: "Heavy rain", 66: "Freezing rain", 67: "Freezing rain",
+    71: "Light snow", 73: "Snow", 75: "Heavy snow", 77: "Snow grains", 80: "Light showers", 81: "Showers",
+    82: "Violent showers", 85: "Snow showers", 86: "Heavy snow showers", 95: "Thunderstorm", 96: "Storm with hail", 99: "Storm with hail",
+  };
+  const DEFAULT_PLACE = { name: "Brisbane", region: "Queensland, AU", lat: -27.4679, lon: 153.0281 };
+  let wxCache = load(WX), wxHits = [], wxError = "", wxTried = 0;
+  const place = () => state.place || DEFAULT_PLACE;
+  const uvWord = (u) => u >= 11 ? "extreme" : u >= 8 ? "very high" : u >= 6 ? "high" : u >= 3 ? "moderate" : "low";
+  const clock = (iso) => iso ? iso.slice(11, 16).replace(/^0/, "") : "–";
+
+  async function fetchWeather() {
+    const p = place();
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}` +
+      "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation" +
+      "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset" +
+      "&timezone=auto&forecast_days=3";
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      wxCache = { at: Date.now(), lat: p.lat, lon: p.lon, data: await r.json() };
+      wxError = ""; keep(WX, wxCache);
+    } catch (e) { wxError = "Couldn't reach the weather service. Showing the last forecast if there is one."; }
+    renderWeather();
+  }
+  function renderWeather() {
+    const p = place();
+    $("#wxPlace").textContent = $("#wxPanel").classList.contains("editing") ? "Done" : "Change";
+    const d = wxCache && wxCache.lat === p.lat && wxCache.lon === p.lon ? wxCache.data : null;
+    if (!d || !d.current || !d.daily) {
+      $("#wxBody").innerHTML = `<p class="empty-note">${esc(wxError || `Loading the weather for ${p.name}…`)}</p>`;
+      return;
+    }
+    const c = d.current, dy = d.daily, uv = Math.round(dy.uv_index_max[0] ?? 0);
+    const rain = dy.precipitation_probability_max[0];
+    const days = [1, 2].filter((i) => dy.time[i]).map((i) => `<li><span class="dn">${esc(fmtDay(dy.time[i], { weekday: "short" }))}</span>
+      <span>${esc(WMO[dy.weather_code[i]] || "–")}${dy.precipitation_probability_max[i] != null ? ` · ${dy.precipitation_probability_max[i]}% rain` : ""}</span>
+      <span class="hl">${Math.round(dy.temperature_2m_max[i])}° / ${Math.round(dy.temperature_2m_min[i])}°</span></li>`).join("");
+    const age = Math.round((Date.now() - wxCache.at) / 6e4);
+    $("#wxBody").innerHTML = `
+      <div class="wx-now">
+        <div class="wx-temp">${Math.round(c.temperature_2m)}<small>°</small></div>
+        <div><div class="wx-cond">${esc(WMO[c.weather_code] || "–")}</div>
+          <div class="wx-sub">feels ${Math.round(c.apparent_temperature)}° · ${esc(p.name)}</div>
+          <div class="wx-sub">today ${Math.round(dy.temperature_2m_max[0])}° / ${Math.round(dy.temperature_2m_min[0])}°</div></div>
+      </div>
+      <div class="wx-facts">
+        <div><b>${rain ?? "–"}%</b><span>rain chance</span></div>
+        <div class="${uv >= 6 ? "uv-hi" : ""}"><b>UV ${uv}</b><span>${uvWord(uv)}</span></div>
+        <div><b>${esc(clock(dy.sunset[0]))}</b><span>sunset</span></div>
+      </div>
+      <ul class="wx-days">${days}</ul>
+      ${wxError ? `<p class="empty-note">${esc(wxError)}</p>` : age > 90 ? `<p class="empty-note">Updated ${fmtMins(age)} ago</p>` : ""}`;
+  }
+  $("#wxForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const q = $("#wxCity").value.trim(); if (!q) return;
+    const out = $("#wxResults");
+    out.innerHTML = `<p class="empty-note">Searching…</p>`;
+    try {
+      const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`);
+      wxHits = ((await r.json()).results || []);
+      out.innerHTML = wxHits.length ? wxHits.map((h, i) => `<li><a href="#" data-act="pick-place" data-i="${i}" onclick="return false"><b>${esc(h.name)}</b><span>${esc([h.admin1, h.country].filter(Boolean).join(", "))}</span></a></li>`).join("")
+        : `<p class="empty-note">No place called "${esc(q)}". Try the nearest town.</p>`;
+    } catch (err) { out.innerHTML = `<p class="empty-note">Couldn't search right now. Check your connection.</p>`; }
+  });
+
+  // ---------- focus timer ----------
+  let T = { len: 25, left: 25 * 60, endsAt: null, running: false };
+  const savedT = load(TIMER); if (savedT && savedT.len) T = savedT;
+  let audio = null;
+  function chime() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [0, .22, .44].forEach((t, i) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = [660, 880, 990][i]; o.connect(g); g.connect(audio.destination);
+        const s = audio.currentTime + t; g.gain.setValueAtTime(.0001, s); g.gain.exponentialRampToValueAtTime(.25, s + .02); g.gain.exponentialRampToValueAtTime(.0001, s + .35);
+        o.start(s); o.stop(s + .4);
+      });
+    } catch (e) {}
+  }
+  function renderTimer() {
+    const s = Math.max(0, T.running ? Math.round((T.endsAt - Date.now()) / 1000) : T.left);
+    $("#face").textContent = `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+    $("#timer").classList.toggle("running", T.running);
+    $("#startBtn").textContent = T.running ? "Pause" : (T.left < T.len * 60 ? "Resume" : "Start");
+    $("#len25").setAttribute("aria-pressed", T.len === 25); $("#len50").setAttribute("aria-pressed", T.len === 50);
+    document.title = T.running ? `${$("#face").textContent} · Daybook` : "Daybook";
+  }
+  function finishSession() {
+    const len = T.len;
+    T = { len, left: len * 60, endsAt: null, running: false }; keep(TIMER, T);
+    chime();
+    setDayLog({ focus: (dayLog().focus || 0) + len }); commit();
+    renderTimer();
+  }
+  $("#startBtn").addEventListener("click", () => {
+    if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    if (T.running) { T.left = Math.max(0, Math.round((T.endsAt - Date.now()) / 1000)); T.running = false; T.endsAt = null; }
+    else { T.endsAt = Date.now() + T.left * 1000; T.running = true; }
+    keep(TIMER, T); renderTimer();
+  });
+  $("#resetBtn").addEventListener("click", () => { T = { len: T.len, left: T.len * 60, endsAt: null, running: false }; keep(TIMER, T); renderTimer(); });
+  document.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
+    if (T.running) return;
+    const len = Number(b.dataset.len);
+    T = { len, left: len * 60, endsAt: null, running: false }; keep(TIMER, T); renderTimer();
+  }));
+
+  // ---------- move between devices (data rides in the link's #fragment, never sent to a server) ----------
+  const toB64 = (s) => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const fromB64 = (s) => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+  $("#moveBtn").addEventListener("click", async () => {
+    const link = location.origin + location.pathname + "#import=" + toB64(JSON.stringify(state));
+    const out = $("#moveOut");
+    try { await navigator.clipboard.writeText(link); $("#moveBtn").textContent = "Link copied. Open it on your other device"; }
+    catch (e) { out.hidden = false; out.value = link; out.select(); $("#moveBtn").textContent = "Copy this link"; }
+  });
+  let pending = null;
+  if (location.hash.startsWith("#import=")) {
+    try { pending = normalize(JSON.parse(fromB64(location.hash.slice(8)))); } catch (e) { pending = null; }
+    history.replaceState(null, "", location.pathname);
+    if (pending) {
+      if (!load(KEY)) { state = pending; keep(KEY, state); pending = null; }
+      else {
+        $("#importText").textContent = `This link carries Daybook data (${pending.tasks.length} tasks, ${pending.countdowns.length} countdowns, ${pending.habits.length} habits). Replace what's saved in this browser?`;
+        $("#importBanner").hidden = false;
+      }
+    }
+  }
+  $("#importYes").addEventListener("click", () => { state = pending; pending = null; $("#importBanner").hidden = true; wxCache = null; commit(); fetchWeather(); });
+  $("#importNo").addEventListener("click", () => { pending = null; $("#importBanner").hidden = true; });
+
+  // ---------- clock ----------
+  let lastDay = today(), lastMin = -1;
+  setInterval(() => {
+    if (T.running && Date.now() >= T.endsAt) finishSession();
+    renderTimer();
+    const now = new Date();
+    if (today() !== lastDay) { lastDay = today(); renderAll(); return; }
+    if (now.getMinutes() !== lastMin) { lastMin = now.getMinutes(); renderHeader(); renderNextUp(); }
+    const stale = !wxCache || Date.now() - wxCache.at > 30 * 6e4;
+    if (stale && Date.now() - wxTried > 5 * 6e4) { wxTried = Date.now(); fetchWeather(); }
+  }, 1000);
+
+  keep(KEY, state);
+  renderAll(); renderTimer();
+  if (T.running && Date.now() >= T.endsAt) finishSession();
+})();
+</script>
+</body>
+</html>
