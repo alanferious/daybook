@@ -48,13 +48,13 @@
 /* Rivendell: pale stone and autumn amber */
 [data-region="rivendell"] { --bg: #dcdae0; --surface: #f4f3f6; --raise: #e8e6ec; --ink: #25222f; --muted: #575366; --line: #c6c3cf; --accent: #9b4f12; --on-accent: #fbf6f0; --good: #2f6b45; --warn: #9a3412; color-scheme: light; }
 /* Moria: black stone, dwarf gold */
-[data-region="moria"] { --bg: #0f0f11; --surface: #19191d; --raise: #232328; --ink: #e6e1d6; --muted: #a29c90; --line: #2f2f36; --accent: #d6b05a; --on-accent: #171207; --good: #9cc98e; --warn: #f08a5d; color-scheme: dark; }
+[data-region="moria"] { --bg: #0f0f11; --surface: #19191d; --raise: #232328; --ink: #e6e1d6; --muted: #a29c90; --line: #2f2f36; --accent: #8fc8d8; --on-accent: #0b1418; --good: #9cc98e; --warn: #f08a5d; color-scheme: dark; }
 /* Lothlórien: silver bark, mallorn gold */
 [data-region="lorien"] { --bg: #d6dce2; --surface: #f2f5f8; --raise: #e4e9ee; --ink: #1a222b; --muted: #4b5763; --line: #c1c9d1; --accent: #7d5b0c; --on-accent: #fffaf0; --good: #2a6a45; --warn: #9a3412; color-scheme: light; }
 /* Amon Hen and the Anduin: river light */
 [data-region="amonhen"] { --bg: #d0dce1; --surface: #eef3f5; --raise: #e0e9ed; --ink: #14232a; --muted: #44575f; --line: #b8c8cf; --accent: #1f6480; --on-accent: #eef6f9; --good: #23664a; --warn: #933a12; color-scheme: light; }
 /* Helm's Deep: rain on the wall at night */
-[data-region="helmsdeep"] { --bg: #13161a; --surface: #1c2025; --raise: #262b31; --ink: #e6e8eb; --muted: #a3a9b0; --line: #30363d; --accent: #d7b45e; --on-accent: #17130a; --good: #9ccb93; --warn: #f2a074; color-scheme: dark; }
+[data-region="helmsdeep"] { --bg: #13161a; --surface: #1c2025; --raise: #262b31; --ink: #e6e8eb; --muted: #a3a9b0; --line: #30363d; --accent: #c3cfdb; --on-accent: #12171d; --good: #9ccb93; --warn: #f2a074; color-scheme: dark; }
 /* Minas Tirith: white stone, Gondor blue */
 [data-region="minastirith"] { --bg: #e1e4ea; --surface: #fbfbfd; --raise: #eef0f4; --ink: #19203a; --muted: #4d566c; --line: #cdd2dd; --accent: #263c7a; --on-accent: #f6f8fd; --good: #23654a; --warn: #9a3412; color-scheme: light; }
 /* The Black Gate: ash plain */
@@ -95,7 +95,8 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 /* each region's scene across the top, fading into the page */
-:root { --vista-h: clamp(220px, 24vw, 470px); }
+/* the scene gives way on short laptop screens so the day's work starts on the first screen */
+:root { --vista-h: clamp(170px, min(24vw, 34vh), 470px); }
 .vista { position: absolute; top: 0; left: 0; right: 0; height: var(--vista-h); z-index: 1; pointer-events: none; overflow: hidden;
   -webkit-mask: linear-gradient(#000 52%, transparent 100%); mask: linear-gradient(#000 52%, transparent 100%); }
 .vista img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%;
@@ -139,9 +140,11 @@ p { text-wrap: pretty; }
 .reckon { margin: 0; font-size: 18px; color: var(--muted); }
 .reckon b { color: var(--ink); font-weight: 500; }
 .clockline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; font-size: 18px; }
-.clockline .clk { font-family: var(--font-display); font-weight: 400; font-size: 26px; color: var(--accent); }
+.clockline .clk { font-family: var(--font-body); font-weight: 500; font-size: 26px; color: var(--accent); font-variant-numeric: tabular-nums lining-nums; }
 .summary { margin: 0; color: var(--muted); }
 .summary b { color: var(--ink); font-weight: 500; }
+.summary a { color: inherit; text-decoration: none; }
+.summary .quick { margin-left: 6px; padding: 2px 10px; border: 1px solid var(--edge); border-radius: var(--r-sm); font-size: 15px; font-variant-numeric: tabular-nums lining-nums; }
 
 .side { display: grid; gap: 14px; align-content: start; min-width: 0; }
 .nextcard { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 4px; }
@@ -150,7 +153,7 @@ p { text-wrap: pretty; }
 .nextcard .big { font-family: var(--font-display); font-weight: 400; font-size: 66px; line-height: 1; color: var(--accent); }
 .nextcard .big small { font-size: 22px; font-weight: 400; margin-left: 8px; color: var(--ink); }
 .nextcard .meta { font-size: 15px; color: var(--muted); }
-.nextcard .then { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 6px; }
+.nextcard .cdtime { margin-top: 2px; }
 
 .player { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 14px; align-items: center; }
 .emblem { grid-row: span 3; position: relative; width: 66px; height: 66px; display: grid; place-items: center; }
@@ -189,9 +192,10 @@ a.linkbtn { text-decoration: none; }
 @media (hover: hover) and (pointer: fine) {
   .site a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .btn:hover { filter: brightness(1.08); }
-  .linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .linkbtn:hover, .summary a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .x:hover { color: var(--warn); background: var(--raise); }
   .plist .pbtn:hover { color: var(--ink); }
+  .plist .pbtn:hover .undo { opacity: 1; }
   .links a:hover { background: var(--raise); }
   .realm:hover { text-decoration-style: solid; }
 }
@@ -206,6 +210,8 @@ a.linkbtn { text-decoration: none; }
 
 /* ---------- the road ---------- */
 .road .phead h2 { font-size: 30px; }
+.road.after { order: 2; }
+.wrap > footer { order: 3; }
 .roadacts { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
 .road .phead { margin-bottom: 4px; }
 .road.slim .mapwrap { height: 0; overflow: hidden; visibility: hidden; }
@@ -249,6 +255,8 @@ a.linkbtn { text-decoration: none; }
 .plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; line-height: 1.3; color: var(--muted); }
 .plist li { display: flex; gap: 5px; align-items: flex-start; overflow-wrap: anywhere; }
 .plist .pbtn { display: flex; gap: 5px; align-items: flex-start; border: 0; background: none; padding: 0; color: inherit; font-size: inherit; line-height: inherit; text-align: left; overflow-wrap: anywhere; }
+.plist .pbtn .undo { margin-left: 4px; color: var(--accent); opacity: 0; transition: opacity .15s ease; }
+.plist .pbtn:focus-visible .undo { opacity: 1; }
 .plist .sealicon { width: 15px; height: 15px; flex: none; margin-top: 1px; --wax-fill: var(--good); --wax-stroke: none; --wax-dash: none; --star-fill: var(--surface); }
 .paper.sat .pt { color: var(--muted); }
 .satbtn { position: relative; justify-self: start; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--accent); border-radius: 5px; background: var(--accent); color: var(--on-accent); font-size: 14px; padding: 4px 10px; min-height: 30px; font-weight: 700; flex-wrap: wrap; gap: 0 6px; text-align: left; }
@@ -313,9 +321,7 @@ textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid 
 .beacon-cap { font-size: 14px; color: var(--muted); text-align: center; margin: 0 0 6px; min-height: 1.5em; }
 .beacon-cap b { color: var(--ink); font-weight: 500; }
 .timer { display: grid; justify-items: center; gap: 12px; padding: 4px 0 6px; }
-.face { font-family: var(--font-display); font-weight: 400; font-size: 58px; line-height: 1; display: flex; }
-.face span { display: inline-block; width: .72em; text-align: center; }
-.face span.c { width: .3em; }
+.face { font-family: var(--font-body); font-weight: 500; font-size: 58px; line-height: 1; font-variant-numeric: tabular-nums lining-nums; letter-spacing: .01em; }
 .timer.running .face { color: var(--accent); }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
 .seg button { border: 0; background: transparent; padding: 5px 14px; font-size: 14px; color: var(--muted); }
@@ -331,7 +337,7 @@ textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid 
 
 /* weather */
 .wx-now { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: center; }
-.wx-temp { font-family: var(--font-display); font-weight: 400; font-size: 58px; line-height: .9; }
+.wx-temp { font-family: var(--font-body); font-weight: 500; font-size: 58px; line-height: .9; font-variant-numeric: lining-nums; }
 .wx-temp small { font-size: 26px; vertical-align: top; }
 .wx-cond { font-weight: 700; font-size: 18px; }
 .wx-sub { font-size: 14px; color: var(--muted); }
@@ -352,6 +358,8 @@ textarea { width: 100%; resize: vertical; padding: 10px 12px; border: 1px solid 
 .sk.f + .sk { width: 50%; height: 12px; }
 .wx-days.skel li { grid-template-columns: 44px minmax(0, 1fr); }
 @keyframes sk { to { opacity: .45; } }
+.skip { position: absolute; left: 16px; top: -60px; z-index: 60; padding: 8px 14px; border-radius: var(--r-sm); background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; }
+.skip:focus { top: 12px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 footer details { flex-basis: 100%; }
 footer summary { cursor: pointer; width: fit-content; }
@@ -366,7 +374,7 @@ footer details p { margin: 8px 0 0; max-width: 68ch; line-height: 1.5; }
 .cds { list-style: none; margin: 0; padding: 0; display: grid; }
 .cd { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .cd:last-child { border-bottom: 0; }
-.cd .n { font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: .95; text-align: right; }
+.cd .n { font-family: var(--font-body); font-weight: 500; font-size: 30px; line-height: .95; text-align: right; font-variant-numeric: tabular-nums lining-nums; }
 .cd .n.word { font-family: var(--font-body); font-weight: 700; font-size: 17px; line-height: 1.1; }
 .cd .n small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
 .cd .t { font-weight: 500; overflow-wrap: anywhere; }
@@ -396,9 +404,14 @@ footer details p { margin: 8px 0 0; max-width: 68ch; line-height: 1.5; }
 .sites { display: grid; gap: 14px; }
 .site { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 14px; align-items: end; }
 .site + .site { padding-top: 14px; border-top: 1px solid var(--line); }
-.site a { color: var(--ink); text-decoration: none; font-family: var(--font-caps); font-size: 20px; line-height: 1.1; }
+.site a { color: var(--ink); text-decoration: none; font-weight: 700; font-size: 17px; line-height: 1.2; letter-spacing: .02em; }
 .site .what { display: block; font-size: 14px; color: var(--muted); }
-.site .tot { display: block; margin-top: 6px; font-family: var(--font-display); font-size: 34px; line-height: 1; }
+.site .tot { display: block; margin-top: 6px; font-weight: 500; font-size: 30px; line-height: 1; font-variant-numeric: lining-nums; }
+.site.flat { grid-template-columns: minmax(0, 1fr); }
+.site.flat > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 12px; align-items: baseline; }
+.site.flat .what { grid-column: 2; grid-row: 1; }
+.site.flat .tot { grid-column: 1; margin-top: 0; font-size: 24px; }
+.site.flat .wk { grid-column: 2; }
 .site .wk { font-size: 14px; color: var(--muted); }
 .spark { display: block; width: 126px; height: 40px; overflow: visible; }
 .spark .bar { fill: var(--accent); }
@@ -421,22 +434,25 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); box-shadow: 0 18px 40px -16px rgba(0,0,0,.7); }
 .toast b { font-family: var(--font-caps); font-weight: 400; font-size: 22px; line-height: 1.15; color: var(--night-gold); }
 .toast span { font-size: 15px; color: var(--night-muted); }
+.toast .act { pointer-events: auto; justify-self: center; margin-top: 4px; border: 1px solid var(--night-gold); background: transparent; color: var(--night-gold);
+  border-radius: var(--r-sm); padding: 3px 14px; font-weight: 700; font-size: 15px; transition: transform .16s var(--ease-out); }
+.toast .act:active { transform: scale(.97); }
 
 /* ---------- arriving in a region ---------- */
 .atmos { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
 .flash { position: fixed; inset: 0; pointer-events: none; z-index: 21; background: #dfe6ff; opacity: 0; }
-.arrive { position: fixed; z-index: 22; top: 20vh; left: 50%; transform: translateX(-50%); width: min(600px, calc(100vw - 32px)); pointer-events: none;
-  display: grid; gap: 4px; justify-items: center; text-align: center; padding: 18px 24px 20px; background: var(--surface); color: var(--ink);
+.arrive { position: absolute; z-index: 22; top: max(12px, calc(var(--vista-h) * .06)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 32px)); cursor: pointer;
+  display: grid; gap: 2px; justify-items: center; text-align: center; padding: 12px 22px 14px; background: var(--surface); color: var(--ink);
   border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); border-radius: var(--r-sm); box-shadow: 0 22px 48px -20px rgba(0,0,0,.5); }
-.arrive b { font-family: var(--font-caps); font-weight: 400; font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.05; color: var(--accent); letter-spacing: .03em; }
-.arrive span { font-size: 18px; color: var(--muted); text-wrap: balance; }
+.arrive b { font-family: var(--font-caps); font-weight: 400; font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.05; color: var(--accent); letter-spacing: .03em; }
+.arrive span { font-size: 17px; color: var(--muted); text-wrap: balance; }
 .realm { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); font-weight: 700; text-decoration: underline dotted; text-underline-offset: 4px; text-decoration-thickness: 1px; }
 .preview select { margin-left: 6px; padding: 3px 8px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--raise); }
 .cdtime { display: inline-flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 14px; color: var(--muted); }
 .cdtime input { padding: 3px 8px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--raise); }
 
 /* ---------- milestone stage ---------- */
-.stage { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 45%, rgba(40, 18, 6, .9), rgba(5, 3, 2, .97) 70%); color: var(--night-ink); cursor: pointer; overflow: hidden; }
+.stage { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 45%, rgba(40, 18, 6, .95), rgba(5, 3, 2, .98) 70%); color: var(--night-ink); cursor: pointer; overflow: hidden; }
 .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .stage .inner { position: relative; display: grid; justify-items: center; gap: 10px; text-align: center; padding: 24px; max-width: 760px; }
 .stage .ringbox { width: min(260px, 60vw); aspect-ratio: 1; }
@@ -460,7 +476,9 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   .col.c3 { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
 }
 @media (max-width: 780px) {
+  :root { --vista-h: 220px; }
   body { padding-top: calc(var(--vista-h) * .86); padding-bottom: 32px; font-size: 16px; }
+  .road .phead h2 { font-size: 25px; }
   .top { grid-template-columns: minmax(0, 1fr); }
   .grid { grid-template-columns: minmax(0, 1fr); }
   .col.c3 { grid-template-columns: minmax(0, 1fr); }
@@ -490,6 +508,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
 </svg>
 
 <div class="vista" id="vista" aria-hidden="true"></div>
+<a class="skip" href="#taskInput">Skip to today's tasks</a>
 <div class="wrap">
   <div class="banner" id="importBanner" hidden>
     <p id="importText">This link carries Daybook data.</p>
@@ -508,7 +527,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
       <p class="summary" id="summary"></p>
     </div>
     <div class="side">
-      <section class="nextcard" id="nextup" aria-live="polite"></section>
+      <section class="nextcard" id="nextup"></section>
       <div class="player" id="player">
         <div class="emblem" id="emblem">
           <svg viewBox="0 0 66 66" aria-hidden="true"><circle cx="33" cy="33" r="27" fill="none" stroke="url(#gold)" stroke-width="7"/><circle cx="33" cy="33" r="27" fill="none" stroke="#fff6d8" stroke-opacity=".5" stroke-width="1" stroke-dasharray="30 140" transform="rotate(-120 33 33)"/></svg>
@@ -556,7 +575,8 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
             <button class="btn ghost" type="button" id="resetBtn">Reset</button>
           </div>
         </div>
-        <div class="bars" id="bars" aria-label="Minutes focused, last 7 days"></div>
+        <div class="bars" id="bars" role="img" aria-label="Minutes focused, last 7 days"></div>
+        <p class="empty-note" id="barsEmpty" hidden>No focus yet this week. Each minute is worth 1 XP.</p>
         <div class="barlabels" id="barLabels"></div>
       </section>
     </div>
@@ -613,10 +633,6 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
         <ul class="deeds" id="deedList"></ul>
         <button class="linkbtn" type="button" id="deedToggle" aria-controls="deedList" aria-expanded="false"></button>
       </section>
-      <section class="panel" id="sitesPanel" aria-labelledby="h-sites">
-        <div class="phead"><h2 id="h-sites">Your sites</h2><a class="linkbtn" href="https://alanferious.goatcounter.com" target="_blank" rel="noopener">Full stats</a></div>
-        <div class="sites" id="sitesBody"></div>
-      </section>
       <section class="panel" id="linksPanel" aria-labelledby="h-links">
         <div class="phead"><h2 id="h-links">Study kit</h2><button class="linkbtn" type="button" data-edit="linksPanel">Edit</button></div>
         <ul class="links" id="linkList"></ul>
@@ -628,6 +644,10 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
           </div>
         </form>
       </section>
+      <section class="panel" id="sitesPanel" aria-labelledby="h-sites">
+        <div class="phead"><h2 id="h-sites">Your sites</h2><span class="roadacts"><button class="linkbtn" type="button" id="sitesDays" aria-expanded="false">Last 7 days</button><a class="linkbtn" href="https://alanferious.goatcounter.com" target="_blank" rel="noopener">Full stats</a></span></div>
+        <div class="sites" id="sitesBody"></div>
+      </section>
     </div>
   </main>
 
@@ -636,12 +656,15 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     <span>Weather by Open-Meteo</span>
     <label class="preview">See another region<select id="regionPreview"><option value="">Where you are today</option></select></label>
     <a class="linkbtn" id="sceneLink" href="scenes.html">Explore the scenes</a>
+    <details><summary>Keys</summary>
+      <p>N jumps to a new task. S starts or pauses focus. Ctrl+Z brings back the last thing you removed while its toast is showing. Esc closes the arrival card and celebrations.</p>
+    </details>
     <details><summary>How XP works</summary>
       <p>A finished task is worth 10 XP, a habit 5, each minute of focus 1, a paper sat 100 and a deed 50. Each of the day's three quests adds 30, and all three add 40 more. Earn 150 XP in a day to keep your streak going. Undoing something takes its XP back.</p>
     </details>
     <details><summary>Your data</summary>
       <p>Daybook has no accounts and no server. Your tasks, habits, exams and notes are kept in this browser's storage and never sent anywhere. The only way they leave is a link you copy yourself, so treat that link like the notes in it.</p>
-      <p>Two outside services are used. Open-Meteo gets your place's coordinates to send back the forecast, and the town you type when changing place. Google Fonts serves the lettering. Neither one sees your Daybook.</p>
+      <p>Three outside services are used. Open-Meteo gets your place's coordinates to send back the forecast, and the town you type when changing place. Google Fonts serves the lettering. GoatCounter is asked for the visit counts of your two sites. None of them sees your Daybook.</p>
       <p>Clearing this browser's site data erases your Daybook. Copy a link first if you want a backup.</p>
     </details>
     <textarea id="moveOut" rows="2" readonly hidden aria-label="Link to move your Daybook"></textarea>
@@ -649,7 +672,8 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
 </div>
 <canvas class="atmos" id="atmos" aria-hidden="true"></canvas>
 <div class="flash" id="flash" aria-hidden="true"></div>
-<div class="arrive" id="arrive" aria-hidden="true" hidden><b id="arriveName"></b><span id="arriveLine"></span></div>
+<div class="arrive" id="arrive" aria-hidden="true" title="Dismiss" hidden><b id="arriveName"></b><span id="arriveLine"></span></div>
+<p class="sr" id="announce" aria-live="polite"></p>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <div class="stage" id="stage" hidden role="dialog" aria-modal="true" aria-labelledby="stageTitle">
   <div class="stageback" id="stageBack" aria-hidden="true"></div>
@@ -752,8 +776,9 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   // ---------- game rules ----------
   const XP = { task: 10, habit: 5, paper: 100, trophy: 50, quest: 30, sweep: 40 };
   const DAILY_GOAL = 150;
-  const TITLES = ["Hobbit of the Shire", "Bree-lander", "Ranger of the North", "Guest of Rivendell", "One of the Fellowship",
-    "Friend of Lothlórien", "Rider of Rohan", "Captain of Gondor", "Hero of the Pelennor", "Ring-bearer", "Lord of the West"];
+  // ranks, not places: the road is the only map, and only sitting papers moves you along it
+  const TITLES = ["Gardener", "Wanderer", "Burglar", "Pathfinder", "Companion",
+    "Loremaster", "Shieldbearer", "Captain", "Ringbearer", "Hero of the Age", "Keeper of the Red Book"];
   const levelStart = (l) => 50 * l * (l - 1);
   const levelOf = (xp) => { let l = 1; while (xp >= levelStart(l + 1)) l++; return l; };
   const titleOf = (l) => TITLES[Math.min(l, TITLES.length) - 1];
@@ -761,8 +786,9 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   const habitsDone = (L) => { const ids = new Set(state.habits.map((h) => h.id)); return Object.keys(L.h || {}).filter((id) => ids.has(id)).length; };
   function questsFor(k = today()) {
     const L = dayLog(k), hn = state.habits.length;
+    const tn = k === today() ? Math.min(3, Math.max(1, todaysTasks().length)) : 3;
     return [
-      { name: "Finish 3 tasks", have: Math.min(L.t || 0, 3), need: 3 },
+      { name: tn === 3 ? "Finish 3 tasks" : tn === 1 ? "Finish a task" : `Finish both tasks`, have: Math.min(L.t || 0, tn), need: tn },
       { name: "Focus for 50 minutes", have: Math.min(L.focus || 0, 50), need: 50 },
       { name: hn ? "Tick every habit" : "Tick every habit (add one first)", have: hn ? habitsDone(L) : 0, need: Math.max(hn, 1) },
     ].map((q) => ({ ...q, done: q.have >= q.need }));
@@ -934,12 +960,20 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
       $("#arriveName").animate([{ letterSpacing: ".3em", opacity: 0 }, { letterSpacing: ".03em", opacity: 1 }], { duration: 1100, easing: "cubic-bezier(.16,1,.3,1)" });
     }
     atmos.play(region);
-    arriveTimer = setTimeout(() => {
+    $("#announce").textContent = `${r[0]}. ${r[1]}`;
+    arriveTimer = setTimeout(leaveArrival, 3200);
+  }
+  function leaveArrival() {
+    const el = $("#arrive"); if (el.hidden) return;
+    clearTimeout(arriveTimer);
+    {
       const done = () => { el.hidden = true; };
       if (calm() || !el.animate) return done();
       el.animate([{ opacity: 1 }, { opacity: 0, transform: "translateX(-50%) translateY(-8px)" }], { duration: 300, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = done;
-    }, 3200);
+    }
   }
+  $("#arrive").addEventListener("click", leaveArrival);
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#arrive").hidden && !stageClose) leaveArrival(); });
 
   // ---------- rewards ----------
   let lastPoint = null, toastQ = [], toastBusy = false;
@@ -953,22 +987,32 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     el.animate([{ opacity: 0, transform: "translate(-50%, -60%) scale(.8)" }, { opacity: 1, transform: "translate(-50%, -110%) scale(1)", offset: .25 },
       { opacity: 0, transform: "translate(-50%, -260%) scale(1)" }], { duration: 1100, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = () => el.remove();
   }
-  function toast(title, sub) { toastQ.push({ title, sub }); if (toastQ.length > 2) toastQ.splice(0, toastQ.length - 2); if (!toastBusy) nextToast(); }
+  let undoNow = null;
+  function toast(title, sub, act) { toastQ.push({ title, sub, act }); if (toastQ.length > 2) toastQ.splice(0, toastQ.length - 2); if (!toastBusy) nextToast(); }
   function nextToast() {
     const t = toastQ.shift(); if (!t) { toastBusy = false; return; }
     toastBusy = true;
     if (stageClose || lvlFrom !== null) { toastQ.unshift(t); setTimeout(nextToast, 500); return; } // a stage is open or about to be
     const el = document.createElement("div");
     el.className = "toast"; el.innerHTML = `<b>${esc(t.title)}</b>${t.sub ? `<span>${esc(t.sub)}</span>` : ""}`;
+    if (t.act) {
+      const btn = document.createElement("button"); btn.type = "button"; btn.className = "act"; btn.textContent = t.act.label;
+      undoNow = () => { undoNow = null; btn.disabled = true; t.act.run(); leave(true); };
+      btn.addEventListener("click", () => undoNow && undoNow());
+      el.appendChild(btn);
+    }
     $("#toasts").appendChild(el);
     if (!calm() && el.animate) el.animate([{ opacity: 0, transform: "translateY(100%)" }, { opacity: 1, transform: "none" }], { duration: 400, easing: "ease" });
-    const leave = () => {
-      if (document.hidden) return addEventListener("visibilitychange", () => setTimeout(leave, 3000), { once: true });
+    let gone = false;
+    const leave = (now) => {
+      if (gone) return;
+      if (!now && document.hidden) return addEventListener("visibilitychange", () => setTimeout(leave, 3000), { once: true });
+      gone = true; if (t.act) undoNow = null;
       const done = () => { el.remove(); nextToast(); };
       if (calm() || !el.animate) return done();
       el.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(100%)" }], { duration: 200, easing: "cubic-bezier(.16,1,.3,1)" }).onfinish = done;
     };
-    setTimeout(leave, 3000);
+    setTimeout(leave, t.act ? 7000 : 3000);
   }
   let finaleDue = false;
   function award(id) {
@@ -1011,11 +1055,12 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     else { shownLevel = lvl; if (lvlFrom !== null && lvl <= lvlFrom) { clearTimeout(lvlTimer); lvlFrom = null; } }
   }
   // a burst of ticks (catching up on papers) earns one level-up, played once the toasts have had their say
-  let lvlTimer = 0, lvlFrom = null;
+  let lvlTimer = 0, lvlFrom = null, holdLevelUntil = 0;
   function queueLevelUp() {
     clearTimeout(lvlTimer);
     lvlTimer = setTimeout(function go() {
-      if (stageClose || $("#toasts").children.length) { lvlTimer = setTimeout(go, 500); return; } // let the toast on screen finish
+      // let the toast on screen finish, and a paper's walk along the road arrive first
+      if (stageClose || $("#toasts").children.length || travelling || Date.now() < holdLevelUntil) { lvlTimer = setTimeout(go, 500); return; }
       const from = lvlFrom, lvl = levelOf(totalXP()); lvlFrom = null;
       if (from !== null && lvl > from) playLevelUp(lvl, from);
     }, calm() ? 500 : 1400);
@@ -1047,10 +1092,11 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
       $("#greet").innerHTML = `${h < 12 ? "Good morning." : h < 18 ? "Good afternoon." : "Good evening."} <button class="realm" type="button" data-act="realm" title="Arrive again">${esc(r[0])}</button>: ${esc(r[1].charAt(0).toLowerCase() + r[1].slice(1))}`;
     } else $("#greet").textContent = greet;
     const list = todaysTasks(), left = list.filter((t) => !t.done).length, hd = habitsDone(dayLog());
-    const parts = [list.length ? `<b>${left}</b> of ${list.length} tasks left` : "No tasks yet"];
-    if (state.habits.length) parts.push(`<b>${hd}</b> of ${state.habits.length} habits`);
-    parts.push(`<b>${beaconsLit()}</b> of 7 beacons lit`);
-    $("#summary").innerHTML = parts.join(" · ");
+    const parts = [`<a href="#h-today">${list.length ? `<b>${list.length - left}</b> of ${list.length} tasks done` : "No tasks yet"}</a>`];
+    if (state.habits.length) parts.push(`<a href="#h-habits"><b>${hd}</b> of ${state.habits.length} habits</a>`);
+    parts.push(`<a href="#h-focus"><b>${beaconsLit()}</b> of 7 beacons lit</a>`);
+    setHTML($("#summary"), parts.join(" · ") + ` <button class="linkbtn quick" type="button" id="quickFocus"></button>`); // kept, so focus stays on the button
+    renderQuick();
   }
 
   function renderPlayer() {
@@ -1058,12 +1104,12 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     const pct = Math.min(100, Math.round(((xp - lo) / (hi - lo)) * 100));
     $("#lvlNum").textContent = l;
     $("#lvlTitle").textContent = titleOf(l);
-    $("#xpText").textContent = `${xp - lo} of ${hi - lo} XP to level ${l + 1}`;
+    $("#xpText").textContent = `${hi - xp} XP to level ${l + 1}`;
+    $("#xpBarWrap").title = `${xp - lo} of ${hi - lo} XP this level · ${xp} XP in all`;
     $("#xpBar").style.clipPath = `inset(0 ${100 - pct}% 0 0 round 4px)`;
     $("#xpBarWrap").setAttribute("aria-valuenow", pct);
     const tx = dayXP(today()), s = streak();
-    $("#pstats").innerHTML = `<span class="${tx >= DAILY_GOAL ? "met" : ""}">today <b>${tx}</b> of ${DAILY_GOAL} XP</span>
-      <span>streak <b>${s}</b> ${s === 1 ? "day" : "days"}</span><span><b>${xp}</b> XP in all</span>`;
+    $("#pstats").innerHTML = `<span class="${tx >= DAILY_GOAL ? "met" : ""}">today <b>${tx}</b> of ${DAILY_GOAL} XP</span>${s ? `<span>goal met <b>${s}</b> ${s === 1 ? "day" : "days"} running</span>` : ""}`;
   }
 
   function hoursLeft(c) {
@@ -1075,22 +1121,22 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     const mins = Math.floor(ms / 6e4);
     return `${Math.floor(mins / 60)}h ${pad(mins % 60)}m to go`;
   }
+  const setHTML = (el, html) => { if (el._html !== html) { el.innerHTML = html; el._html = html; } };
   function renderNextUp(J) {
     const el = $("#nextup"), up = upcoming();
     if (!up.length) {
-      el.innerHTML = J.home
+      setHTML(el, J.home
         ? `<h2>Nothing on the horizon</h2><div class="big">Home</div><div class="meta">Every paper is sat. Add whatever comes next under On the horizon.</div>`
-        : `<h2>Nothing on the horizon</h2><div class="meta">Add an exam or deadline under On the horizon to count down to it.</div>`;
+        : `<h2>Nothing on the horizon</h2><div class="meta">Add an exam or deadline under On the horizon to count down to it.</div>`);
       return;
     }
     const c = up[0], n = daysUntil(c.date), same = up.filter((x) => x.date === c.date);
     const stop = J.stops.find((s) => s.date === c.date);
     const big = n === 0 ? "Today" : n === 1 ? "Tomorrow" : `${n}<small>days</small>`;
-    const meta = [fmtDay(c.date, { weekday: "long", day: "numeric", month: "short" }), same.length === 1 ? fmtTime(c.time) : "", hoursLeft(c), stop ? `at ${stop.way.name}` : ""].filter(Boolean).join(" · ");
-    const rest = up.filter((x) => x.date !== c.date).slice(0, 2).map((x) => `${esc(x.title)} (${esc(fmtDay(x.date))})`).join(", ");
+    const meta = [fmtDay(c.date, { weekday: "long", day: "numeric", month: "short" }), same.length === 1 ? fmtTime(c.time) : "", hoursLeft(c), stop ? `the road reaches ${stop.way.name}` : ""].filter(Boolean).join(" · ");
+    const ask = same.filter((x) => !x.time).map((x) => `<label class="cdtime">${same.length > 1 ? `${esc(x.title)} starts at` : "Starts at"} <input type="time" data-time="${esc(x.id)}"></label>`).join("");
     const titles = same.map((x) => `<span>${esc(x.title)}${same.length > 1 && x.time ? ` · ${esc(fmtTime(x.time))}` : ""}</span>`).join("");
-    el.innerHTML = `<h2>${titles}</h2><div class="big num">${big}</div><div class="meta">${esc(meta)}</div>
-      ${rest ? `<div class="then">Then ${rest}</div>` : ""}`;
+    setHTML(el, `<h2>${titles}</h2><div class="big">${big}</div><div class="meta">${esc(meta)}</div>${ask}`);
   }
 
   // ---------- render: map ----------
@@ -1217,7 +1263,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     $("#h-road").textContent = J.home ? "There and back again" : "The Road to Mount Doom";
     if (!J.stops.length) {
       $("#roadMeta").textContent = "";
-      box.innerHTML = `<p class="empty-note">Add exams under On the horizon (type: Exam) and they become stops on the road. Tick each paper off after you sit it for ${XP.paper} XP.</p>`;
+      box.innerHTML = `<p class="empty-note">Add your exams under On the horizon (press Edit, choose Exam) and each exam day becomes a stop on the road. Log each paper after you sit it for ${XP.paper} XP.</p>`;
       buildMap(J);
       return;
     }
@@ -1225,11 +1271,11 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     const nd = J.next ? daysUntil(J.next.date) : 0;
     const where = J.home ? "Home again" : J.todayStop >= 0 ? `Today you reach ${J.stops[J.todayStop].way.name}`
       : J.next ? `${J.reached >= 0 ? `Past ${J.stops[J.reached].way.name}` : "Still in the Shire"}, ${J.next.way.name} ${nd === 1 ? "tomorrow" : `in ${nd} days`}` : "";
-    $("#roadMeta").textContent = [where, `${sat} of ${total} papers sat`, J.owed ? `${J.owed} to log` : "", toGo > 1 ? `Mount Doom in ${toGo} days` : ""].filter(Boolean).join(" · ");
     const t = today(), nextIdx = J.nextIdx;
-    const owedPapers = exams().filter((c) => !c.sat && c.date < t);
+    const owedPapers = exams().filter((c) => !c.sat && c.date < t), owedN = owedPapers.reduce((n, c) => n + papersOf(c), 0);
+    $("#roadMeta").textContent = [where, `${sat} of ${total} papers sat`, owedN ? `${owedN} to log` : "", toGo > 1 ? `Mount Doom in ${toGo} days` : ""].filter(Boolean).join(" · ");
     $("#logAll").hidden = owedPapers.length < 2;
-    $("#logAll").textContent = `Mark all ${owedPapers.reduce((n, c) => n + papersOf(c), 0)} past papers sat`;
+    $("#logAll").textContent = `Mark all ${owedN} past papers sat`;
     const satBtn = (c, s) => {
       const label = c.sat ? `${svgUse("i-seal", "sealicon")}Sat` : s.date === t ? "I've sat it" : "Log it";
       return `<button class="satbtn" type="button" data-act="sat" data-id="${esc(c.id)}" aria-pressed="${!!c.sat}"><span>${label}<span class="sr"> ${esc(c.title)}</span></span>${c.sat ? "" : `<span>+${XP.paper * papersOf(c)}</span>`}</button>`;
@@ -1240,7 +1286,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
       const when = s.sat ? "passed" : s.date === t ? "today" : owed ? "log it" : n === 1 ? "tomorrow" : `in ${n} days`;
       const act = cls === "today" || cls === "owed" || cls === "next";
       // a sat paper stays a toggle, so a slip of the mouse can be undone
-      const item = (c) => c.sat ? `<li class="sat"><button class="pbtn" type="button" data-act="sat" data-id="${esc(c.id)}" aria-pressed="true" title="Sat. Click to untick">${svgUse("i-seal", "sealicon")}${esc(c.title)}</button></li>` : `<li>${esc(c.title)}</li>`;
+      const item = (c) => c.sat ? `<li class="sat"><button class="pbtn" type="button" data-act="sat" data-id="${esc(c.id)}" aria-pressed="true" title="Sat. Click to untick">${svgUse("i-seal", "sealicon")}${esc(c.title)}<span class="undo" aria-hidden="true">Untick</span></button></li>` : `<li>${esc(c.title)}</li>`;
       return `<div class="stop ${cls}"><h3>${esc(s.way.name)}<small>${esc(fmtDay(s.date, { weekday: "short", day: "numeric", month: "short" }))} · ${esc(when)}</small></h3>
         ${!act ? `<ul class="plist">${s.papers.map(item).join("")}</ul>` : s.papers.map((c) => `<div class="paper${c.sat ? " sat" : ""}"><span class="pt">${esc(c.title)}${c.time ? ` · ${esc(fmtTime(c.time))}` : ""}</span>
           ${s.date <= t ? satBtn(c, s) : ""}</div>`).join("")}
@@ -1264,6 +1310,8 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   function renderMapState(J) {
     const open = mapOpen(J);
     $("#road").classList.toggle("slim", !open);
+    // on exam days (and the day a paper is sat) the road leads; on ordinary days the working panels do
+    $("#road").classList.toggle("after", !(!J.stops.length || J.todayStop >= 0 || ui.satDay === today() || holdHome));
     $("#mapToggle").textContent = open ? "Hide map" : "Show map";
     $("#mapToggle").setAttribute("aria-expanded", String(open));
   }
@@ -1373,11 +1421,15 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     $("#bars").innerHTML = days.map((k, i) => `<div class="bar${i === 6 ? " today" : ""}" title="${esc(fmtDay(k))}: ${vals[i]} min">
       ${vals[i] ? `<span class="num">${vals[i]}</span>` : ""}<i style="height:${Math.round((vals[i] / max) * 64)}px"></i></div>`).join("");
     $("#barLabels").innerHTML = days.map((k) => `<span>${esc(fmtDay(k, { weekday: "narrow" }))}</span>`).join("");
+    const none = vals.every((v) => !v);
+    $("#bars").hidden = $("#barLabels").hidden = none; $("#barsEmpty").hidden = !none;
   }
 
   function renderCountdowns(J) {
-    const ul = $("#cdList"), up = upcoming(), editing = $("#cdPanel").classList.contains("editing");
-    if (!up.length) { ul.innerHTML = `<li class="empty-note">Nothing on the horizon. Press Edit to add exams, deadlines or anything you're counting down to.</li>`; return; }
+    const ul = $("#cdList"), all = upcoming(), editing = $("#cdPanel").classList.contains("editing");
+    const up = editing ? all : all.filter((c) => c.kind !== "exam"), onRoad = all.length - all.filter((c) => c.kind !== "exam").length;
+    const roadNote = !editing && onRoad ? `<li class="empty-note">${onRoad} ${onRoad === 1 ? "exam is" : "exams are"} on the road. Press Edit to change ${onRoad === 1 ? "it" : "them"} or set start times.</li>` : "";
+    if (!up.length) { ul.innerHTML = roadNote || `<li class="empty-note">Nothing on the horizon. Press Edit to add exams, deadlines or anything you're counting down to.</li>`; return; }
     const shown = editing ? up : up.slice(0, 5);
     ul.innerHTML = shown.map((c) => {
       const n = daysUntil(c.date), stop = c.kind === "exam" ? J.stops.find((s) => s.date === c.date) : null;
@@ -1388,7 +1440,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
         <div class="d">${esc([fmtDay(c.date), fmtTime(c.time), stop ? stop.way.name : c.kind === "deadline" ? "deadline" : c.kind === "event" ? "event" : ""].filter(Boolean).join(" · "))}</div>
         ${editing ? `<label class="cdtime">Starts at <input type="time" data-time="${esc(c.id)}" value="${esc(c.time || "")}"></label>` : ""}</div>
         <button class="x ed" type="button" data-act="del-cd" data-id="${esc(c.id)}" aria-label="Remove ${esc(c.title)}">${svgUse("i-x")}</button></li>`;
-    }).join("") + (up.length > shown.length ? `<li class="empty-note">${up.length - shown.length} more on the road above.</li>` : "");
+    }).join("") + (up.length > shown.length ? `<li class="empty-note">${up.length - shown.length} more after these.</li>` : "") + roadNote;
   }
 
   function renderDeeds() {
@@ -1486,7 +1538,17 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
         else { t.done = false; setDayLog({ t: Math.max(0, (L.t || 0) - 1) }); }
         break;
       }
-      case "del-task": state.tasks = state.tasks.filter((x) => x.id !== id); break;
+      case "del-task": case "del-habit": case "del-cd": case "del-link": {
+        // removing is instant, and the toast offers it back for a few seconds
+        const key = { "del-task": "tasks", "del-habit": "habits", "del-cd": "countdowns", "del-link": "links" }[b.dataset.act];
+        const i = state[key].findIndex((x) => x.id === id); if (i < 0) return;
+        const [gone] = state[key].splice(i, 1);
+        toast("Removed", gone.text || gone.name || gone.title, { label: "Undo", run: () => {
+          if (state[key].some((x) => x.id === gone.id)) return;
+          state[key].splice(Math.min(i, state[key].length), 0, gone); commit();
+        } });
+        break;
+      }
       case "toggle-habit": {
         const h = { ...(dayLog().h || {}) };
         if (h[id]) delete h[id]; else h[id] = true;
@@ -1501,12 +1563,10 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
           const done = stop && stop.papers.every((p) => p.sat);
           if (papersSat() < paperCount() || paperCount() < 4) toast(done ? `${stop.way.name} reached` : "Paper sat", `${c.title}. +${XP.paper * papersOf(c)} XP · ${papersSat()} of ${paperCount()} papers`);
           travelDelay = calm() ? 0 : 480; stampId = id; ui.satDay = today(); keepUI();
+          holdLevelUntil = Date.now() + (calm() ? 0 : 4000);
         } else toast("Unticked", `${c.title}. ${XP.paper * papersOf(c)} XP taken back`);
         break;
       }
-      case "del-habit": state.habits = state.habits.filter((x) => x.id !== id); break;
-      case "del-cd": state.countdowns = state.countdowns.filter((x) => x.id !== id); break;
-      case "del-link": state.links = state.links.filter((x) => x.id !== id); break;
       case "pick-place": {
         const p = wxHits[Number(b.dataset.i)]; if (!p) return;
         state.place = { name: p.name, lat: p.latitude, lon: p.longitude };
@@ -1672,15 +1732,25 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
       });
     } catch (e) {}
   }
+  // the focus timer from the top of the page, so a session starts without scrolling
+  function renderQuick() {
+    const q = $("#quickFocus"); if (!q) return;
+    const s = Math.max(0, T.running ? Math.round((T.endsAt - Date.now()) / 1000) : T.left), txt = `${Math.floor(s / 60)}:${pad(s % 60)}`;
+    q.textContent = T.running ? `Pause focus · ${txt}` : T.left < T.len * 60 ? `Resume focus · ${txt}` : `Start ${T.len}-minute focus`;
+  }
+  document.addEventListener("click", (e) => { if (e.target.closest("#quickFocus")) $("#startBtn").click(); });
   function renderTimer() {
     const s = Math.max(0, T.running ? Math.round((T.endsAt - Date.now()) / 1000) : T.left);
     const txt = `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
-    $("#face").innerHTML = [...txt].map((ch) => `<span${ch === ":" ? ' class="c"' : ""}>${ch}</span>`).join("");
+    $("#face").textContent = txt;
     $("#face").setAttribute("aria-label", `${Math.floor(s / 60)} minutes ${s % 60} seconds left`);
     $("#timer").classList.toggle("running", T.running);
     $("#startBtn").textContent = T.running ? "Pause" : (T.left < T.len * 60 ? "Resume" : "Start");
+    const spent = Math.floor((T.len * 60 - s) / 60);
+    $("#resetBtn").textContent = spent >= 1 ? `Stop, keep ${spent} min` : "Reset";
     $("#len25").setAttribute("aria-pressed", T.len === 25); $("#len50").setAttribute("aria-pressed", T.len === 50);
     document.title = T.running ? `${txt} · Daybook` : "Daybook";
+    renderQuick();
   }
   function finishSession() {
     const len = T.len;
@@ -1700,7 +1770,17 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     else { T.endsAt = Date.now() + T.left * 1000; T.running = true; }
     keep(TIMER, T); renderTimer();
   });
-  $("#resetBtn").addEventListener("click", () => { T = { len: T.len, left: T.len * 60, endsAt: null, running: false }; keep(TIMER, T); renderTimer(); });
+  $("#resetBtn").addEventListener("click", () => {
+    const left = T.running ? Math.max(0, Math.round((T.endsAt - Date.now()) / 1000)) : T.left, spent = Math.floor((T.len * 60 - left) / 60);
+    T = { len: T.len, left: T.len * 60, endsAt: null, running: false }; keep(TIMER, T);
+    if (spent >= 1) {
+      setDayLog({ focus: (dayLog().focus || 0) + spent });
+      toast("Session stopped", `${spent} ${spent === 1 ? "minute" : "minutes"} focused. +${spent} XP.`);
+      const r = $("#face").getBoundingClientRect(); lastPoint = { x: r.left + r.width / 2, y: r.top };
+      commit();
+    }
+    renderTimer();
+  });
   document.querySelectorAll("[data-len]").forEach((b) => b.addEventListener("click", () => {
     if (T.running) return;
     const len = Number(b.dataset.len);
@@ -1985,7 +2065,15 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     });
   }
   $("#importAdd").addEventListener("click", () => { state = merge(state, pending).state; closeBanner(); commit(); });
-  $("#importReplace").addEventListener("click", () => { state = pending; closeBanner(); shownLevel = levelOf(totalXP()); wxCache = null; commit(); fetchWeather(); });
+  $("#importReplace").addEventListener("click", () => {
+    const btn = $("#importReplace");
+    if (!btn.dataset.armed) {
+      const n = (k) => state[k].length, ex = state.countdowns.filter((c) => c.kind === "exam").length;
+      $("#importText").textContent = `Replace everything here with the link's copy? This browser's ${ex} ${ex === 1 ? "exam" : "exams"}, ${n("tasks")} ${n("tasks") === 1 ? "task" : "tasks"}, ${n("habits")} ${n("habits") === 1 ? "habit" : "habits"}, links and notes would be overwritten.`;
+      btn.dataset.armed = "1"; btn.textContent = "Yes, replace mine"; return;
+    }
+    delete btn.dataset.armed; btn.textContent = "Replace mine";
+    state = pending; closeBanner(); shownLevel = levelOf(totalXP()); wxCache = null; commit(); fetchWeather(); });
   $("#importNo").addEventListener("click", closeBanner);
 
   // ---------- your sites: visit counts from GoatCounter's public counter (no cookies, no IP addresses) ----------
@@ -2002,6 +2090,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     if (!r.ok) throw new Error(r.status);
     return Number(String((await r.json()).count).replace(/\D/g, "")) || 0;
   }
+  $("#sitesDays").addEventListener("click", () => { ui.sitesOpen = !ui.sitesOpen; keepUI(); renderSites(); });
   async function fetchSites() {
     // the end date is exclusive, so each day runs to the next midnight
     const days = Array.from({ length: 7 }, (_, i) => dkey(addDays(new Date(), i - 6)));
@@ -2031,13 +2120,26 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     if (!c || !c.data || c.data.length !== SITES.length) { $("#sitesBody").innerHTML = siteError ? `<p class="empty-note">${esc(siteError)}</p>` : SITES_SKEL; return; }
     const max = Math.max(1, ...c.data.flatMap((d) => d.days));
     const t = today(), mins = Math.round((Date.now() - c.at) / 6e4);
+    const open = !!ui.sitesOpen;
+    $("#sitesDays").textContent = open ? "Hide days" : "Last 7 days"; $("#sitesDays").setAttribute("aria-expanded", String(open));
     $("#sitesBody").innerHTML = SITES.map((st, i) => {
       const d = c.data[i], wk = d.days.reduce((a, b) => a + b, 0);
-      return `<div class="site"><div><a href="${esc(st.url)}" target="_blank" rel="noopener">${esc(st.name)}</a><span class="what">${esc(st.what)}</span>
+      return `<div class="site${open ? "" : " flat"}"><div><a href="${esc(st.url)}" target="_blank" rel="noopener">${esc(st.name)}</a><span class="what">${esc(st.what)}</span>
         <span class="tot num">${d.total.toLocaleString("en-AU")}</span><span class="wk">${d.total === 1 ? "visit" : "visits"} in all · ${wk} this week</span></div>
-        <div>${spark(c.days, d.days, max)}<div class="spark-days" aria-hidden="true">${c.days.map((x) => `<span${x === t ? ' class="t"' : ""}>${esc(fmtDay(x, { weekday: "narrow" }))}</span>`).join("")}</div></div></div>`;
+        ${open ? `<div>${spark(c.days, d.days, max)}<div class="spark-days" aria-hidden="true">${c.days.map((x) => `<span${x === t ? ' class="t"' : ""}>${esc(fmtDay(x, { weekday: "narrow" }))}</span>`).join("")}</div></div>` : ""}</div>`;
     }).join("") + `<p class="sites-note">${siteError ? esc(siteError) + " " : ""}Checked ${mins < 1 ? "just now" : mins < 60 ? `${mins} min ago` : `${Math.round(mins / 60)} h ago`}. GoatCounter's public counts can run up to four hours behind, and your own visits count too.</p>`;
   }
+
+  // ---------- keys ----------
+  addEventListener("keydown", (e) => {
+    if (stageClose) return;
+    const typing = e.target.closest && e.target.closest("input, textarea, select, [contenteditable]");
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z" && undoNow && !typing) { e.preventDefault(); undoNow(); return; }
+    if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "n" || e.key === "N") { e.preventDefault(); $("#taskInput").focus(); }
+    else if (e.key === "s" || e.key === "S") { e.preventDefault(); $("#startBtn").click(); }
+  });
+  $(".skip").addEventListener("click", (e) => { e.preventDefault(); $("#taskInput").focus(); });
 
   // ---------- clock ----------
   let lastDay = today(), lastMin = -1;
