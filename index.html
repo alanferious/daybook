@@ -187,6 +187,7 @@ a.linkbtn { text-decoration: none; }
 .check:active, .habit-btn:active .check { transform: scale(.92); }
 :is(.satbtn, .x, .linkbtn, .realm) { transition: transform .16s var(--ease-out), color .15s ease, background-color .15s ease; }
 @media (hover: hover) and (pointer: fine) {
+  .site a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .btn:hover { filter: brightness(1.08); }
   .linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
   .x:hover { color: var(--warn); background: var(--raise); }
@@ -390,6 +391,23 @@ footer details p { margin: 8px 0 0; max-width: 68ch; line-height: 1.5; }
 .links li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .links a { display: block; padding: 8px 10px; margin: 0 -10px; border-radius: var(--r-sm); color: var(--ink); text-decoration: none; min-width: 0; }
 .links a b { display: block; font-weight: 700; color: var(--accent); }
+
+/* your sites: visits from GoatCounter, one scale for both so they compare */
+.sites { display: grid; gap: 14px; }
+.site { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 14px; align-items: end; }
+.site + .site { padding-top: 14px; border-top: 1px solid var(--line); }
+.site a { color: var(--ink); text-decoration: none; font-family: var(--font-caps); font-size: 20px; line-height: 1.1; }
+.site .what { display: block; font-size: 14px; color: var(--muted); }
+.site .tot { display: block; margin-top: 6px; font-family: var(--font-display); font-size: 34px; line-height: 1; }
+.site .wk { font-size: 14px; color: var(--muted); }
+.spark { display: block; width: 126px; height: 40px; overflow: visible; }
+.spark .bar { fill: var(--accent); }
+.spark .nil { fill: var(--edge); }
+.spark .base { stroke: var(--line); stroke-width: 1; }
+.spark .hit { fill: transparent; }
+.spark-days { display: grid; grid-template-columns: repeat(7, 1fr); width: 126px; margin-top: 3px; font-size: 11px; color: var(--muted); text-align: center; }
+.spark-days .t { color: var(--ink); font-weight: 700; }
+.sites-note { font-size: 13px; color: var(--muted); margin: 0; }
 .links a span { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
 
 footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
@@ -594,6 +612,10 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
         <div class="phead"><h2 id="h-deeds">Deeds</h2><span class="meta num" id="deedMeta"></span></div>
         <ul class="deeds" id="deedList"></ul>
         <button class="linkbtn" type="button" id="deedToggle" aria-controls="deedList" aria-expanded="false"></button>
+      </section>
+      <section class="panel" id="sitesPanel" aria-labelledby="h-sites">
+        <div class="phead"><h2 id="h-sites">Your sites</h2><a class="linkbtn" href="https://alanferious.goatcounter.com" target="_blank" rel="noopener">Full stats</a></div>
+        <div class="sites" id="sitesBody"></div>
       </section>
       <section class="panel" id="linksPanel" aria-labelledby="h-links">
         <div class="phead"><h2 id="h-links">Study kit</h2><button class="linkbtn" type="button" data-edit="linksPanel">Edit</button></div>
@@ -1418,7 +1440,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     if (rg !== shownRegion) setTimeout(() => { $('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim(); }, calm() ? 0 : 1500);
     shownRegion = rg;
     renderHeader(J); renderPlayer(); renderNextUp(J); renderRoad(J); renderTasks(); renderQuests(); renderHabits();
-    renderBeacons(); renderFocusStats(); renderCountdowns(J); renderDeeds(); renderLinks(); renderNotes(); renderWeather();
+    renderBeacons(); renderFocusStats(); renderCountdowns(J); renderDeeds(); renderLinks(); renderNotes(); renderWeather(); renderSites();
     renderMapState(J);
     // a redraw replaces the button you pressed; give keyboard focus back to its successor
     if (refocus) { const el = document.querySelector(refocus); refocus = null; if (el && (document.activeElement === document.body || !document.activeElement)) el.focus({ preventScroll: true }); }
@@ -1966,6 +1988,57 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   $("#importReplace").addEventListener("click", () => { state = pending; closeBanner(); shownLevel = levelOf(totalXP()); wxCache = null; commit(); fetchWeather(); });
   $("#importNo").addEventListener("click", closeBanner);
 
+  // ---------- your sites: visit counts from GoatCounter's public counter (no cookies, no IP addresses) ----------
+  const GC = "https://alanferious.goatcounter.com/counter/", SITESKEY = "daybook.sites.v1";
+  const SITES = [
+    { path: "/km0", name: "KM0", what: "Spanish drills", url: "https://alanferious.github.io/repaso/" },
+    { path: "/teu", name: "TEU", what: "Econ revision", url: "https://alanferious.github.io/teu/" },
+  ];
+  let siteCache = load(SITESKEY), siteError = "", siteTried = 0;
+  // a path with no visits yet answers 404 with a zero count
+  async function gcCount(path, start, end) {
+    const r = await fetch(GC + encodeURI(path) + ".json" + (start ? `?start=${start}&end=${end}` : ""));
+    if (r.status === 404) return 0;
+    if (!r.ok) throw new Error(r.status);
+    return Number(String((await r.json()).count).replace(/\D/g, "")) || 0;
+  }
+  async function fetchSites() {
+    // the end date is exclusive, so each day runs to the next midnight
+    const days = Array.from({ length: 7 }, (_, i) => dkey(addDays(new Date(), i - 6)));
+    try {
+      const data = await Promise.all(SITES.map(async (st) => ({
+        total: await gcCount(st.path),
+        days: await Promise.all(days.map((d) => gcCount(st.path, d, dkey(addDays(new Date(d + "T12:00"), 1))))),
+      })));
+      siteCache = { at: Date.now(), days, data }; siteError = ""; keep(SITESKEY, siteCache);
+    } catch { siteError = "Couldn't reach GoatCounter. Showing the last counts if there are any."; }
+    renderSites();
+  }
+  const SITES_SKEL = SITES.map(() => `<div class="site"><div><span class="sk c"></span><span class="sk s"></span></div><span class="sk t"></span></div>`).join("");
+  function spark(days, counts, max) {
+    const bw = 16, gap = 2, H = 36, n = counts.length;
+    const bars = counts.map((v, i) => {
+      const x = i * (bw + gap), lbl = `${fmtDay(days[i], { weekday: "short", day: "numeric", month: "short" })}: ${v} ${v === 1 ? "visit" : "visits"}`;
+      if (!v) return `<g><title>${esc(lbl)}</title><rect class="nil" x="${x}" y="${H - 2}" width="${bw}" height="2" rx="1"/><rect class="hit" x="${x - 1}" y="0" width="${bw + 2}" height="${H + 4}"/></g>`;
+      const h = Math.max(4, Math.round((v / max) * H)), y = H - h, r = Math.min(4, h / 2);
+      return `<g><title>${esc(lbl)}</title><path class="bar" d="M${x},${H} V${y + r} Q${x},${y} ${x + r},${y} H${x + bw - r} Q${x + bw},${y} ${x + bw},${y + r} V${H} Z"/><rect class="hit" x="${x - 1}" y="0" width="${bw + 2}" height="${H + 4}"/></g>`;
+    }).join("");
+    const w = n * (bw + gap) - gap;
+    return `<svg class="spark" viewBox="0 0 ${w} ${H + 4}" role="img" aria-label="Visits over the last 7 days: ${esc(counts.map((v, i) => `${fmtDay(days[i], { weekday: "short" })} ${v}`).join(", "))}">${bars}<line class="base" x1="0" x2="${w}" y1="${H + .5}" y2="${H + .5}"/></svg>`;
+  }
+  function renderSites() {
+    const c = siteCache;
+    if (!c || !c.data || c.data.length !== SITES.length) { $("#sitesBody").innerHTML = siteError ? `<p class="empty-note">${esc(siteError)}</p>` : SITES_SKEL; return; }
+    const max = Math.max(1, ...c.data.flatMap((d) => d.days));
+    const t = today(), mins = Math.round((Date.now() - c.at) / 6e4);
+    $("#sitesBody").innerHTML = SITES.map((st, i) => {
+      const d = c.data[i], wk = d.days.reduce((a, b) => a + b, 0);
+      return `<div class="site"><div><a href="${esc(st.url)}" target="_blank" rel="noopener">${esc(st.name)}</a><span class="what">${esc(st.what)}</span>
+        <span class="tot num">${d.total.toLocaleString("en-AU")}</span><span class="wk">${d.total === 1 ? "visit" : "visits"} in all · ${wk} this week</span></div>
+        <div>${spark(c.days, d.days, max)}<div class="spark-days" aria-hidden="true">${c.days.map((x) => `<span${x === t ? ' class="t"' : ""}>${esc(fmtDay(x, { weekday: "narrow" }))}</span>`).join("")}</div></div></div>`;
+    }).join("") + `<p class="sites-note">${siteError ? esc(siteError) + " " : ""}Checked ${mins < 1 ? "just now" : mins < 60 ? `${mins} min ago` : `${Math.round(mins / 60)} h ago`}. GoatCounter's public counts can run up to four hours behind, and your own visits count too.</p>`;
+  }
+
   // ---------- clock ----------
   let lastDay = today(), lastMin = -1;
   setInterval(() => {
@@ -1976,6 +2049,9 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
     if (now.getMinutes() !== lastMin) { lastMin = now.getMinutes(); renderHeader(J); renderNextUp(J); }
     const stale = !wxCache || Date.now() - wxCache.at > 30 * 6e4;
     if (stale && Date.now() - wxTried > 5 * 6e4) { wxTried = Date.now(); fetchWeather(); }
+    const sitesStale = !siteCache || Date.now() - siteCache.at > 60 * 6e4;
+    if (sitesStale && Date.now() - siteTried > 10 * 6e4) { siteTried = Date.now(); fetchSites(); }
+    if (now.getSeconds() === 0 && siteCache) renderSites();
   }, 1000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) ambient(); });
   if (rmq.addEventListener) rmq.addEventListener("change", () => renderAll({ noTravel: true }));
