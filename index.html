@@ -86,7 +86,7 @@ body {
   background: var(--bg); color: var(--ink);
   font: 17px/1.5 var(--font-body);
   font-variant-numeric: lining-nums;
-  padding: calc(var(--vista-h) * .56) max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left));
+  padding: calc(var(--vista-h) * var(--vista-top)) max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left));
   caret-color: var(--accent);
 }
 body::before {
@@ -96,9 +96,19 @@ body::before {
 }
 /* each region's scene across the top, fading into the page */
 /* the scene gives way on short laptop screens so the day's work starts on the first screen */
-:root { --vista-h: clamp(170px, min(24vw, 34vh), 470px); }
+@property --vista-h { syntax: "<length>"; inherits: true; initial-value: 300px; }
+:root { --vista-h: clamp(170px, min(24vw, 34vh), 470px); --vista-top: .56; --vista-fade: 52%; }
+/* the whole scene: the strip takes the painting's own 4:1 shape, so nothing is cropped off the top */
+:root.whole { --vista-h: clamp(220px, 25vw, 640px); --vista-top: .74; --vista-fade: 72%; }
+:root.scene-anim { transition: --vista-h .4s var(--ease-out); }
 .vista { position: absolute; top: 0; left: 0; right: 0; height: var(--vista-h); z-index: 1; pointer-events: none; overflow: hidden;
-  -webkit-mask: linear-gradient(#000 52%, transparent 100%); mask: linear-gradient(#000 52%, transparent 100%); }
+  -webkit-mask: linear-gradient(#000 var(--vista-fade), transparent 100%); mask: linear-gradient(#000 var(--vista-fade), transparent 100%); }
+.sceneBtn { position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); display: inline-flex; gap: 6px; align-items: center;
+  border: 0; border-radius: 999px; padding: 5px 12px 5px 9px; font-size: 14px; color: var(--night-ink); background: rgba(14, 10, 6, .5);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .16s var(--ease-out), background-color .15s ease; }
+.sceneBtn:active { transform: scale(.97); }
+.sceneBtn svg { width: 15px; height: 15px; }
+@media (hover: hover) and (pointer: fine) { .sceneBtn:hover { background: rgba(14, 10, 6, .7); } }
 .vista img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 100%;
   opacity: 0; transform: scale(1.04); filter: blur(5px); transform-origin: 50% 100%;
   transition: opacity 1.2s ease, transform 2.2s var(--ease-out), filter 1.2s var(--ease-out); }
@@ -476,8 +486,9 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   .col.c3 { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: start; }
 }
 @media (max-width: 780px) {
-  :root { --vista-h: 220px; }
-  body { padding-top: calc(var(--vista-h) * .86); padding-bottom: 32px; font-size: 16px; }
+  :root, :root.whole { --vista-h: 220px; --vista-top: .86; }
+  :root.whole { --vista-h: 250px; --vista-top: .94; --vista-fade: 70%; }
+  body { padding-bottom: 32px; font-size: 16px; }
   .road .phead h2 { font-size: 25px; }
   .top { grid-template-columns: minmax(0, 1fr); }
   .grid { grid-template-columns: minmax(0, 1fr); }
@@ -508,6 +519,7 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
 </svg>
 
 <div class="vista" id="vista" aria-hidden="true"></div>
+<button class="sceneBtn" type="button" id="sceneBtn"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 12.5 6 7l3 3.5 2-2 3.5 4M1.5 3.5h13v9h-13z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg><span>Whole scene</span></button>
 <a class="skip" href="#taskInput">Skip to today's tasks</a>
 <div class="wrap">
   <div class="banner" id="importBanner" hidden>
@@ -727,6 +739,18 @@ footer { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-b
   let state = normalize(load(KEY) || STARTER);
   const ui = load(UI) || {};
   const keepUI = () => keep(UI, ui);
+  // the scene shows whole unless it has been tucked away to bring the day's work up
+  const sceneWhole = () => {
+    document.documentElement.classList.toggle("whole", !ui.sceneTucked);
+    $("#sceneBtn span").textContent = ui.sceneTucked ? "Whole scene" : "Tuck scene away";
+  };
+  sceneWhole();
+  $("#sceneBtn").addEventListener("click", (e) => {
+    ui.sceneTucked = !ui.sceneTucked; keepUI();
+    const root = document.documentElement, anim = e.detail && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (anim) { root.classList.add("scene-anim"); setTimeout(() => root.classList.remove("scene-anim"), 450); }
+    sceneWhole();
+  });
 
   const today = () => dkey(new Date());
   const dayLog = (k = today()) => state.log[k] || {};
